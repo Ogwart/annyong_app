@@ -9,7 +9,7 @@
       "stopAtEntry": false,
       "externalConsole": true,
       "cwd": "c:/Users/82109/Desktop/Project3",
-      "program": "c:/Users/82109/Desktop/Project3/build/Debug/outDebug",
+      "program": "${workspaceFolder}",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
