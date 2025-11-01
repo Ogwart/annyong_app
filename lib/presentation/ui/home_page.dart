@@ -2,6 +2,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/bookmark__button.dart';
 import 'package:annyong/presentation/widgets/floor_button.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -23,7 +24,9 @@ class HomePage extends StatelessWidget {
                     children: [
                       // ------------------메뉴 드로우어 버튼------------------
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          context.go('/home/menu');
+                        },
                         child: Container(
                           width: 50,
                           height: 50,
