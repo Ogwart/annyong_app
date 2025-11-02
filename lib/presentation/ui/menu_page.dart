@@ -1,4 +1,5 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
+import 'package:annyong/presentation/widgets/menu_list_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -121,44 +122,9 @@ class MenuPage extends StatelessWidget {
             ),
           ),
           // 설정 메뉴
-          MenuListButton(title: '즐겨찾기'),
-          MenuListButton(title: '설정'),
-        ],
-      ),
-    );
-  }
-}
-
-class MenuListButton extends StatelessWidget {
-  const MenuListButton({super.key, required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 30),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.grey300, width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          GestureDetector(
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.grey400,
-                size: 20,
-              ),
-            ),
-          ),
+          MenuListButton(title: '즐겨찾기', routePath: '/home/menu/bookmark'),
+          MenuListButton(title: '설정', routePath: '/home/menu/settings'),
+          //MenuListButton(title: '설정', route: "menu/settings"),
         ],
       ),
     );
