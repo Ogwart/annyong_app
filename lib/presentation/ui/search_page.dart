@@ -12,10 +12,11 @@ class SearchPage extends StatelessWidget {
         centerTitle: true,
         title: Text("시설물 검색", style: TextStyle(fontSize: 24)),
         leading: Padding(
-          padding: EdgeInsetsGeometry.symmetric(horizontal: 12),
+          padding: const EdgeInsetsGeometry.symmetric(horizontal: 12),
           child: IconButton(
             onPressed: () => context.pop(),
             icon: Icon(Icons.arrow_back_ios),
+            color: AppColors.text,
           ),
         ),
       ),
@@ -86,7 +87,9 @@ class SearchRoomsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        context.push('/home/search/searchRooms', extra: title);
+      },
       child: Container(
         alignment: Alignment.center,
         width: 112,

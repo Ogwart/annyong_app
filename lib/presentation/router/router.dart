@@ -45,7 +45,10 @@ class AppRouter {
                 routes: [
                   GoRoute(
                     path: "searchRooms",
-                    builder: (context, state) => SearchRoomsPage(),
+                    builder: (context, state) {
+                      final searchType = state.extra as String? ?? '';
+                      return SearchRoomsPage(searchType: searchType);
+                    },
                   ),
                 ],
               ),
