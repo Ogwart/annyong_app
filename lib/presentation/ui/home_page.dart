@@ -1,14 +1,17 @@
+import 'package:annyong/presentation/providers/search_result_provider.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/bookmark__button.dart';
 import 'package:annyong/presentation/widgets/floor_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SearchResultProvider>();
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -144,8 +147,16 @@ class HomePage extends StatelessWidget {
                   right: 0,
                   child: Column(
                     children: [
-                      FloorButton(isSelected: true, floorNumber: 2),
-                      FloorButton(isSelected: false, floorNumber: 1),
+                      FloorButton(
+                        floor: '2F',
+                        onTap: () => provider.setSelectedFloor('2F'),
+                        isSelected: provider.selectedFloor == '2F',
+                      ),
+                      FloorButton(
+                        floor: '1F',
+                        onTap: () => provider.setSelectedFloor('1F'),
+                        isSelected: provider.selectedFloor == '1F',
+                      ),
                     ],
                   ),
                 ),
