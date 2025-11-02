@@ -2,6 +2,7 @@ import 'package:annyong/presentation/ui/bookmark_page.dart';
 import 'package:annyong/presentation/ui/home_page.dart';
 import 'package:annyong/presentation/ui/menu_page.dart';
 import 'package:annyong/presentation/ui/search_page.dart';
+import 'package:annyong/presentation/ui/search_result_page.dart';
 import 'package:annyong/presentation/ui/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/settings_page.dart';
 import 'package:flutter/material.dart';
@@ -50,8 +51,16 @@ class AppRouter {
                       return SearchRoomsPage(searchType: searchType);
                     },
                   ),
+                  GoRoute(
+                    path: "searchResult",
+                    builder: (context, state) {
+                      final searchKeyword = state.extra as String? ?? '';
+                      return SearchResultPage(searchKeyword: searchKeyword);
+                    },
+                  ),
                 ],
               ),
+              // 검색 결과 페이지
             ],
           ),
         ],

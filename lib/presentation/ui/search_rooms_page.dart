@@ -232,10 +232,9 @@ class _SearchRoomsPageState extends State<SearchRoomsPage> {
                           itemBuilder: (context, index) {
                             final classroom = classrooms[index];
                             final isSelected = selectedClassroom == classroom;
-                            return CategoryItem(
+                            return CategoryItemRooms(
                               name: classroom,
                               isSelected: isSelected,
-                              onTap: () => _onClassroomSelected(classroom),
                             );
                           },
                         ),

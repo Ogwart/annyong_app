@@ -120,7 +120,9 @@ class SearchFacilitiesTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        context.go('/home/search/searchResult', extra: title);
+      },
       child: Container(
         alignment: Alignment.center,
         width: 112,
