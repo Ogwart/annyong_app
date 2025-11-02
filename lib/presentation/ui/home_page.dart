@@ -40,7 +40,9 @@ class HomePage extends StatelessWidget {
                       const SizedBox(width: 12),
                       // ------------------시설물 검색 버튼------------------
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          context.go('/home/search');
+                        },
                         child: Container(
                           width: 200,
                           height: 50,
@@ -63,7 +65,9 @@ class HomePage extends StatelessWidget {
                       const SizedBox(width: 12),
                       // ------------------길찾기 버튼------------------
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          //context.go('/home/search');
+                        },
                         child: Container(
                           width: 80,
                           height: 50,

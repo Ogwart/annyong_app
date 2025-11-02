@@ -1,6 +1,8 @@
 import 'package:annyong/presentation/ui/bookmark_page.dart';
 import 'package:annyong/presentation/ui/home_page.dart';
 import 'package:annyong/presentation/ui/menu_page.dart';
+import 'package:annyong/presentation/ui/search_page.dart';
+import 'package:annyong/presentation/ui/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +23,7 @@ class AppRouter {
             path: "/home",
             builder: (context, state) => HomePage(),
             routes: [
+              // 메뉴 관련 페이지
               GoRoute(
                 path: "menu",
                 builder: (context, state) => MenuPage(),
@@ -32,6 +35,17 @@ class AppRouter {
                   GoRoute(
                     path: "settings",
                     builder: (context, state) => SettingsPage(),
+                  ),
+                ],
+              ),
+              // 검색 관련 페이지
+              GoRoute(
+                path: "search",
+                builder: (context, state) => SearchPage(),
+                routes: [
+                  GoRoute(
+                    path: "searchRooms",
+                    builder: (context, state) => SearchRoomsPage(),
                   ),
                 ],
               ),
