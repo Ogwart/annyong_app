@@ -1,3 +1,5 @@
+import 'package:annyong/domain/entity/poi_category.dart';
+import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/search_page/search_facilities_tile.dart';
 import 'package:annyong/presentation/widgets/search_page/search_rooms_tile.dart';
@@ -6,25 +8,71 @@ import 'package:go_router/go_router.dart';
 
 enum SearchMode { normal, departure, destination }
 
-class SearchPage extends StatelessWidget {
+class SearchPage extends StatefulWidget {
   final SearchMode? searchMode;
   final bool returnResult;
 
   const SearchPage({super.key, this.searchMode, this.returnResult = false});
 
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
   static const _sectionTitleStyle = TextStyle(
     fontWeight: FontWeight.w700,
     fontSize: 16,
   );
 
+  final PoiRepository _poiRepository = PoiRepository();
+  List<PoiCategory> _categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await _poiRepository.fetchCategories();
+      setState(() {
+        _categories = categories;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // 공간 카테고리만 필터링 (id가 1, 2, 3인 카테고리)
+  List<PoiCategory> _getRoomCategories() {
+    return _categories.where((c) => c.id <= 3).toList();
+  }
+
+  // 시설물 카테고리만 필터링 (id가 4 이상인 카테고리)
+  List<PoiCategory> _getFacilityCategories() {
+    return _categories.where((c) => c.id > 3).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final roomCategories = _getRoomCategories();
+    final facilityCategories = _getFacilityCategories();
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text("시설물 검색", style: TextStyle(fontSize: 24)),
         leading: Padding(
-          padding: const EdgeInsetsGeometry.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back_ios),
@@ -41,7 +89,7 @@ class SearchPage extends StatelessWidget {
             const SizedBox(height: 12),
             SizedBox(
               height: 150,
-              child: GridView(
+              child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -50,29 +98,23 @@ class SearchPage extends StatelessWidget {
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
-                children: [
-                  SearchRoomsTile(
-                    title: '강의실',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchRoomsTile(
-                    title: '라운지\n교내 카페',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchRoomsTile(
-                    title: '사무실',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                ],
+                itemCount: roomCategories.length,
+                itemBuilder: (context, index) {
+                  final category = roomCategories[index];
+                  return SearchRoomsTile(
+                    title: category.name,
+                    categoryId: category.id,
+                    searchMode: widget.searchMode,
+                    returnResult: widget.returnResult,
+                  );
+                },
               ),
             ),
+            const SizedBox(height: 20),
             const Text('시설물', style: _sectionTitleStyle),
             const SizedBox(height: 12),
             Flexible(
-              child: GridView(
+              child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -81,53 +123,15 @@ class SearchPage extends StatelessWidget {
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
-                children: [
-                  SearchFacilitiesTile(
-                    title: '엘리베이터\n계단',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '화장실',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '출입문',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '자판기',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '정수기',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: 'ATM\n제세동기',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '콘센트',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '소화기',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                  SearchFacilitiesTile(
-                    title: '쓰레기통',
-                    searchMode: searchMode,
-                    returnResult: returnResult,
-                  ),
-                ],
+                itemCount: facilityCategories.length,
+                itemBuilder: (context, index) {
+                  final category = facilityCategories[index];
+                  return SearchFacilitiesTile(
+                    title: category.name,
+                    searchMode: widget.searchMode,
+                    returnResult: widget.returnResult,
+                  );
+                },
               ),
             ),
           ],
