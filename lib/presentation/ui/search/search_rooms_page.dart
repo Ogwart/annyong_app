@@ -126,7 +126,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
     if (widget.returnResult) {
       final result = await context.push<String>(
-        '/home/search/searchResult',
+        '/home/navi',
         extra: {
           'title': classroom,
           'searchMode': widget.searchMode,
@@ -149,10 +149,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     } else if (widget.searchMode == SearchMode.destination) {
       pathProvider.setDestination(classroom.name);
     } else {
-      // 기본 모드: 목적지로 설정하고 path_selection으로 이동
+      // 기본 모드: 목적지로 설정하고 navi으로 이동
       pathProvider.setDestination(classroom.name);
     }
-    context.go("/home/pathSelection");
+    context.go("/home/navi");
   }
 
   @override

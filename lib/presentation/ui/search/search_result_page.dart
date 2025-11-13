@@ -73,7 +73,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
       pathProvider.setDestination(poi.name);
     } else {
       pathProvider.setDestination(poi.name);
-      context.go('/home/pathSelection');
+      context.go('/home/navi');
       return;
     }
     context.pop();
