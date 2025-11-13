@@ -134,6 +134,11 @@ flutter:
     - assets/map/8_1F/3/13/
     - assets/icons/
 
+    # - assets/poi/
+    - assets/poi/building.json
+    - assets/poi/poi_category.json
+    - assets/poi/poi.json
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
