@@ -13,8 +13,10 @@ class SearchResultProvider extends ChangeNotifier {
   }
 
   void setSelectedFloor(String floor) {
-    _selectedFloor = floor;
-    notifyListeners();
+    if (_selectedFloor != floor) {
+      _selectedFloor = floor;
+      notifyListeners();
+    }
   }
 }
 
