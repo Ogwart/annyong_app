@@ -9,11 +9,13 @@ class SearchRoomsTile extends StatelessWidget {
     required this.title,
     this.searchMode,
     this.returnResult = false,
+    required this.categoryId,
   });
 
   final String title;
   final SearchMode? searchMode;
   final bool returnResult;
+  final int categoryId;
 
   static const _textStyle = TextStyle(
     fontSize: 15,
@@ -31,6 +33,7 @@ class SearchRoomsTile extends StatelessWidget {
             'title': title,
             'searchMode': searchMode,
             'returnResult': returnResult,
+            'categoryId': categoryId,
           },
         );
         if (returnResult && result != null) {
