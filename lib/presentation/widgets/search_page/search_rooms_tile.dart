@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class SearchRoomsTile extends StatelessWidget {
-  const SearchRoomsTile({super.key, required this.title, this.searchMode});
+  const SearchRoomsTile({
+    super.key,
+    required this.title,
+    this.searchMode,
+    this.returnResult = false,
+  });
 
   final String title;
   final SearchMode? searchMode;
+  final bool returnResult;
 
   static const _textStyle = TextStyle(
     fontSize: 15,
@@ -18,11 +24,18 @@ class SearchRoomsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        context.push(
+      onTap: () async {
+        final result = await context.push<String>(
           '/home/search/searchRooms',
-          extra: {'title': title, 'searchMode': searchMode},
+          extra: {
+            'title': title,
+            'searchMode': searchMode,
+            'returnResult': returnResult,
+          },
         );
+        if (returnResult && result != null) {
+          context.pop(result);
+        }
       },
       child: Container(
         alignment: Alignment.center,

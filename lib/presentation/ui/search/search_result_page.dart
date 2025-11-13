@@ -12,11 +12,13 @@ import 'package:provider/provider.dart';
 class SearchResultPage extends ConsumerStatefulWidget {
   final String searchKeyword;
   final SearchMode? searchMode;
+  final bool returnResult;
 
   const SearchResultPage({
     super.key,
     required this.searchKeyword,
     this.searchMode,
+    this.returnResult = false,
   });
 
   @override
@@ -66,7 +68,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           padding: const EdgeInsets.all(16.0),
                           child: IconButton(
                             onPressed: () => context.pop(),
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.arrow_back_ios,
                               color: AppColors.text,
                               size: 24,
@@ -93,7 +95,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                 ),
                               ],
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.navigation,
                               color: Colors.white,
                               size: 24,
@@ -171,9 +173,13 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           title: result['title']!,
                           description: result['description']!,
                           onSelect: () {
-                            final pathProvider = ref.read(
-                              pathSelectionProvider.notifier,
-                            );
+                            if (widget.returnResult) {
+                              context.pop(result['title']!);
+                              return;
+                            }
+
+                            final pathProvider =
+                                ref.read(pathSelectionProvider.notifier);
                             if (widget.searchMode == SearchMode.departure) {
                               pathProvider.setDeparture(result['title']);
                             } else if (widget.searchMode ==

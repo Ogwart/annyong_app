@@ -4,6 +4,7 @@ import 'package:annyong/presentation/ui/measure/measure_result_page.dart';
 import 'package:annyong/presentation/ui/menu/bookmark_page.dart';
 import 'package:annyong/presentation/ui/home/home_page.dart';
 import 'package:annyong/presentation/ui/menu/menu_page.dart';
+import 'package:annyong/presentation/ui/navi_page.dart';
 import 'package:annyong/presentation/ui/path/path_selection_page.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/ui/search/search_result_page.dart';
@@ -61,46 +62,77 @@ class AppRouter {
                 path: "search",
                 builder: (context, state) {
                   SearchMode? searchMode;
+                  bool returnResult = false;
                   final extra = state.extra;
                   if (extra is SearchMode) {
                     searchMode = extra;
                   } else if (extra is Map) {
-                    // Map에서 searchMode 추출 시도
                     final searchModeValue = extra['searchMode'];
                     if (searchModeValue is SearchMode) {
                       searchMode = searchModeValue;
                     }
+                    final returnResultValue = extra['returnResult'];
+                    if (returnResultValue is bool) {
+                      returnResult = returnResultValue;
+                    }
                   }
-                  return SearchPage(searchMode: searchMode);
+                  return SearchPage(
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  );
                 },
                 routes: [
                   GoRoute(
                     path: "searchRooms",
                     builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final searchType = extra?['title'] as String? ?? '';
-                      final searchModeValue = extra?['searchMode'];
-                      final searchMode = searchModeValue is SearchMode
-                          ? searchModeValue
-                          : null;
+                      final extra = state.extra;
+                      String searchType = '';
+                      SearchMode? searchMode;
+                      bool returnResult = false;
+                      if (extra is Map<String, dynamic>) {
+                        searchType = extra['title'] as String? ?? '';
+                        final searchModeValue = extra['searchMode'];
+                        if (searchModeValue is SearchMode) {
+                          searchMode = searchModeValue;
+                        }
+                        final returnResultValue = extra['returnResult'];
+                        if (returnResultValue is bool) {
+                          returnResult = returnResultValue;
+                        }
+                      } else if (extra is String) {
+                        searchType = extra;
+                      }
                       return SearchRoomsPage(
                         searchType: searchType,
                         searchMode: searchMode,
+                        returnResult: returnResult,
                       );
                     },
                   ),
                   GoRoute(
                     path: "searchResult",
                     builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final searchKeyword = extra?['title'] as String? ?? '';
-                      final searchModeValue = extra?['searchMode'];
-                      final searchMode = searchModeValue is SearchMode
-                          ? searchModeValue
-                          : null;
+                      final extra = state.extra;
+                      String searchKeyword = '';
+                      SearchMode? searchMode;
+                      bool returnResult = false;
+                      if (extra is Map<String, dynamic>) {
+                        searchKeyword = extra['title'] as String? ?? '';
+                        final searchModeValue = extra['searchMode'];
+                        if (searchModeValue is SearchMode) {
+                          searchMode = searchModeValue;
+                        }
+                        final returnResultValue = extra['returnResult'];
+                        if (returnResultValue is bool) {
+                          returnResult = returnResultValue;
+                        }
+                      } else if (extra is String) {
+                        searchKeyword = extra;
+                      }
                       return SearchResultPage(
                         searchKeyword: searchKeyword,
                         searchMode: searchMode,
+                        returnResult: returnResult,
                       );
                     },
                   ),
@@ -110,6 +142,10 @@ class AppRouter {
               GoRoute(
                 path: "pathSelection",
                 builder: (context, state) => PathSelectionPage(),
+              ),
+              GoRoute(
+                path: "navi",
+                builder: (context, state) => const NaviPage(),
               ),
             ],
           ),

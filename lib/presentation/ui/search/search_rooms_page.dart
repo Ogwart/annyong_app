@@ -9,8 +9,14 @@ import 'package:go_router/go_router.dart';
 class SearchRoomsPage extends ConsumerStatefulWidget {
   final String searchType;
   final SearchMode? searchMode;
+  final bool returnResult;
 
-  const SearchRoomsPage({super.key, required this.searchType, this.searchMode});
+  const SearchRoomsPage({
+    super.key,
+    required this.searchType,
+    this.searchMode,
+    this.returnResult = false,
+  });
 
   @override
   ConsumerState<SearchRoomsPage> createState() => _SearchRoomsPageState();
@@ -87,11 +93,28 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     });
   }
 
-  // TODO: 호수 선택 어떻게 할 건지 회의하고 함수 사용처 결정
-  void _onClassroomSelected(String classroom) {
+  Future<void> _onClassroomSelected(String classroom) async {
     setState(() {
       selectedClassroom = classroom;
     });
+
+    if (widget.returnResult) {
+      final result = await context.push<String>(
+        '/home/search/searchResult',
+        extra: {
+          'title': classroom,
+          'searchMode': widget.searchMode,
+          'returnResult': true,
+        },
+      );
+
+      if (!mounted) return;
+
+      if (result != null) {
+        context.pop(result);
+      }
+      return;
+    }
 
     // 선택한 강의실을 출발지/목적지로 설정
     final pathProvider = ref.read(pathSelectionProvider.notifier);

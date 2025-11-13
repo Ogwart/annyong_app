@@ -8,8 +8,9 @@ enum SearchMode { normal, departure, destination }
 
 class SearchPage extends StatelessWidget {
   final SearchMode? searchMode;
+  final bool returnResult;
 
-  const SearchPage({super.key, this.searchMode});
+  const SearchPage({super.key, this.searchMode, this.returnResult = false});
 
   static const _sectionTitleStyle = TextStyle(
     fontWeight: FontWeight.w700,
@@ -50,9 +51,21 @@ class SearchPage extends StatelessWidget {
                   crossAxisSpacing: 12,
                 ),
                 children: [
-                  SearchRoomsTile(title: '강의실', searchMode: searchMode),
-                  SearchRoomsTile(title: '라운지\n교내 카페', searchMode: searchMode),
-                  SearchRoomsTile(title: '사무실', searchMode: searchMode),
+                  SearchRoomsTile(
+                    title: '강의실',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchRoomsTile(
+                    title: '라운지\n교내 카페',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchRoomsTile(
+                    title: '사무실',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
                 ],
               ),
             ),
@@ -72,18 +85,48 @@ class SearchPage extends StatelessWidget {
                   SearchFacilitiesTile(
                     title: '엘리베이터\n계단',
                     searchMode: searchMode,
+                    returnResult: returnResult,
                   ),
-                  SearchFacilitiesTile(title: '화장실', searchMode: searchMode),
-                  SearchFacilitiesTile(title: '출입문', searchMode: searchMode),
-                  SearchFacilitiesTile(title: '자판기', searchMode: searchMode),
-                  SearchFacilitiesTile(title: '정수기', searchMode: searchMode),
+                  SearchFacilitiesTile(
+                    title: '화장실',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchFacilitiesTile(
+                    title: '출입문',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchFacilitiesTile(
+                    title: '자판기',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchFacilitiesTile(
+                    title: '정수기',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
                   SearchFacilitiesTile(
                     title: 'ATM\n제세동기',
                     searchMode: searchMode,
+                    returnResult: returnResult,
                   ),
-                  SearchFacilitiesTile(title: '콘센트', searchMode: searchMode),
-                  SearchFacilitiesTile(title: '소화기', searchMode: searchMode),
-                  SearchFacilitiesTile(title: '쓰레기통', searchMode: searchMode),
+                  SearchFacilitiesTile(
+                    title: '콘센트',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchFacilitiesTile(
+                    title: '소화기',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
+                  SearchFacilitiesTile(
+                    title: '쓰레기통',
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  ),
                 ],
               ),
             ),
