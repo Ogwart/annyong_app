@@ -1,5 +1,4 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
-import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/widgets/navi_add_waypoint_button.dart';
 import 'package:annyong/presentation/widgets/navi_location_input_tile.dart';
 import 'package:annyong/presentation/widgets/navi_map_preview.dart';
@@ -101,10 +100,7 @@ class _NaviPageState extends State<NaviPage> {
                       ),
                       trailing: IconButton(
                         onPressed: () => _removeWaypoint(i),
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: AppColors.text,
-                        ),
+                        icon: Icon(Icons.delete_outline, color: AppColors.text),
                       ),
                     ),
                     const SizedBox(height: 12),
