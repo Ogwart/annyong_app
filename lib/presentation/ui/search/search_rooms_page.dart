@@ -86,7 +86,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
   void _onBuildingSelected(Building building) {
     setState(() {
-      debugPrint('선택된 건물: ${building.toString()}');
+      debugPrint('선택된 건물: ${building.name}');
       selectedBuilding = building.name;
       selectedBuildingId = building.id;
       selectedFloor = null;

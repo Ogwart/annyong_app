@@ -9,7 +9,7 @@ class Building {
   factory Building.fromJson(Map<String, dynamic> json) {
     return Building(
       id: json['building_id'] as int,
-      name: json['buidling_name'] as String? ?? '',
+      name: json['building_name'] as String? ?? '',
     );
   }
 }
