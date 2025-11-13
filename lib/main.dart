@@ -1,10 +1,12 @@
+import 'package:annyong/presentation/providers/home_page_map_provider.dart';
 import 'package:annyong/presentation/providers/search_result_provider.dart';
 import 'package:annyong/presentation/router/router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -16,6 +18,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SearchResultProvider()),
+        ChangeNotifierProvider(create: (_) => HomePageMapProvider()),
       ],
       child: MaterialApp.router(
         theme: ThemeData(

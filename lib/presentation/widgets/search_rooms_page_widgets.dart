@@ -1,6 +1,5 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SelectedCategoryFlag extends StatelessWidget {
   const SelectedCategoryFlag({super.key});
@@ -88,19 +87,19 @@ class CategoryItem extends StatelessWidget {
 class CategoryItemRooms extends StatelessWidget {
   final String name;
   final bool isSelected;
+  final VoidCallback? onTap;
 
   const CategoryItemRooms({
     super.key,
     required this.name,
     required this.isSelected,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        context.go('/home/search/searchResult', extra: name);
-      },
+      onTap: onTap,
       child: Container(
         color: isSelected ? AppColors.primary : Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
