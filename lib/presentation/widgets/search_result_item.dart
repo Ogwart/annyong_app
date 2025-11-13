@@ -5,12 +5,14 @@ class SearchResultItem extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback onSelect;
+  final int categoryId;
 
   const SearchResultItem({
     super.key,
     required this.title,
     required this.description,
     required this.onSelect,
+    required this.categoryId,
   });
 
   @override

@@ -128,6 +128,7 @@ class _SearchPageState extends State<SearchPage> {
                   final category = facilityCategories[index];
                   return SearchFacilitiesTile(
                     title: category.name,
+                    categoryId: category.id,
                     searchMode: widget.searchMode,
                     returnResult: widget.returnResult,
                   );

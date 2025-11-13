@@ -120,6 +120,11 @@ class AppRouter {
                     builder: (context, state) {
                       final extra = state.extra;
                       String searchKeyword = '';
+                      final int categoryId =
+                          extra is Map<String, dynamic> &&
+                              extra['categoryId'] is int
+                          ? extra['categoryId'] as int
+                          : 0;
                       SearchMode? searchMode;
                       bool returnResult = false;
                       if (extra is Map<String, dynamic>) {
@@ -137,6 +142,7 @@ class AppRouter {
                       }
                       return SearchResultPage(
                         searchKeyword: searchKeyword,
+                        categoryId: categoryId,
                         searchMode: searchMode,
                         returnResult: returnResult,
                       );
