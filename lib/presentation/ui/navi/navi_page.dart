@@ -141,15 +141,8 @@ class _NaviPageState extends State<NaviPage> {
                     },
                   ),
                   NaviFloorButtonData(
-                    floor: '1F',
+                    floor: '2F',
                     isSelected: true,
-                    onTap: () {
-                      // TODO: 층 전환 로직 연동
-                    },
-                  ),
-                  NaviFloorButtonData(
-                    floor: 'B1',
-                    isSelected: false,
                     onTap: () {
                       // TODO: 층 전환 로직 연동
                     },
