@@ -61,11 +61,13 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
 
   // POI 선택 처리 핸들러
   void _handlePoiSelect(Poi poi) {
+    // 결과 반환 모드인 경우 선택한 POI 이름 반환
     if (widget.returnResult) {
       context.pop(poi.name);
       return;
     }
 
+    // 선택한 강의실을 출발지/목적지로 설정
     final pathProvider = ref.read(pathSelectionProvider.notifier);
     if (widget.searchMode == SearchMode.departure) {
       pathProvider.setDeparture(poi.name);
@@ -76,7 +78,6 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
       context.go('/home/navi');
       return;
     }
-    context.pop();
   }
 
   @override

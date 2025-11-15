@@ -124,21 +124,9 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
       selectedClassroom = classroom.name;
     });
 
+    // 결과 반환 모드인 경우 선택한 강의실 이름 반환
     if (widget.returnResult) {
-      final result = await context.push<String>(
-        '/home/navi',
-        extra: {
-          'title': classroom,
-          'searchMode': widget.searchMode,
-          'returnResult': true,
-        },
-      );
-
-      if (!mounted) return;
-
-      if (result != null) {
-        context.pop(result);
-      }
+      context.pop(classroom.name);
       return;
     }
 
