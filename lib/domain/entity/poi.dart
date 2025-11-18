@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class Poi {
   final int id;
   final String name;
@@ -7,7 +9,7 @@ class Poi {
   final int floor;
   final double xCoord;
   final double yCoord;
-  final String? vertex;
+  final int? vertexId;
 
   const Poi({
     required this.id,
@@ -18,7 +20,7 @@ class Poi {
     required this.floor,
     required this.xCoord,
     required this.yCoord,
-    required this.vertex,
+    required this.vertexId,
   });
 
   factory Poi.fromJson(Map<String, dynamic> json) {
@@ -31,8 +33,7 @@ class Poi {
       floor: json['floor'] as int? ?? 0,
       xCoord: (json['x_coord'] as num?)?.toDouble() ?? 0,
       yCoord: (json['y_coord'] as num?)?.toDouble() ?? 0,
-      vertex: json['vertex'] as String?,
+      vertexId: json['vertex_id'] as int,
     );
   }
 }
-

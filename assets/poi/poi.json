@@ -8,7 +8,7 @@
     "floor": 1,
     "x_coord": 250,
     "y_coord": 103,
-    "vertex": "3.5W1층 시설물"
+    "vertex_id": 3
   },
   {
     "poi_id": 2,
@@ -19,7 +19,7 @@
     "floor": 1,
     "x_coord": 269,
     "y_coord": 116,
-    "vertex": "2"
+    "vertex_id": 2
   },
   {
     "poi_id": 3,
@@ -30,7 +30,7 @@
     "floor": 1,
     "x_coord": 332,
     "y_coord": 124,
-    "vertex": "1"
+    "vertex_id": 1
   },
   {
     "poi_id": 4,
@@ -41,7 +41,7 @@
     "floor": 1,
     "x_coord": 207,
     "y_coord": 376,
-    "vertex": "4.5W1층 공간"
+    "vertex_id": 4
   },
   {
     "poi_id": 5,
@@ -52,7 +52,7 @@
     "floor": 1,
     "x_coord": 135,
     "y_coord": 662,
-    "vertex": "85 5S1층 시설물"
+    "vertex_id": 85
   },
   {
     "poi_id": 6,
@@ -63,7 +63,7 @@
     "floor": 1,
     "x_coord": 196,
     "y_coord": 655,
-    "vertex": "6"
+    "vertex_id": 6
   },
   {
     "poi_id": 7,
@@ -74,7 +74,7 @@
     "floor": 1,
     "x_coord": 175,
     "y_coord": 691,
-    "vertex": "85"
+    "vertex_id": 85
   },
   {
     "poi_id": 8,
@@ -85,7 +85,7 @@
     "floor": 1,
     "x_coord": 240,
     "y_coord": 709,
-    "vertex": "85"
+    "vertex_id": 85
   },
   {
     "poi_id": 9,
@@ -96,7 +96,7 @@
     "floor": 1,
     "x_coord": 240,
     "y_coord": 724,
-    "vertex": "85"
+    "vertex_id": 85
   },
   {
     "poi_id": 10,
@@ -107,7 +107,7 @@
     "floor": 1,
     "x_coord": 488,
     "y_coord": 763,
-    "vertex": "12"
+    "vertex_id": 12
   },
   {
     "poi_id": 11,
@@ -118,7 +118,7 @@
     "floor": 1,
     "x_coord": 503,
     "y_coord": 763,
-    "vertex": "12"
+    "vertex_id": 12
   },
   {
     "poi_id": 12,
@@ -129,7 +129,7 @@
     "floor": 1,
     "x_coord": 555,
     "y_coord": 794,
-    "vertex": "15"
+    "vertex_id": 15
   },
   {
     "poi_id": 13,
@@ -140,7 +140,7 @@
     "floor": 1,
     "x_coord": 617,
     "y_coord": 794,
-    "vertex": "16"
+    "vertex_id": 16
   },
   {
     "poi_id": 14,
@@ -151,7 +151,7 @@
     "floor": 1,
     "x_coord": 621,
     "y_coord": 771,
-    "vertex": "16"
+    "vertex_id": 16
   },
   {
     "poi_id": 15,
@@ -162,7 +162,7 @@
     "floor": 1,
     "x_coord": 634,
     "y_coord": 739,
-    "vertex": "14"
+    "vertex_id": 14
   },
   {
     "poi_id": 16,
@@ -173,7 +173,7 @@
     "floor": 1,
     "x_coord": 687,
     "y_coord": 811,
-    "vertex": "18"
+    "vertex_id": 18
   },
   {
     "poi_id": 17,
@@ -184,7 +184,7 @@
     "floor": 1,
     "x_coord": 744,
     "y_coord": 751,
-    "vertex": "21"
+    "vertex_id": 21
   },
   {
     "poi_id": 18,
@@ -195,7 +195,7 @@
     "floor": 1,
     "x_coord": 1054,
     "y_coord": 741,
-    "vertex": "35"
+    "vertex_id": 35
   },
   {
     "poi_id": 19,
@@ -206,7 +206,7 @@
     "floor": 1,
     "x_coord": 1085,
     "y_coord": 725,
-    "vertex": "34"
+    "vertex_id": 34
   },
   {
     "poi_id": 20,
@@ -217,7 +217,7 @@
     "floor": 1,
     "x_coord": 1085,
     "y_coord": 711,
-    "vertex": "34"
+    "vertex_id": 34
   },
   {
     "poi_id": 21,
@@ -228,7 +228,7 @@
     "floor": 1,
     "x_coord": 1090,
     "y_coord": 687,
-    "vertex": "44"
+    "vertex_id": 44
   },
   {
     "poi_id": 22,
@@ -239,7 +239,7 @@
     "floor": 1,
     "x_coord": 1143,
     "y_coord": 708,
-    "vertex": "63"
+    "vertex_id": 63
   },
   {
     "poi_id": 23,
@@ -250,7 +250,7 @@
     "floor": 1,
     "x_coord": 1197,
     "y_coord": 708,
-    "vertex": "64"
+    "vertex_id": 64
   },
   {
     "poi_id": 24,
@@ -261,7 +261,7 @@
     "floor": 1,
     "x_coord": 1251,
     "y_coord": 708,
-    "vertex": "65"
+    "vertex_id": 65
   },
   {
     "poi_id": 25,
@@ -272,7 +272,7 @@
     "floor": 1,
     "x_coord": 1286,
     "y_coord": 687,
-    "vertex": "66"
+    "vertex_id": 66
   },
   {
     "poi_id": 26,
@@ -283,7 +283,7 @@
     "floor": 1,
     "x_coord": 1310,
     "y_coord": 710,
-    "vertex": "67"
+    "vertex_id": 67
   },
   {
     "poi_id": 27,
@@ -294,7 +294,7 @@
     "floor": 1,
     "x_coord": 1347,
     "y_coord": 710,
-    "vertex": "68"
+    "vertex_id": 68
   },
   {
     "poi_id": 28,
@@ -305,7 +305,7 @@
     "floor": 1,
     "x_coord": 1353,
     "y_coord": 741,
-    "vertex": "86"
+    "vertex_id": 86
   },
   {
     "poi_id": 29,
@@ -316,7 +316,7 @@
     "floor": 1,
     "x_coord": 1368,
     "y_coord": 730,
-    "vertex": "87"
+    "vertex_id": 87
   },
   {
     "poi_id": 30,
@@ -327,7 +327,7 @@
     "floor": 1,
     "x_coord": 1490,
     "y_coord": 712,
-    "vertex": "71"
+    "vertex_id": 71
   },
   {
     "poi_id": 31,
@@ -338,7 +338,7 @@
     "floor": 1,
     "x_coord": 1574,
     "y_coord": 740,
-    "vertex": "77"
+    "vertex_id": 77
   },
   {
     "poi_id": 32,
@@ -349,7 +349,7 @@
     "floor": 1,
     "x_coord": 1452,
     "y_coord": 627,
-    "vertex": "83"
+    "vertex_id": 83
   },
   {
     "poi_id": 33,
@@ -360,7 +360,7 @@
     "floor": 1,
     "x_coord": 1557,
     "y_coord": 627,
-    "vertex": "83"
+    "vertex_id": 83
   },
   {
     "poi_id": 34,
@@ -371,7 +371,7 @@
     "floor": 1,
     "x_coord": 1633,
     "y_coord": 622,
-    "vertex": "81"
+    "vertex_id": 81
   },
   {
     "poi_id": 35,
@@ -382,7 +382,7 @@
     "floor": 1,
     "x_coord": 1678,
     "y_coord": 622,
-    "vertex": "81"
+    "vertex_id": 81
   },
   {
     "poi_id": 36,
@@ -393,7 +393,7 @@
     "floor": 1,
     "x_coord": 1686,
     "y_coord": 658,
-    "vertex": "80"
+    "vertex_id": 80
   },
   {
     "poi_id": 37,
@@ -404,7 +404,7 @@
     "floor": 1,
     "x_coord": 1647,
     "y_coord": 749,
-    "vertex": "78"
+    "vertex_id": 78
   },
   {
     "poi_id": 38,
@@ -415,7 +415,7 @@
     "floor": 1,
     "x_coord": 1625,
     "y_coord": 780,
-    "vertex": "56"
+    "vertex_id": 56
   },
   {
     "poi_id": 39,
@@ -426,7 +426,7 @@
     "floor": 1,
     "x_coord": 1492,
     "y_coord": 780,
-    "vertex": "53"
+    "vertex_id": 53
   },
   {
     "poi_id": 40,
@@ -437,7 +437,7 @@
     "floor": 1,
     "x_coord": 1477,
     "y_coord": 780,
-    "vertex": "53"
+    "vertex_id": 53
   },
   {
     "poi_id": 41,
@@ -448,7 +448,7 @@
     "floor": 1,
     "x_coord": 1287,
     "y_coord": 780,
-    "vertex": "48"
+    "vertex_id": 48
   },
   {
     "poi_id": 42,
@@ -459,7 +459,7 @@
     "floor": 1,
     "x_coord": 1270,
     "y_coord": 780,
-    "vertex": "48"
+    "vertex_id": 48
   },
   {
     "poi_id": 43,
@@ -470,7 +470,7 @@
     "floor": 1,
     "x_coord": 1270,
     "y_coord": 813,
-    "vertex": "59"
+    "vertex_id": 59
   },
   {
     "poi_id": 44,
@@ -481,7 +481,7 @@
     "floor": 1,
     "x_coord": 1248,
     "y_coord": 813,
-    "vertex": "59"
+    "vertex_id": 59
   },
   {
     "poi_id": 45,
@@ -492,7 +492,7 @@
     "floor": 1,
     "x_coord": 1143,
     "y_coord": 813,
-    "vertex": "57"
+    "vertex_id": 57
   },
   {
     "poi_id": 46,
@@ -503,7 +503,7 @@
     "floor": 1,
     "x_coord": 1122,
     "y_coord": 813,
-    "vertex": "57"
+    "vertex_id": 57
   },
   {
     "poi_id": 47,
@@ -514,7 +514,7 @@
     "floor": 1,
     "x_coord": 1120,
     "y_coord": 780,
-    "vertex": "44"
+    "vertex_id": 44
   },
   {
     "poi_id": 48,
@@ -525,7 +525,7 @@
     "floor": 1,
     "x_coord": 1129,
     "y_coord": 835,
-    "vertex": "60"
+    "vertex_id": 60
   },
   {
     "poi_id": 49,
@@ -536,7 +536,7 @@
     "floor": 1,
     "x_coord": 1165,
     "y_coord": 835,
-    "vertex": "60"
+    "vertex_id": 60
   },
   {
     "poi_id": 50,
@@ -547,7 +547,7 @@
     "floor": 1,
     "x_coord": 1197,
     "y_coord": 856,
-    "vertex": "61"
+    "vertex_id": 61
   },
   {
     "poi_id": 51,
@@ -558,7 +558,7 @@
     "floor": 1,
     "x_coord": 207,
     "y_coord": 589,
-    "vertex": "5"
+    "vertex_id": 5
   },
   {
     "poi_id": 52,
@@ -569,7 +569,7 @@
     "floor": 1,
     "x_coord": 654,
     "y_coord": 858,
-    "vertex": "18"
+    "vertex_id": 18
   },
   {
     "poi_id": 53,
@@ -580,7 +580,7 @@
     "floor": 1,
     "x_coord": 127,
     "y_coord": 705,
-    "vertex": "85 5S1층 공간"
+    "vertex_id": 85
   },
   {
     "poi_id": 54,
@@ -591,7 +591,7 @@
     "floor": 1,
     "x_coord": 127,
     "y_coord": 749,
-    "vertex": "8"
+    "vertex_id": 8
   },
   {
     "poi_id": 55,
@@ -602,7 +602,7 @@
     "floor": 1,
     "x_coord": 135,
     "y_coord": 810,
-    "vertex": "8"
+    "vertex_id": 8
   },
   {
     "poi_id": 56,
@@ -613,7 +613,7 @@
     "floor": 1,
     "x_coord": 247,
     "y_coord": 810,
-    "vertex": "8"
+    "vertex_id": 8
   },
   {
     "poi_id": 57,
@@ -624,7 +624,7 @@
     "floor": 1,
     "x_coord": 372,
     "y_coord": 810,
-    "vertex": "10"
+    "vertex_id": 10
   },
   {
     "poi_id": 58,
@@ -635,7 +635,7 @@
     "floor": 1,
     "x_coord": 478,
     "y_coord": 810,
-    "vertex": "12"
+    "vertex_id": 12
   },
   {
     "poi_id": 59,
@@ -646,7 +646,7 @@
     "floor": 1,
     "x_coord": 567,
     "y_coord": 833,
-    "vertex": "15"
+    "vertex_id": 15
   },
   {
     "poi_id": 60,
@@ -657,7 +657,7 @@
     "floor": 1,
     "x_coord": 782,
     "y_coord": 819,
-    "vertex": "43"
+    "vertex_id": 43
   },
   {
     "poi_id": 61,
@@ -668,7 +668,7 @@
     "floor": 1,
     "x_coord": 818,
     "y_coord": 819,
-    "vertex": "42"
+    "vertex_id": 42
   },
   {
     "poi_id": 62,
@@ -679,7 +679,7 @@
     "floor": 1,
     "x_coord": 854,
     "y_coord": 819,
-    "vertex": "42"
+    "vertex_id": 42
   },
   {
     "poi_id": 63,
@@ -690,7 +690,7 @@
     "floor": 1,
     "x_coord": 890,
     "y_coord": 819,
-    "vertex": "41"
+    "vertex_id": 41
   },
   {
     "poi_id": 64,
@@ -701,7 +701,7 @@
     "floor": 1,
     "x_coord": 926,
     "y_coord": 819,
-    "vertex": "40"
+    "vertex_id": 40
   },
   {
     "poi_id": 65,
@@ -712,7 +712,7 @@
     "floor": 1,
     "x_coord": 962,
     "y_coord": 819,
-    "vertex": "39"
+    "vertex_id": 39
   },
   {
     "poi_id": 66,
@@ -723,7 +723,7 @@
     "floor": 1,
     "x_coord": 998,
     "y_coord": 819,
-    "vertex": "38"
+    "vertex_id": 38
   },
   {
     "poi_id": 67,
@@ -734,7 +734,7 @@
     "floor": 1,
     "x_coord": 1034,
     "y_coord": 819,
-    "vertex": "37"
+    "vertex_id": 37
   },
   {
     "poi_id": 68,
@@ -745,7 +745,7 @@
     "floor": 1,
     "x_coord": 1088,
     "y_coord": 819,
-    "vertex": "36"
+    "vertex_id": 36
   },
   {
     "poi_id": 69,
@@ -756,7 +756,7 @@
     "floor": 1,
     "x_coord": 1143,
     "y_coord": 872,
-    "vertex": "61"
+    "vertex_id": 61
   },
   {
     "poi_id": 70,
@@ -767,7 +767,7 @@
     "floor": 1,
     "x_coord": 1308,
     "y_coord": 819,
-    "vertex": "48"
+    "vertex_id": 48
   },
   {
     "poi_id": 71,
@@ -778,7 +778,7 @@
     "floor": 1,
     "x_coord": 1357,
     "y_coord": 819,
-    "vertex": "50"
+    "vertex_id": 50
   },
   {
     "poi_id": 72,
@@ -789,7 +789,7 @@
     "floor": 1,
     "x_coord": 1394,
     "y_coord": 819,
-    "vertex": "51"
+    "vertex_id": 51
   },
   {
     "poi_id": 73,
@@ -800,7 +800,7 @@
     "floor": 1,
     "x_coord": 1429,
     "y_coord": 819,
-    "vertex": "52"
+    "vertex_id": 52
   },
   {
     "poi_id": 74,
@@ -811,7 +811,7 @@
     "floor": 1,
     "x_coord": 1466,
     "y_coord": 819,
-    "vertex": "53"
+    "vertex_id": 53
   },
   {
     "poi_id": 75,
@@ -822,7 +822,7 @@
     "floor": 1,
     "x_coord": 1501,
     "y_coord": 819,
-    "vertex": "53"
+    "vertex_id": 53
   },
   {
     "poi_id": 76,
@@ -833,7 +833,7 @@
     "floor": 1,
     "x_coord": 1554,
     "y_coord": 819,
-    "vertex": "55"
+    "vertex_id": 55
   },
   {
     "poi_id": 77,
@@ -844,7 +844,7 @@
     "floor": 1,
     "x_coord": 1609,
     "y_coord": 819,
-    "vertex": "56"
+    "vertex_id": 56
   },
   {
     "poi_id": 78,
@@ -855,7 +855,7 @@
     "floor": 1,
     "x_coord": 1523,
     "y_coord": 675,
-    "vertex": "72"
+    "vertex_id": 72
   },
   {
     "poi_id": 79,
@@ -866,7 +866,7 @@
     "floor": 1,
     "x_coord": 1471,
     "y_coord": 675,
-    "vertex": "71"
+    "vertex_id": 71
   },
   {
     "poi_id": 80,
@@ -877,7 +877,7 @@
     "floor": 1,
     "x_coord": 1433,
     "y_coord": 675,
-    "vertex": "70"
+    "vertex_id": 70
   },
   {
     "poi_id": 81,
@@ -888,7 +888,7 @@
     "floor": 1,
     "x_coord": 1395,
     "y_coord": 675,
-    "vertex": "69"
+    "vertex_id": 69
   },
   {
     "poi_id": 82,
@@ -899,7 +899,7 @@
     "floor": 1,
     "x_coord": 1359,
     "y_coord": 675,
-    "vertex": "68"
+    "vertex_id": 68
   },
   {
     "poi_id": 83,
@@ -910,7 +910,7 @@
     "floor": 1,
     "x_coord": 1018,
     "y_coord": 675,
-    "vertex": "32"
+    "vertex_id": 32
   },
   {
     "poi_id": 84,
@@ -921,7 +921,7 @@
     "floor": 1,
     "x_coord": 964,
     "y_coord": 675,
-    "vertex": "31"
+    "vertex_id": 31
   },
   {
     "poi_id": 85,
@@ -932,7 +932,7 @@
     "floor": 1,
     "x_coord": 928,
     "y_coord": 675,
-    "vertex": "30"
+    "vertex_id": 30
   },
   {
     "poi_id": 86,
@@ -943,7 +943,7 @@
     "floor": 1,
     "x_coord": 892,
     "y_coord": 675,
-    "vertex": "29"
+    "vertex_id": 29
   },
   {
     "poi_id": 87,
@@ -954,7 +954,7 @@
     "floor": 1,
     "x_coord": 856,
     "y_coord": 675,
-    "vertex": "28"
+    "vertex_id": 28
   },
   {
     "poi_id": 88,
@@ -965,7 +965,7 @@
     "floor": 1,
     "x_coord": 820,
     "y_coord": 675,
-    "vertex": "24"
+    "vertex_id": 24
   },
   {
     "poi_id": 89,
@@ -976,7 +976,7 @@
     "floor": 1,
     "x_coord": 784,
     "y_coord": 675,
-    "vertex": "24"
+    "vertex_id": 24
   },
   {
     "poi_id": 90,
@@ -987,7 +987,7 @@
     "floor": 1,
     "x_coord": 730,
     "y_coord": 675,
-    "vertex": "25"
+    "vertex_id": 25
   },
   {
     "poi_id": 91,
@@ -998,7 +998,7 @@
     "floor": 1,
     "x_coord": 676,
     "y_coord": 675,
-    "vertex": "27"
+    "vertex_id": 27
   },
   {
     "poi_id": 92,
@@ -1009,7 +1009,7 @@
     "floor": 1,
     "x_coord": 533,
     "y_coord": 683,
-    "vertex": "13"
+    "vertex_id": 13
   },
   {
     "poi_id": 93,
@@ -1020,7 +1020,7 @@
     "floor": 1,
     "x_coord": 449,
     "y_coord": 683,
-    "vertex": "11"
+    "vertex_id": 11
   },
   {
     "poi_id": 94,
@@ -1031,7 +1031,7 @@
     "floor": 1,
     "x_coord": 425,
     "y_coord": 683,
-    "vertex": "11"
+    "vertex_id": 11
   },
   {
     "poi_id": 95,
@@ -1042,7 +1042,7 @@
     "floor": 1,
     "x_coord": 401,
     "y_coord": 683,
-    "vertex": "11"
+    "vertex_id": 11
   },
   {
     "poi_id": 96,
@@ -1053,7 +1053,7 @@
     "floor": 1,
     "x_coord": 318,
     "y_coord": 683,
-    "vertex": "9,10"
+    "vertex_id": 9
   },
   {
     "poi_id": 97,
@@ -1064,7 +1064,7 @@
     "floor": 2,
     "x_coord": 231,
     "y_coord": 99,
-    "vertex": "96 5W2층 시설물"
+    "vertex_id": 96
   },
   {
     "poi_id": 98,
@@ -1075,7 +1075,7 @@
     "floor": 2,
     "x_coord": 278,
     "y_coord": 132,
-    "vertex": "95"
+    "vertex_id": 95
   },
   {
     "poi_id": 99,
@@ -1086,7 +1086,7 @@
     "floor": 2,
     "x_coord": 197,
     "y_coord": 522,
-    "vertex": "106"
+    "vertex_id": 106
   },
   {
     "poi_id": 100,
@@ -1097,7 +1097,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 109,
-    "vertex": "96.5W2층 공간"
+    "vertex_id": 96
   },
   {
     "poi_id": 101,
@@ -1108,7 +1108,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 143,
-    "vertex": "96"
+    "vertex_id": 96
   },
   {
     "poi_id": 102,
@@ -1119,7 +1119,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 199,
-    "vertex": "97"
+    "vertex_id": 97
   },
   {
     "poi_id": 103,
@@ -1130,7 +1130,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 271,
-    "vertex": "99"
+    "vertex_id": 99
   },
   {
     "poi_id": 104,
@@ -1141,7 +1141,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 343,
-    "vertex": "101"
+    "vertex_id": 101
   },
   {
     "poi_id": 105,
@@ -1152,7 +1152,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 415,
-    "vertex": "103"
+    "vertex_id": 103
   },
   {
     "poi_id": 106,
@@ -1163,7 +1163,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 469,
-    "vertex": "104"
+    "vertex_id": 104
   },
   {
     "poi_id": 107,
@@ -1174,7 +1174,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 505,
-    "vertex": "105"
+    "vertex_id": 105
   },
   {
     "poi_id": 108,
@@ -1185,7 +1185,7 @@
     "floor": 2,
     "x_coord": 146,
     "y_coord": 541,
-    "vertex": "106"
+    "vertex_id": 106
   },
   {
     "poi_id": 109,
@@ -1196,7 +1196,7 @@
     "floor": 2,
     "x_coord": 272,
     "y_coord": 559,
-    "vertex": "106"
+    "vertex_id": 106
   },
   {
     "poi_id": 110,
@@ -1207,7 +1207,7 @@
     "floor": 2,
     "x_coord": 272,
     "y_coord": 486,
-    "vertex": "105"
+    "vertex_id": 105
   },
   {
     "poi_id": 111,
@@ -1218,7 +1218,7 @@
     "floor": 2,
     "x_coord": 272,
     "y_coord": 379,
-    "vertex": "103"
+    "vertex_id": 103
   },
   {
     "poi_id": 112,
@@ -1229,7 +1229,7 @@
     "floor": 2,
     "x_coord": 272,
     "y_coord": 234,
-    "vertex": "100"
+    "vertex_id": 100
   },
   {
     "poi_id": 113,
@@ -1240,7 +1240,7 @@
     "floor": 2,
     "x_coord": 166,
     "y_coord": 561,
-    "vertex": "114.5S2층 시설물"
+    "vertex_id": 114
   },
   {
     "poi_id": 114,
@@ -1251,7 +1251,7 @@
     "floor": 2,
     "x_coord": 121,
     "y_coord": 576,
-    "vertex": "114"
+    "vertex_id": 114
   },
   {
     "poi_id": 115,
@@ -1262,7 +1262,7 @@
     "floor": 2,
     "x_coord": 141,
     "y_coord": 619,
-    "vertex": "115"
+    "vertex_id": 115
   },
   {
     "poi_id": 116,
@@ -1273,7 +1273,7 @@
     "floor": 2,
     "x_coord": 121,
     "y_coord": 667,
-    "vertex": "117"
+    "vertex_id": 117
   },
   {
     "poi_id": 117,
@@ -1284,7 +1284,7 @@
     "floor": 2,
     "x_coord": 210,
     "y_coord": 609,
-    "vertex": "108"
+    "vertex_id": 108
   },
   {
     "poi_id": 118,
@@ -1295,7 +1295,7 @@
     "floor": 2,
     "x_coord": 210,
     "y_coord": 664,
-    "vertex": "110"
+    "vertex_id": 110
   },
   {
     "poi_id": 119,
@@ -1306,7 +1306,7 @@
     "floor": 2,
     "x_coord": 170,
     "y_coord": 694,
-    "vertex": "118"
+    "vertex_id": 118
   },
   {
     "poi_id": 120,
@@ -1317,7 +1317,7 @@
     "floor": 2,
     "x_coord": 241,
     "y_coord": 717,
-    "vertex": "112"
+    "vertex_id": 112
   },
   {
     "poi_id": 121,
@@ -1328,7 +1328,7 @@
     "floor": 2,
     "x_coord": 241,
     "y_coord": 732,
-    "vertex": "112"
+    "vertex_id": 112
   },
   {
     "poi_id": 122,
@@ -1339,7 +1339,7 @@
     "floor": 2,
     "x_coord": 534,
     "y_coord": 771,
-    "vertex": "126"
+    "vertex_id": 126
   },
   {
     "poi_id": 123,
@@ -1350,7 +1350,7 @@
     "floor": 2,
     "x_coord": 645,
     "y_coord": 754,
-    "vertex": "128"
+    "vertex_id": 128
   },
   {
     "poi_id": 124,
@@ -1361,7 +1361,7 @@
     "floor": 2,
     "x_coord": 745,
     "y_coord": 754,
-    "vertex": "130"
+    "vertex_id": 130
   },
   {
     "poi_id": 125,
@@ -1372,7 +1372,7 @@
     "floor": 2,
     "x_coord": 803,
     "y_coord": 786,
-    "vertex": "133"
+    "vertex_id": 133
   },
   {
     "poi_id": 126,
@@ -1383,7 +1383,7 @@
     "floor": 2,
     "x_coord": 876,
     "y_coord": 714,
-    "vertex": "143"
+    "vertex_id": 143
   },
   {
     "poi_id": 127,
@@ -1394,7 +1394,7 @@
     "floor": 2,
     "x_coord": 912,
     "y_coord": 786,
-    "vertex": "136"
+    "vertex_id": 136
   },
   {
     "poi_id": 128,
@@ -1405,7 +1405,7 @@
     "floor": 2,
     "x_coord": 984,
     "y_coord": 786,
-    "vertex": "138"
+    "vertex_id": 138
   },
   {
     "poi_id": 129,
@@ -1416,7 +1416,7 @@
     "floor": 2,
     "x_coord": 1058,
     "y_coord": 744,
-    "vertex": "152"
+    "vertex_id": 152
   },
   {
     "poi_id": 130,
@@ -1427,7 +1427,7 @@
     "floor": 2,
     "x_coord": 1091,
     "y_coord": 689,
-    "vertex": "148"
+    "vertex_id": 148
   },
   {
     "poi_id": 131,
@@ -1438,7 +1438,7 @@
     "floor": 2,
     "x_coord": 1126,
     "y_coord": 734,
-    "vertex": "153"
+    "vertex_id": 153
   },
   {
     "poi_id": 132,
@@ -1449,7 +1449,7 @@
     "floor": 2,
     "x_coord": 1145,
     "y_coord": 715,
-    "vertex": "157"
+    "vertex_id": 157
   },
   {
     "poi_id": 133,
@@ -1460,7 +1460,7 @@
     "floor": 2,
     "x_coord": 1198,
     "y_coord": 715,
-    "vertex": "158"
+    "vertex_id": 158
   },
   {
     "poi_id": 134,
@@ -1471,7 +1471,7 @@
     "floor": 2,
     "x_coord": 1251,
     "y_coord": 715,
-    "vertex": "159"
+    "vertex_id": 159
   },
   {
     "poi_id": 135,
@@ -1482,7 +1482,7 @@
     "floor": 2,
     "x_coord": 1307,
     "y_coord": 689,
-    "vertex": "187"
+    "vertex_id": 187
   },
   {
     "poi_id": 136,
@@ -1493,7 +1493,7 @@
     "floor": 2,
     "x_coord": 1339,
     "y_coord": 716,
-    "vertex": "187"
+    "vertex_id": 187
   },
   {
     "poi_id": 137,
@@ -1504,7 +1504,7 @@
     "floor": 2,
     "x_coord": 1268,
     "y_coord": 787,
-    "vertex": "166"
+    "vertex_id": 166
   },
   {
     "poi_id": 138,
@@ -1515,7 +1515,7 @@
     "floor": 2,
     "x_coord": 1578,
     "y_coord": 745,
-    "vertex": "176"
+    "vertex_id": 176
   },
   {
     "poi_id": 139,
@@ -1526,7 +1526,7 @@
     "floor": 2,
     "x_coord": 1649,
     "y_coord": 754,
-    "vertex": "177"
+    "vertex_id": 177
   },
   {
     "poi_id": 140,
@@ -1537,7 +1537,7 @@
     "floor": 2,
     "x_coord": 127,
     "y_coord": 712,
-    "vertex": "118 5S2층 공간"
+    "vertex_id": 118
   },
   {
     "poi_id": 141,
@@ -1548,7 +1548,7 @@
     "floor": 2,
     "x_coord": 127,
     "y_coord": 788,
-    "vertex": "119"
+    "vertex_id": 119
   },
   {
     "poi_id": 142,
@@ -1559,7 +1559,7 @@
     "floor": 2,
     "x_coord": 127,
     "y_coord": 819,
-    "vertex": "119"
+    "vertex_id": 119
   },
   {
     "poi_id": 143,
@@ -1570,7 +1570,7 @@
     "floor": 2,
     "x_coord": 139,
     "y_coord": 850,
-    "vertex": "119"
+    "vertex_id": 119
   },
   {
     "poi_id": 144,
@@ -1581,7 +1581,7 @@
     "floor": 2,
     "x_coord": 227,
     "y_coord": 820,
-    "vertex": "113"
+    "vertex_id": 113
   },
   {
     "poi_id": 145,
@@ -1592,7 +1592,7 @@
     "floor": 2,
     "x_coord": 336,
     "y_coord": 820,
-    "vertex": "122"
+    "vertex_id": 122
   },
   {
     "poi_id": 146,
@@ -1603,7 +1603,7 @@
     "floor": 2,
     "x_coord": 408,
     "y_coord": 820,
-    "vertex": "123"
+    "vertex_id": 123
   },
   {
     "poi_id": 147,
@@ -1614,7 +1614,7 @@
     "floor": 2,
     "x_coord": 443,
     "y_coord": 820,
-    "vertex": "124"
+    "vertex_id": 124
   },
   {
     "poi_id": 148,
@@ -1625,7 +1625,7 @@
     "floor": 2,
     "x_coord": 497,
     "y_coord": 820,
-    "vertex": "125"
+    "vertex_id": 125
   },
   {
     "poi_id": 149,
@@ -1636,7 +1636,7 @@
     "floor": 2,
     "x_coord": 569,
     "y_coord": 820,
-    "vertex": "127"
+    "vertex_id": 127
   },
   {
     "poi_id": 150,
@@ -1647,7 +1647,7 @@
     "floor": 2,
     "x_coord": 786,
     "y_coord": 827,
-    "vertex": "133"
+    "vertex_id": 133
   },
   {
     "poi_id": 151,
@@ -1658,7 +1658,7 @@
     "floor": 2,
     "x_coord": 821,
     "y_coord": 827,
-    "vertex": "134"
+    "vertex_id": 134
   },
   {
     "poi_id": 152,
@@ -1669,7 +1669,7 @@
     "floor": 2,
     "x_coord": 858,
     "y_coord": 827,
-    "vertex": "134"
+    "vertex_id": 134
   },
   {
     "poi_id": 153,
@@ -1680,7 +1680,7 @@
     "floor": 2,
     "x_coord": 895,
     "y_coord": 827,
-    "vertex": "136"
+    "vertex_id": 136
   },
   {
     "poi_id": 154,
@@ -1691,7 +1691,7 @@
     "floor": 2,
     "x_coord": 932,
     "y_coord": 827,
-    "vertex": "136"
+    "vertex_id": 136
   },
   {
     "poi_id": 155,
@@ -1702,7 +1702,7 @@
     "floor": 2,
     "x_coord": 966,
     "y_coord": 827,
-    "vertex": "137"
+    "vertex_id": 137
   },
   {
     "poi_id": 156,
@@ -1713,7 +1713,7 @@
     "floor": 2,
     "x_coord": 1001,
     "y_coord": 827,
-    "vertex": "138"
+    "vertex_id": 138
   },
   {
     "poi_id": 157,
@@ -1724,7 +1724,7 @@
     "floor": 2,
     "x_coord": 1037,
     "y_coord": 827,
-    "vertex": "139"
+    "vertex_id": 139
   },
   {
     "poi_id": 158,
@@ -1735,7 +1735,7 @@
     "floor": 2,
     "x_coord": 1074,
     "y_coord": 827,
-    "vertex": "140"
+    "vertex_id": 140
   },
   {
     "poi_id": 159,
@@ -1746,7 +1746,7 @@
     "floor": 2,
     "x_coord": 1109,
     "y_coord": 827,
-    "vertex": "153"
+    "vertex_id": 153
   },
   {
     "poi_id": 160,
@@ -1757,7 +1757,7 @@
     "floor": 2,
     "x_coord": 1289,
     "y_coord": 820,
-    "vertex": "166"
+    "vertex_id": 166
   },
   {
     "poi_id": 161,
@@ -1768,7 +1768,7 @@
     "floor": 2,
     "x_coord": 1325,
     "y_coord": 820,
-    "vertex": "168"
+    "vertex_id": 168
   },
   {
     "poi_id": 162,
@@ -1779,7 +1779,7 @@
     "floor": 2,
     "x_coord": 1361,
     "y_coord": 820,
-    "vertex": "169"
+    "vertex_id": 169
   },
   {
     "poi_id": 163,
@@ -1790,7 +1790,7 @@
     "floor": 2,
     "x_coord": 1397,
     "y_coord": 820,
-    "vertex": "170"
+    "vertex_id": 170
   },
   {
     "poi_id": 164,
@@ -1801,7 +1801,7 @@
     "floor": 2,
     "x_coord": 1433,
     "y_coord": 820,
-    "vertex": "171"
+    "vertex_id": 171
   },
   {
     "poi_id": 165,
@@ -1812,7 +1812,7 @@
     "floor": 2,
     "x_coord": 1469,
     "y_coord": 820,
-    "vertex": "172"
+    "vertex_id": 172
   },
   {
     "poi_id": 166,
@@ -1823,7 +1823,7 @@
     "floor": 2,
     "x_coord": 1505,
     "y_coord": 820,
-    "vertex": "172"
+    "vertex_id": 172
   },
   {
     "poi_id": 167,
@@ -1834,7 +1834,7 @@
     "floor": 2,
     "x_coord": 1541,
     "y_coord": 820,
-    "vertex": "174"
+    "vertex_id": 174
   },
   {
     "poi_id": 168,
@@ -1845,7 +1845,7 @@
     "floor": 2,
     "x_coord": 1577,
     "y_coord": 820,
-    "vertex": "174"
+    "vertex_id": 174
   },
   {
     "poi_id": 169,
@@ -1856,7 +1856,7 @@
     "floor": 2,
     "x_coord": 1613,
     "y_coord": 820,
-    "vertex": "175"
+    "vertex_id": 175
   },
   {
     "poi_id": 170,
@@ -1867,7 +1867,7 @@
     "floor": 2,
     "x_coord": 1661,
     "y_coord": 710,
-    "vertex": "178"
+    "vertex_id": 178
   },
   {
     "poi_id": 171,
@@ -1878,7 +1878,7 @@
     "floor": 2,
     "x_coord": 1661,
     "y_coord": 668,
-    "vertex": "181"
+    "vertex_id": 181
   },
   {
     "poi_id": 172,
@@ -1889,7 +1889,7 @@
     "floor": 2,
     "x_coord": 1505,
     "y_coord": 677,
-    "vertex": "182"
+    "vertex_id": 182
   },
   {
     "poi_id": 173,
@@ -1900,7 +1900,7 @@
     "floor": 2,
     "x_coord": 1397,
     "y_coord": 677,
-    "vertex": "184"
+    "vertex_id": 184
   },
   {
     "poi_id": 174,
@@ -1911,7 +1911,7 @@
     "floor": 2,
     "x_coord": 1038,
     "y_coord": 677,
-    "vertex": "147"
+    "vertex_id": 147
   },
   {
     "poi_id": 175,
@@ -1922,7 +1922,7 @@
     "floor": 2,
     "x_coord": 1002,
     "y_coord": 677,
-    "vertex": "146"
+    "vertex_id": 146
   },
   {
     "poi_id": 176,
@@ -1933,7 +1933,7 @@
     "floor": 2,
     "x_coord": 966,
     "y_coord": 677,
-    "vertex": "145"
+    "vertex_id": 145
   },
   {
     "poi_id": 177,
@@ -1944,7 +1944,7 @@
     "floor": 2,
     "x_coord": 930,
     "y_coord": 677,
-    "vertex": "144"
+    "vertex_id": 144
   },
   {
     "poi_id": 178,
@@ -1955,7 +1955,7 @@
     "floor": 2,
     "x_coord": 894,
     "y_coord": 677,
-    "vertex": "143"
+    "vertex_id": 143
   },
   {
     "poi_id": 179,
@@ -1966,7 +1966,7 @@
     "floor": 2,
     "x_coord": 858,
     "y_coord": 677,
-    "vertex": "143"
+    "vertex_id": 143
   },
   {
     "poi_id": 180,
@@ -1977,7 +1977,7 @@
     "floor": 2,
     "x_coord": 822,
     "y_coord": 677,
-    "vertex": "141"
+    "vertex_id": 141
   },
   {
     "poi_id": 181,
@@ -1988,7 +1988,7 @@
     "floor": 2,
     "x_coord": 786,
     "y_coord": 677,
-    "vertex": "141"
+    "vertex_id": 141
   },
   {
     "poi_id": 182,
@@ -1999,7 +1999,7 @@
     "floor": 2,
     "x_coord": 750,
     "y_coord": 677,
-    "vertex": "149"
+    "vertex_id": 149
   },
   {
     "poi_id": 183,
@@ -2010,7 +2010,7 @@
     "floor": 2,
     "x_coord": 714,
     "y_coord": 677,
-    "vertex": "150"
+    "vertex_id": 150
   },
   {
     "poi_id": 184,
@@ -2021,7 +2021,7 @@
     "floor": 2,
     "x_coord": 678,
     "y_coord": 677,
-    "vertex": "151"
+    "vertex_id": 151
   },
   {
     "poi_id": 185,
@@ -2032,7 +2032,7 @@
     "floor": 2,
     "x_coord": 499,
     "y_coord": 691,
-    "vertex": "123,125"
+    "vertex_id": 123
   },
   {
     "poi_id": 186,
@@ -2043,7 +2043,7 @@
     "floor": 2,
     "x_coord": 374,
     "y_coord": 691,
-    "vertex": "122"
+    "vertex_id": 122
   },
   {
     "poi_id": 187,
@@ -2054,7 +2054,7 @@
     "floor": 2,
     "x_coord": 337,
     "y_coord": 691,
-    "vertex": "122"
+    "vertex_id": 122
   },
   {
     "poi_id": 188,
@@ -2065,7 +2065,7 @@
     "floor": 2,
     "x_coord": 281,
     "y_coord": 691,
-    "vertex": "120"
+    "vertex_id": 120
   },
   {
     "poi_id": 189,
@@ -2076,7 +2076,7 @@
     "floor": 1,
     "x_coord": 107,
     "y_coord": 124,
-    "vertex": "하텍1층 시설물"
+    "vertex_id": -1
   },
   {
     "poi_id": 190,
@@ -2087,7 +2087,7 @@
     "floor": 1,
     "x_coord": 107,
     "y_coord": 161,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 191,
@@ -2098,7 +2098,7 @@
     "floor": 1,
     "x_coord": 64,
     "y_coord": 187,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 192,
@@ -2109,7 +2109,7 @@
     "floor": 1,
     "x_coord": 75,
     "y_coord": 221,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 193,
@@ -2120,7 +2120,7 @@
     "floor": 1,
     "x_coord": 137,
     "y_coord": 184,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 194,
@@ -2131,7 +2131,7 @@
     "floor": 1,
     "x_coord": 174,
     "y_coord": 154,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 195,
@@ -2142,7 +2142,7 @@
     "floor": 1,
     "x_coord": 271,
     "y_coord": 161,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 196,
@@ -2153,7 +2153,7 @@
     "floor": 1,
     "x_coord": 166,
     "y_coord": 326,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 197,
@@ -2164,7 +2164,7 @@
     "floor": 1,
     "x_coord": 205,
     "y_coord": 333,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 198,
@@ -2175,7 +2175,7 @@
     "floor": 1,
     "x_coord": 304,
     "y_coord": 208,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 199,
@@ -2186,7 +2186,7 @@
     "floor": 1,
     "x_coord": 341,
     "y_coord": 208,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 200,
@@ -2197,7 +2197,7 @@
     "floor": 1,
     "x_coord": 475,
     "y_coord": 208,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 201,
@@ -2208,7 +2208,7 @@
     "floor": 1,
     "x_coord": 562,
     "y_coord": 208,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 202,
@@ -2219,7 +2219,7 @@
     "floor": 1,
     "x_coord": 664,
     "y_coord": 208,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 203,
@@ -2230,7 +2230,7 @@
     "floor": 1,
     "x_coord": 804,
     "y_coord": 166,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 204,
@@ -2241,7 +2241,7 @@
     "floor": 1,
     "x_coord": 819,
     "y_coord": 166,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 205,
@@ -2252,7 +2252,7 @@
     "floor": 1,
     "x_coord": 751,
     "y_coord": 219,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 206,
@@ -2263,7 +2263,7 @@
     "floor": 1,
     "x_coord": 769,
     "y_coord": 219,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 207,
@@ -2274,7 +2274,7 @@
     "floor": 1,
     "x_coord": 787,
     "y_coord": 219,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 208,
@@ -2285,7 +2285,7 @@
     "floor": 1,
     "x_coord": 787,
     "y_coord": 245,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 209,
@@ -2296,7 +2296,7 @@
     "floor": 1,
     "x_coord": 853,
     "y_coord": 231,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 210,
@@ -2307,7 +2307,7 @@
     "floor": 1,
     "x_coord": 853,
     "y_coord": 246,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 211,
@@ -2318,7 +2318,7 @@
     "floor": 1,
     "x_coord": 900,
     "y_coord": 245,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 212,
@@ -2329,7 +2329,7 @@
     "floor": 1,
     "x_coord": 772,
     "y_coord": 290,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 213,
@@ -2340,7 +2340,7 @@
     "floor": 1,
     "x_coord": 799,
     "y_coord": 290,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 214,
@@ -2351,7 +2351,7 @@
     "floor": 1,
     "x_coord": 852,
     "y_coord": 288,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 215,
@@ -2362,7 +2362,7 @@
     "floor": 1,
     "x_coord": 852,
     "y_coord": 304,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 216,
@@ -2373,7 +2373,7 @@
     "floor": 1,
     "x_coord": 852,
     "y_coord": 317,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 217,
@@ -2384,7 +2384,7 @@
     "floor": 1,
     "x_coord": 889,
     "y_coord": 290,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 218,
@@ -2395,7 +2395,7 @@
     "floor": 1,
     "x_coord": 917,
     "y_coord": 297,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 219,
@@ -2406,7 +2406,7 @@
     "floor": 1,
     "x_coord": 934,
     "y_coord": 324,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 220,
@@ -2417,7 +2417,7 @@
     "floor": 1,
     "x_coord": 896,
     "y_coord": 358,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 221,
@@ -2428,7 +2428,7 @@
     "floor": 1,
     "x_coord": 864,
     "y_coord": 386,
-    "vertex": "192,194"
+    "vertex_id": 192
   },
   {
     "poi_id": 222,
@@ -2439,7 +2439,7 @@
     "floor": 1,
     "x_coord": 777,
     "y_coord": 385,
-    "vertex": "193"
+    "vertex_id": 193
   },
   {
     "poi_id": 223,
@@ -2450,7 +2450,7 @@
     "floor": 1,
     "x_coord": 777,
     "y_coord": 369,
-    "vertex": "193"
+    "vertex_id": 193
   },
   {
     "poi_id": 224,
@@ -2461,7 +2461,7 @@
     "floor": 1,
     "x_coord": 762,
     "y_coord": 475,
-    "vertex": "188"
+    "vertex_id": 188
   },
   {
     "poi_id": 225,
@@ -2472,7 +2472,7 @@
     "floor": 1,
     "x_coord": 768,
     "y_coord": 514,
-    "vertex": "189"
+    "vertex_id": 189
   },
   {
     "poi_id": 226,
@@ -2483,7 +2483,7 @@
     "floor": 1,
     "x_coord": 821,
     "y_coord": 514,
-    "vertex": "190"
+    "vertex_id": 190
   },
   {
     "poi_id": 227,
@@ -2494,7 +2494,7 @@
     "floor": 1,
     "x_coord": 837,
     "y_coord": 645,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 228,
@@ -2505,7 +2505,7 @@
     "floor": 1,
     "x_coord": 899,
     "y_coord": 636,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 229,
@@ -2516,7 +2516,7 @@
     "floor": 1,
     "x_coord": 115,
     "y_coord": 278,
-    "vertex": "하텍1층 공간"
+    "vertex_id": -1
   },
   {
     "poi_id": 230,
@@ -2527,7 +2527,7 @@
     "floor": 1,
     "x_coord": 309,
     "y_coord": 278,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 231,
@@ -2538,7 +2538,7 @@
     "floor": 1,
     "x_coord": 429,
     "y_coord": 278,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 232,
@@ -2549,7 +2549,7 @@
     "floor": 1,
     "x_coord": 549,
     "y_coord": 278,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 233,
@@ -2560,7 +2560,7 @@
     "floor": 1,
     "x_coord": 652,
     "y_coord": 278,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 234,
@@ -2571,7 +2571,7 @@
     "floor": 1,
     "x_coord": 727,
     "y_coord": 278,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 235,
@@ -2582,7 +2582,7 @@
     "floor": 1,
     "x_coord": 896,
     "y_coord": 185,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 236,
@@ -2593,7 +2593,7 @@
     "floor": 1,
     "x_coord": 896,
     "y_coord": 447,
-    "vertex": "192,194"
+    "vertex_id": 192
   },
   {
     "poi_id": 237,
@@ -2604,7 +2604,7 @@
     "floor": 1,
     "x_coord": 896,
     "y_coord": 554,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 238,
@@ -2615,7 +2615,7 @@
     "floor": 1,
     "x_coord": 896,
     "y_coord": 602,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 239,
@@ -2626,7 +2626,7 @@
     "floor": 1,
     "x_coord": 792,
     "y_coord": 586,
-    "vertex": null
+    "vertex_id": -1
   },
   {
     "poi_id": 240,
@@ -2637,6 +2637,6 @@
     "floor": 1,
     "x_coord": 792,
     "y_coord": 536,
-    "vertex": null
+    "vertex_id": -1
   }
 ]
