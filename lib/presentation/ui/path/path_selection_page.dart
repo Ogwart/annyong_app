@@ -66,10 +66,6 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
       _updateControllers();
     });
 
-    final pathState = ref.watch(pathSelectionProvider);
-    final isFindPathEnabled =
-        pathState.departure != null && pathState.destination != null;
-
     return Scaffold(
       appBar: AppBar(backgroundColor: AppColors.grey200),
       body: SafeArea(
@@ -259,8 +255,22 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                 onTap: _isFindPathEnabled
                     ? () {
                         // 길찾기 기능 구현
-                        print('출발지 POI: ${pathState.departure!.vertex}');
-                        print('목적지 POI: ${pathState.destination!.vertex}');
+                        final pathState = ref.read(pathSelectionProvider);
+                        final Poi? startPoi = pathState.departure;
+                        final Poi? endPoi = pathState.destination;
+
+                        debugPrint('출발지 POI: ${pathState.departure!.vertexId}');
+                        debugPrint(
+                          '목적지 POI: ${pathState.destination!.vertexId}',
+                        );
+
+                        if (startPoi != null && endPoi != null) {
+                          // 길찾기 결과 페이지로 이동하면서 출발지/목적지 Poi 객체를 전달
+                          context.push(
+                            '/home/pathSelection/pathResult',
+                            extra: {'start': startPoi, 'end': endPoi},
+                          );
+                        }
                       }
                     : null,
                 child: Container(

@@ -11,8 +11,11 @@ import 'package:annyong/presentation/ui/search/search_result_page.dart';
 import 'package:annyong/presentation/ui/search/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/menu/settings_page.dart';
 import 'package:annyong/presentation/ui/splash/splash_page.dart';
+import 'package:annyong/presentation/ui/path/path_selection_page.dart';
+import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:annyong/domain/entity/poi.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -150,10 +153,22 @@ class AppRouter {
                   ),
                 ],
               ),
-              // 경로 선택 페이지 (길찾기)
+              // 길찾기 관련 페이지
               GoRoute(
                 path: "pathSelection",
                 builder: (context, state) => PathSelectionPage(),
+                routes: [
+                  GoRoute(
+                    path: "pathResult",
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      final Poi start = extra['start'] as Poi;
+                      final Poi end = extra['end'] as Poi;
+
+                      return PathResultPage(start: start, end: end);
+                    },
+                  ),
+                ],
               ),
               GoRoute(
                 path: "navi",

@@ -39,6 +39,7 @@ dependencies:
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   flutter_riverpod: ^3.0.3
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:
@@ -138,6 +139,10 @@ flutter:
     - assets/poi/building.json
     - assets/poi/poi_category.json
     - assets/poi/poi.json
+
+     # - assets/graph/
+    - assets/graph/edge.json
+    - assets/graph/vertex.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
