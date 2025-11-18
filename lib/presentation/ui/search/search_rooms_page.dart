@@ -137,10 +137,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     } else if (widget.searchMode == SearchMode.destination) {
       pathProvider.setDestination(classroom.name);
     } else {
-      // 기본 모드: 목적지로 설정하고 navi으로 이동
+      // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
       pathProvider.setDestination(classroom.name);
     }
-    context.go("/home/navi");
+    context.go("/home/pathSelection");
   }
 
   @override

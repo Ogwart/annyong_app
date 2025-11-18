@@ -74,10 +74,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     } else if (widget.searchMode == SearchMode.destination) {
       pathProvider.setDestination(poi.name);
     } else {
+      // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
       pathProvider.setDestination(poi.name);
-      context.go('/home/navi');
-      return;
     }
+    context.go("/home/pathSelection");
   }
 
   @override
