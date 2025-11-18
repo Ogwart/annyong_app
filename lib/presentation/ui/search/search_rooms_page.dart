@@ -133,12 +133,12 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     // 선택한 강의실을 출발지/목적지로 설정
     final pathProvider = ref.read(pathSelectionProvider.notifier);
     if (widget.searchMode == SearchMode.departure) {
-      pathProvider.setDeparture(classroom.name);
+      pathProvider.setDeparture(classroom);
     } else if (widget.searchMode == SearchMode.destination) {
-      pathProvider.setDestination(classroom.name);
+      pathProvider.setDestination(classroom);
     } else {
       // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
-      pathProvider.setDestination(classroom.name);
+      pathProvider.setDestination(classroom);
     }
     context.go("/home/pathSelection");
   }

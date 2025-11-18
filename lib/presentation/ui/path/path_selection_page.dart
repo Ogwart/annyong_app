@@ -4,6 +4,8 @@ import 'package:annyong/presentation/viewmodels/path_selection_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
+import 'package:annyong/domain/entity/poi.dart';
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -27,12 +29,8 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
 
   void _updateControllers() {
     final pathState = ref.read(pathSelectionProvider);
-    if (pathState.departure != null && _departureController.text != pathState.departure) {
-      _departureController.text = pathState.departure!;
-    }
-    if (pathState.destination != null && _destinationController.text != pathState.destination) {
-      _destinationController.text = pathState.destination!;
-    }
+    _departureController.text = pathState.departure?.name ?? '';
+    _destinationController.text = pathState.destination?.name ?? '';
   }
 
   @override
@@ -43,16 +41,18 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
   }
 
   void _swapDepartureDestination() {
-    final temp = _departureController.text;
-    _departureController.text = _destinationController.text;
-    _destinationController.text = temp;
-    setState(() {});
+    // final temp = _departureController.text;
+    // _departureController.text = _destinationController.text;
+    // _destinationController.text = temp;
+    // setState(() {});
+    ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
   }
 
   void _reset() {
-    _departureController.clear();
-    _destinationController.clear();
-    setState(() {});
+    // _departureController.clear();
+    // _destinationController.clear();
+    // setState(() {});
+    ref.read(pathSelectionProvider.notifier).resetPath();
   }
 
   bool get _isFindPathEnabled {
@@ -65,6 +65,11 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     ref.listen(pathSelectionProvider, (previous, next) {
       _updateControllers();
     });
+
+    final pathState = ref.watch(pathSelectionProvider);
+    final isFindPathEnabled =
+        pathState.departure != null && pathState.destination != null;
+
     return Scaffold(
       appBar: AppBar(backgroundColor: AppColors.grey200),
       body: SafeArea(
@@ -254,6 +259,8 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                 onTap: _isFindPathEnabled
                     ? () {
                         // 길찾기 기능 구현
+                        print('출발지 POI: ${pathState.departure!.vertex}');
+                        print('목적지 POI: ${pathState.destination!.vertex}');
                       }
                     : null,
                 child: Container(

@@ -70,12 +70,12 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     // 선택한 강의실을 출발지/목적지로 설정
     final pathProvider = ref.read(pathSelectionProvider.notifier);
     if (widget.searchMode == SearchMode.departure) {
-      pathProvider.setDeparture(poi.name);
+      pathProvider.setDeparture(poi);
     } else if (widget.searchMode == SearchMode.destination) {
-      pathProvider.setDestination(poi.name);
+      pathProvider.setDestination(poi);
     } else {
       // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
-      pathProvider.setDestination(poi.name);
+      pathProvider.setDestination(poi);
     }
     context.go("/home/pathSelection");
   }
