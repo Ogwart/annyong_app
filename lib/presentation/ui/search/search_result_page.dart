@@ -73,6 +73,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
       pathProvider.setDeparture(poi);
     } else if (widget.searchMode == SearchMode.destination) {
       pathProvider.setDestination(poi);
+    } else if (widget.searchMode == SearchMode.waypoint1) {
+      pathProvider.setWaypoint1(poi);
+    } else if (widget.searchMode == SearchMode.waypoint2) {
+      pathProvider.setWaypoint2(poi);
     } else {
       // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
       pathProvider.setDestination(poi);

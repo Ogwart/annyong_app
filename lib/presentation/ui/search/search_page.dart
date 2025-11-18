@@ -6,7 +6,7 @@ import 'package:annyong/presentation/widgets/search_page/search_rooms_tile.dart'
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum SearchMode { normal, departure, destination }
+enum SearchMode { normal, departure, destination, waypoint1, waypoint2 }
 
 class SearchPage extends StatefulWidget {
   final SearchMode? searchMode;

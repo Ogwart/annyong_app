@@ -17,6 +17,7 @@ class PathSelectionPage extends ConsumerStatefulWidget {
 class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
   final TextEditingController _departureController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
+  final List<TextEditingController> _waypointControllers = [];
   String? _selectedFloor = '1F';
 
   @override
@@ -31,13 +32,35 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     final pathState = ref.read(pathSelectionProvider);
     _departureController.text = pathState.departure?.name ?? '';
     _destinationController.text = pathState.destination?.name ?? '';
+    _waypointControllers[0].text = pathState.waypoint1?.name ?? '';
+    _waypointControllers[1].text = pathState.waypoint2?.name ?? '';
   }
 
   @override
   void dispose() {
     _departureController.dispose();
     _destinationController.dispose();
+    for (var controller in _waypointControllers) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  // 경유지 추가 로직
+  void _addWaypoint() {
+    if (_waypointControllers.length >= 2) return; // 최대 2개 제한
+
+    setState(() {
+      _waypointControllers.add(TextEditingController());
+    });
+  }
+
+  // 경유지 삭제 로직
+  void _removeWaypoint(int index) {
+    setState(() {
+      _waypointControllers[index].dispose(); // 메모리 해제
+      _waypointControllers.removeAt(index);
+    });
   }
 
   void _swapDepartureDestination() {
@@ -92,86 +115,49 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // 출발지 필드
-                            Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey300,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TextField(
-                                controller: _departureController,
-                                readOnly: true,
-                                onTap: () {
-                                  context.push(
-                                    '/home/search',
-                                    extra: SearchMode.departure,
-                                  );
-                                },
-                                onChanged: (_) => setState(() {}),
-                                decoration: InputDecoration(
-                                  hintText: '출발지',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Pretendard',
-                                    fontSize: 16,
-                                    color: AppColors.grey400,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 16,
-                                  ),
-                                ),
-                                style: TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: 16,
-                                  color: AppColors.text,
-                                ),
-                              ),
+                            _buildLocationField(
+                              controller: _departureController,
+                              hintText: '출발지',
+                              searchMode: SearchMode.departure,
                             ),
+
+                            // 경유지 필드 (동적 생성)
+                            for (
+                              int i = 0;
+                              i < _waypointControllers.length;
+                              i++
+                            ) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildLocationField(
+                                      controller: _waypointControllers[i],
+                                      hintText: '경유지 ${i + 1}',
+                                      searchMode: i == 0
+                                          ? SearchMode.waypoint1
+                                          : SearchMode.waypoint2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // 경유지 삭제 버튼
+                                  GestureDetector(
+                                    onTap: () => _removeWaypoint(i),
+                                    child: Icon(
+                                      Icons.remove_circle_outline,
+                                      color: AppColors.grey400,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             // 목적지 필드
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.grey300,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: TextField(
-                                      controller: _destinationController,
-                                      readOnly: true,
-                                      onTap: () {
-                                        context.push(
-                                          '/home/search',
-                                          extra: SearchMode.destination,
-                                        );
-                                      },
-                                      onChanged: (_) => setState(() {}),
-                                      decoration: InputDecoration(
-                                        hintText: '목적지',
-                                        hintStyle: TextStyle(
-                                          fontFamily: 'Pretendard',
-                                          fontSize: 16,
-                                          color: AppColors.grey400,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 16,
-                                            ),
-                                      ),
-                                      style: TextStyle(
-                                        fontFamily: 'Pretendard',
-                                        fontSize: 16,
-                                        color: AppColors.text,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            _buildLocationField(
+                              controller: _destinationController,
+                              hintText: '목적지',
+                              searchMode: SearchMode.destination,
                             ),
                           ],
                         ),
@@ -216,24 +202,23 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
               ),
             ),
             // --------------------경유지 추가 버튼-------------------------
-            Positioned(
-              top: 36,
-              right: 80,
-              child: GestureDetector(
-                onTap: () {
-                  // 추가 목적지 기능 구현
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
+            if (_waypointControllers.length < 2) // 최대 2개 제한 도달 시 사라지게끔 렌더링
+              Positioned(
+                top: 36,
+                right: 80,
+                child: GestureDetector(
+                  onTap: _addWaypoint,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 24),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 24),
                 ),
               ),
-            ),
             // 층 선택 버튼 (오른쪽)
             Positioned(
               right: 24,
@@ -329,6 +314,46 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
               color: isSelected ? Colors.white : AppColors.text,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationField({
+    required TextEditingController controller,
+    required String hintText,
+    required SearchMode searchMode,
+  }) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: AppColors.grey300,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        onTap: () {
+          context.push('/home/search', extra: searchMode);
+        },
+        onChanged: (_) => setState(() {}),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 16,
+            color: AppColors.grey400,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        style: TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 16,
+          color: AppColors.text,
         ),
       ),
     );
