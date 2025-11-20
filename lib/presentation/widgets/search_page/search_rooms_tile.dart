@@ -3,7 +3,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class SearchRoomsTile extends StatelessWidget {
+class SearchRoomsTile extends StatefulWidget {
   const SearchRoomsTile({
     super.key,
     required this.title,
@@ -24,20 +24,27 @@ class SearchRoomsTile extends StatelessWidget {
   );
 
   @override
+  State<SearchRoomsTile> createState() => _SearchRoomsTileState();
+}
+
+class _SearchRoomsTileState extends State<SearchRoomsTile> {
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
         final result = await context.push<String>(
           '/home/search/searchRooms',
           extra: {
-            'title': title,
-            'searchMode': searchMode,
-            'returnResult': returnResult,
-            'categoryId': categoryId,
+            'title': widget.title,
+            'searchMode': widget.searchMode,
+            'returnResult': widget.returnResult,
+            'categoryId': widget.categoryId,
           },
         );
-        if (returnResult && result != null) {
-          context.pop(result);
+        if (widget.returnResult && result != null) {
+          if (context.mounted) {
+            context.pop(result);
+          }
         }
       },
       child: Container(
@@ -48,7 +55,11 @@ class SearchRoomsTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           color: AppColors.grey200,
         ),
-        child: Text(title, style: _textStyle, textAlign: TextAlign.center),
+        child: Text(
+          widget.title,
+          style: SearchRoomsTile._textStyle,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

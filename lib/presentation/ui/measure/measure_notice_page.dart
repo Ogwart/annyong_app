@@ -1,11 +1,17 @@
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/static.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class MeasureNoticePage extends StatelessWidget {
-  MeasureNoticePage({super.key});
+class MeasureNoticePage extends StatefulWidget {
+  const MeasureNoticePage({super.key});
 
+  @override
+  State<MeasureNoticePage> createState() => _MeasureNoticePageState();
+}
+
+class _MeasureNoticePageState extends State<MeasureNoticePage> {
   final StaticExample example = StaticExample();
 
   @override
@@ -98,9 +104,18 @@ class MeasureNoticePage extends StatelessWidget {
                     //const SizedBox(width: 40),
                     // 측정 시작 버튼
                     GestureDetector(
-                      onTap: () {
-                        context.pop();
-                        context.push("/measure");
+                      onTap: () async {
+                        // POI 선택 화면으로 이동
+                        final selectedPoi = await context.push<Poi>(
+                          "/home/search",
+                          extra: {"returnResult": true, "searchMode": null},
+                        );
+
+                        if (selectedPoi != null && context.mounted) {
+                          // POI 선택 후 측정 페이지로 이동
+                          context.pop();
+                          context.push("/measure", extra: selectedPoi);
+                        }
                       },
                       child: Container(
                         alignment: Alignment.center,

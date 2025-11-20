@@ -3,7 +3,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class SearchFacilitiesTile extends StatelessWidget {
+class SearchFacilitiesTile extends StatefulWidget {
   const SearchFacilitiesTile({
     super.key,
     required this.title,
@@ -24,19 +24,24 @@ class SearchFacilitiesTile extends StatelessWidget {
   );
 
   @override
+  State<SearchFacilitiesTile> createState() => _SearchFacilitiesTileState();
+}
+
+class _SearchFacilitiesTileState extends State<SearchFacilitiesTile> {
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
         final result = await context.push<String>(
           "/home/search/searchResult",
           extra: {
-            'title': title,
-            'searchMode': searchMode,
-            'returnResult': returnResult,
-            'categoryId': categoryId,
+            'title': widget.title,
+            'searchMode': widget.searchMode,
+            'returnResult': widget.returnResult,
+            'categoryId': widget.categoryId,
           },
         );
-        if (returnResult && result != null) {
+        if (widget.returnResult && result != null && context.mounted) {
           context.pop(result);
         }
       },
@@ -48,7 +53,11 @@ class SearchFacilitiesTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           color: AppColors.grey200,
         ),
-        child: Text(title, style: _textStyle, textAlign: TextAlign.center),
+        child: Text(
+          widget.title,
+          style: SearchFacilitiesTile._textStyle,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

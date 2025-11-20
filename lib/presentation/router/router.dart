@@ -29,11 +29,19 @@ class AppRouter {
       ),
       GoRoute(
         path: "/measure",
-        builder: (context, state) => MeasurePage(),
+        builder: (context, state) {
+          final extra = state.extra;
+          final Poi? startPoi = extra is Poi ? extra : null;
+          return MeasurePage(startPoi: startPoi);
+        },
         routes: [
           GoRoute(
             path: "measureResult",
-            builder: (context, state) => MeasureResultPage(),
+            builder: (context, state) {
+              final extra = state.extra;
+              final double? strideLength = extra is double ? extra : null;
+              return MeasureResultPage(strideLength: strideLength);
+            },
           ),
         ],
       ),
