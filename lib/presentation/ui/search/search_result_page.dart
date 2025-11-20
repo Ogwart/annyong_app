@@ -1,3 +1,5 @@
+import 'package:annyong/domain/repository/poi_repository.dart';
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/search_result_provider.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
@@ -8,15 +10,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 
 class SearchResultPage extends ConsumerStatefulWidget {
-  final String searchKeyword;
+  final String? searchKeyword;
+  final int? categoryId;
   final SearchMode? searchMode;
+  final bool returnResult;
 
   const SearchResultPage({
     super.key,
-    required this.searchKeyword,
+    this.searchKeyword,
+    this.categoryId,
     this.searchMode,
+    this.returnResult = false,
   });
 
   @override
@@ -24,26 +31,62 @@ class SearchResultPage extends ConsumerStatefulWidget {
 }
 
 class _SearchResultPageState extends ConsumerState<SearchResultPage> {
+  final PoiRepository _repository = PoiRepository();
+  late final Future<List<Poi>> _poiFuture;
+  late final String _displayKeyword;
+
   @override
   void initState() {
     super.initState();
+    _displayKeyword = widget.searchKeyword ?? '';
+    debugPrint('선택된 키워드: ${_displayKeyword}');
+    _poiFuture = _loadPois();
+    debugPrint('카테고리 ID: ${widget.categoryId}');
+
     // 페이지 진입 시 searchKeyword 설정 (한 번만 실행)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<SearchResultProvider>();
-      provider.setSearchKeyword(widget.searchKeyword);
+      provider.setSearchKeyword(_displayKeyword);
     });
+  }
+
+  // 실제 POI 데이터를 불러오는 메서드
+  Future<List<Poi>> _loadPois() async {
+    final pois = await _repository.fetchPois();
+    if (widget.categoryId != null) {
+      return pois.where((poi) => poi.categoryId == widget.categoryId).toList();
+    }
+    return pois;
+  }
+
+  // POI 선택 처리 핸들러
+  void _handlePoiSelect(Poi poi) {
+    // 결과 반환 모드인 경우 선택한 POI 이름 반환
+    if (widget.returnResult) {
+      context.pop(poi.name);
+      return;
+    }
+
+    // 선택한 강의실을 출발지/목적지로 설정
+    final pathProvider = ref.read(pathSelectionProvider.notifier);
+    if (widget.searchMode == SearchMode.departure) {
+      pathProvider.setDeparture(poi);
+    } else if (widget.searchMode == SearchMode.destination) {
+      pathProvider.setDestination(poi);
+    } else if (widget.searchMode == SearchMode.waypoint1) {
+      pathProvider.setWaypoint1(poi);
+    } else if (widget.searchMode == SearchMode.waypoint2) {
+      pathProvider.setWaypoint2(poi);
+    } else {
+      // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
+      pathProvider.setDestination(poi);
+    }
+    context.go("/home/pathSelection");
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SearchResultProvider>();
-
-    // 임시 데이터 - 나중에 실제 데이터로 교체
-    final List<Map<String, String>> searchResults = [
-      {'title': '장소 이름 1', 'description': '장소와 관련된 설명 등'},
-      {'title': '장소 이름 2', 'description': '장소와 관련된 설명 등'},
-      {'title': '장소 이름 3', 'description': '장소와 관련된 설명 등'},
-    ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -66,7 +109,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           padding: const EdgeInsets.all(16.0),
                           child: IconButton(
                             onPressed: () => context.pop(),
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.arrow_back_ios,
                               color: AppColors.text,
                               size: 24,
@@ -93,7 +136,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                 ),
                               ],
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.navigation,
                               color: Colors.white,
                               size: 24,
@@ -159,34 +202,30 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                   ),
                   // 검색 결과 리스트
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      itemCount: searchResults.length,
-                      itemBuilder: (context, index) {
-                        final result = searchResults[index];
-                        return SearchResultItem(
-                          title: result['title']!,
-                          description: result['description']!,
-                          onSelect: () {
-                            final pathProvider = ref.read(
-                              pathSelectionProvider.notifier,
+                    child: FutureBuilder<List<Poi>>(
+                      future: _poiFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final results = snapshot.data ?? [];
+                        return ListView.builder(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          itemCount: results.length,
+                          itemBuilder: (context, index) {
+                            final poi = results[index];
+                            return SearchResultItem(
+                              title: poi.name,
+                              categoryId: poi.categoryId,
+                              description: poi.description ?? '설명 없음',
+                              onSelect: () => _handlePoiSelect(poi),
                             );
-                            if (widget.searchMode == SearchMode.departure) {
-                              pathProvider.setDeparture(result['title']);
-                            } else if (widget.searchMode ==
-                                SearchMode.destination) {
-                              pathProvider.setDestination(result['title']);
-                            } else {
-                              // 기본 모드: 목적지로 설정하고 path_selection으로 이동
-                              pathProvider.setDestination(result['title']);
-                              context.go('/home/pathSelection');
-                              return;
-                            }
-                            // 출발지/목적지 모드: path_selection으로 돌아가기
-                            context.pop();
                           },
                         );
                       },

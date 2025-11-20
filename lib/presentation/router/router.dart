@@ -10,8 +10,10 @@ import 'package:annyong/presentation/ui/search/search_result_page.dart';
 import 'package:annyong/presentation/ui/search/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/menu/settings_page.dart';
 import 'package:annyong/presentation/ui/splash/splash_page.dart';
+import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:annyong/domain/entity/poi.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -64,55 +66,117 @@ class AppRouter {
                 path: "search",
                 builder: (context, state) {
                   SearchMode? searchMode;
+                  bool returnResult = false;
                   final extra = state.extra;
                   if (extra is SearchMode) {
                     searchMode = extra;
                   } else if (extra is Map) {
-                    // Map에서 searchMode 추출 시도
                     final searchModeValue = extra['searchMode'];
                     if (searchModeValue is SearchMode) {
                       searchMode = searchModeValue;
                     }
+                    final returnResultValue = extra['returnResult'];
+                    if (returnResultValue is bool) {
+                      returnResult = returnResultValue;
+                    }
                   }
-                  return SearchPage(searchMode: searchMode);
+                  return SearchPage(
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  );
                 },
                 routes: [
                   GoRoute(
                     path: "searchRooms",
                     builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final searchType = extra?['title'] as String? ?? '';
-                      final searchModeValue = extra?['searchMode'];
-                      final searchMode = searchModeValue is SearchMode
-                          ? searchModeValue
-                          : null;
+                      final extra = state.extra;
+                      String searchType = '';
+                      final int categoryId =
+                          extra is Map<String, dynamic> &&
+                              extra['categoryId'] is int
+                          ? extra['categoryId'] as int
+                          : 0;
+                      SearchMode? searchMode;
+                      bool returnResult = false;
+                      if (extra is Map<String, dynamic>) {
+                        searchType = extra['title'] as String? ?? '';
+                        final searchModeValue = extra['searchMode'];
+                        if (searchModeValue is SearchMode) {
+                          searchMode = searchModeValue;
+                        }
+                        final returnResultValue = extra['returnResult'];
+                        if (returnResultValue is bool) {
+                          returnResult = returnResultValue;
+                        }
+                      } else if (extra is String) {
+                        searchType = extra;
+                      }
                       return SearchRoomsPage(
                         searchType: searchType,
+                        categoryId: categoryId,
                         searchMode: searchMode,
+                        returnResult: returnResult,
                       );
                     },
                   ),
                   GoRoute(
                     path: "searchResult",
                     builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final searchKeyword = extra?['title'] as String? ?? '';
-                      final searchModeValue = extra?['searchMode'];
-                      final searchMode = searchModeValue is SearchMode
-                          ? searchModeValue
-                          : null;
+                      final extra = state.extra;
+                      String searchKeyword = '';
+                      final int categoryId =
+                          extra is Map<String, dynamic> &&
+                              extra['categoryId'] is int
+                          ? extra['categoryId'] as int
+                          : 0;
+                      SearchMode? searchMode;
+                      bool returnResult = false;
+                      if (extra is Map<String, dynamic>) {
+                        searchKeyword = extra['title'] as String? ?? '';
+                        final searchModeValue = extra['searchMode'];
+                        if (searchModeValue is SearchMode) {
+                          searchMode = searchModeValue;
+                        }
+                        final returnResultValue = extra['returnResult'];
+                        if (returnResultValue is bool) {
+                          returnResult = returnResultValue;
+                        }
+                      } else if (extra is String) {
+                        searchKeyword = extra;
+                      }
                       return SearchResultPage(
                         searchKeyword: searchKeyword,
+                        categoryId: categoryId,
                         searchMode: searchMode,
+                        returnResult: returnResult,
                       );
                     },
                   ),
                 ],
               ),
-              // 경로 선택 페이지 (길찾기)
+              // 길찾기 관련 페이지
               GoRoute(
                 path: "pathSelection",
                 builder: (context, state) => PathSelectionPage(),
+                routes: [
+                  GoRoute(
+                    path: "pathResult",
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      final Poi start = extra['start'] as Poi;
+                      final Poi end = extra['end'] as Poi;
+
+                      return PathResultPage(
+                        start: start,
+                        end: end,
+                        waypoints:
+                            (extra['waypoints'] as List<dynamic>?)
+                                ?.cast<Poi>() ??
+                            [],
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

@@ -87,13 +87,13 @@ class CategoryItem extends StatelessWidget {
 class CategoryItemRooms extends StatelessWidget {
   final String name;
   final bool isSelected;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   const CategoryItemRooms({
     super.key,
     required this.name,
     required this.isSelected,
-    this.onTap,
+    required this.onTap,
   });
 
   @override
