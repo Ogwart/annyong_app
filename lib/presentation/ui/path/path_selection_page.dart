@@ -251,17 +251,14 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                           );
                           debugPrint('목적지 POI: ${endPoi!.vertexId}');
 
-                          // 적어도 출발지, 목적지 둘 다 있어야 길찾기 결과로 이동
-                          if (_isFindPathEnabled) {
-                            context.go(
-                              '/home/pathSelection/pathResult',
-                              extra: {
-                                'start': startPoi,
-                                'end': endPoi,
-                                'waypoints': activeWaypoints,
-                              },
-                            );
-                          }
+                          context.go(
+                            '/home/pathSelection/pathResult',
+                            extra: {
+                              'start': startPoi,
+                              'end': endPoi,
+                              'waypoints': activeWaypoints,
+                            },
+                          );
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
