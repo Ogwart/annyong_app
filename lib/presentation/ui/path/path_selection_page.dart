@@ -244,7 +244,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                           );
 
                           if (startPoi != null && endPoi != null) {
-                            context.push(
+                            context.go(
                               '/home/pathSelection/pathResult',
                               extra: {'start': startPoi, 'end': endPoi},
                             );
