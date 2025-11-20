@@ -11,11 +11,21 @@ class MenuPage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
+          // 상단 보폭 메뉴
           Container(
             padding: EdgeInsets.symmetric(vertical: 30, horizontal: 20),
             width: double.infinity,
             height: 264,
-            decoration: BoxDecoration(color: AppColors.primary),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 16,
+                  offset: Offset(0, 4),
+                  color: Colors.black.withAlpha(25),
+                ),
+              ],
+              color: AppColors.primary,
+            ),
             child: Column(
               children: [
                 // 상단 화살표, 페이지 제목
@@ -91,33 +101,6 @@ class MenuPage extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-              ],
-            ),
-          ),
-          // 즐겨찾기 메뉴
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "즐겨찾기",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.text,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // 즐겨찾기 수정 페이지로 라우팅
-                  },
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(Icons.settings_outlined),
-                  ),
                 ),
               ],
             ),

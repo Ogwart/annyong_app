@@ -14,13 +14,11 @@ class MenuListButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. GestureDetector가 Container 전체를 감싸도록 변경
     return GestureDetector(
       onTap: () {
-        // 2. 절대 경로로 이동하도록 context.go를 호출
         context.go(routePath);
       },
-      behavior: HitTestBehavior.opaque, // 빈 공간도 탭이 되도록 설정
+      behavior: HitTestBehavior.opaque,
       child: InkWell(
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 16, horizontal: 30),
