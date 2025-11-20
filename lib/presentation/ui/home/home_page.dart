@@ -114,7 +114,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isMapReady = ref.watch(homeMapProvider);
+    //final isMapReady = ref.watch(homeMapProvider);
     final mapProvider = context.watch<HomePageMapProvider>();
     final tileUrlTemplate = _getTileUrlTemplate(
       mapProvider.selectedBuilding,

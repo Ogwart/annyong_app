@@ -70,6 +70,7 @@ class MenuPage extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         // 재측정 화면으로 라우팅
+                        context.push('/measureNotice');
                       },
                       child: Container(
                         alignment: Alignment.center,

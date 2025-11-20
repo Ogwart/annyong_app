@@ -24,8 +24,11 @@ class AppRouter {
       GoRoute(
         path: "/measureNotice",
         builder: (context, state) => MeasureNoticePage(),
+      ),
+      GoRoute(
+        path: "/measure",
+        builder: (context, state) => MeasurePage(),
         routes: [
-          GoRoute(path: "measure", builder: (context, state) => MeasurePage()),
           GoRoute(
             path: "measureResult",
             builder: (context, state) => MeasureResultPage(),

@@ -6,16 +6,17 @@ import 'package:go_router/go_router.dart';
 class MeasureNoticePage extends StatelessWidget {
   MeasureNoticePage({super.key});
 
-  StaticExample example = StaticExample();
+  final StaticExample example = StaticExample();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(elevation: 0),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
@@ -35,6 +36,7 @@ class MeasureNoticePage extends StatelessWidget {
                   ),
                 ),
               ),
+              // -----------------------보폭 측정 안내사항 텍스트-----------------------
               Flexible(
                 flex: 4,
                 child: Container(
