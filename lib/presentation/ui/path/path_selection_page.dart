@@ -143,7 +143,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('길찾기 검색')),
       body: SafeArea(
         child: Column(
           children: [
