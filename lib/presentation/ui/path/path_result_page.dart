@@ -8,8 +8,14 @@ import 'package:annyong/domain/usecases/path_description_builder.dart';
 class PathResultPage extends ConsumerWidget {
   final Poi start;
   final Poi end;
+  final List<Poi> waypoints;
 
-  const PathResultPage({super.key, required this.start, required this.end});
+  const PathResultPage({
+    super.key,
+    required this.start,
+    required this.end,
+    this.waypoints = const [], // 경유지 기본값: 빈 리스트
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,11 +45,23 @@ class PathResultPage extends ConsumerWidget {
           ),
         ),
         data: (pathFinder) {
-          final result = pathFinder.findShortestPath(
+          // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
+          // 유효하지 않은 것은 -1로 대체
+          final List<int> visitOrder = [
             start.vertexId ?? -1,
+            ...waypoints.map((e) => e.vertexId ?? -1),
             end.vertexId ?? -1,
-          );
+          ];
 
+          // 유효하지 않은 정점이 있을 때 예외 처리
+          if (visitOrder.contains(-1)) {
+            return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+          }
+
+          // 경유지 포함하여 경로 탐색
+          final result = pathFinder.findPathWithWaypoints(visitOrder);
+
+          // 경로 못 찾았을 때 UI 처리
           if (result == null || result.path.isEmpty) {
             return Center(
               child: Padding(
@@ -73,21 +91,20 @@ class PathResultPage extends ConsumerWidget {
             );
           }
 
-          // 1. 빌더를 통해 JSON 데이터(Map) 생성
+          // JSON 결과 생성 및 출력
           final jsonResult = PathDescriptionBuilder().build(
             pathFinder,
             result.path,
             result.totalCost,
           );
 
-          // 2. 콘솔 로그 출력
           const JsonEncoder encoder = JsonEncoder.withIndent('  ');
           final String prettyJson = encoder.convert(jsonResult);
           debugPrint('----------- [Path Result JSON Start] -----------');
           debugPrint(prettyJson);
           debugPrint('----------- [Path Result JSON End] -----------');
 
-          // 3. UI 렌더링
+          // 유효한 경로 찾았을 때 UI 렌더링
           final double totalCost = jsonResult['total_cost'] ?? 0.0;
           final List<dynamic> routes = jsonResult['routes'] ?? [];
 
@@ -96,13 +113,14 @@ class PathResultPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ------------------출발, 도착, 총 비용 카드------------------
+                // ------------------출발, 경유, 도착, 총 비용 카드------------------
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // 1. 출발지 (항상 랜더링)
                         Row(
                           children: [
                             const Icon(Icons.place, color: Colors.green),
@@ -115,7 +133,30 @@ class PathResultPage extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+
+                        // 2. 경유지 (리스트가 비어있으면 렌더링되지 않음)
+                        // Collection for를 사용하여 경유지 목록만큼 Row 생성
+                        for (int i = 0; i < waypoints.length; i++) ...[
+                          const SizedBox(height: 8), // 위 요소와의 간격ㄱ
+                          Row(
+                            children: [
+                              // 경유지 아이콘 (파란색 깃발 추천)
+                              const Icon(Icons.flag, color: Colors.blue),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '경유${i + 1}: ${waypoints[i].name}',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // 3. 도착지 (항상 랜더링)
+                        const SizedBox(height: 8), // 위 요소(출발지 혹은 마지막 경유지)와의 간격
                         Row(
                           children: [
                             const Icon(Icons.location_on, color: Colors.red),
@@ -128,9 +169,11 @@ class PathResultPage extends ConsumerWidget {
                             ),
                           ],
                         ),
+
+                        // 4. 총 비용 정보 (항상 랜더링)
                         const Divider(height: 24),
                         Text(
-                          '총 비용: $totalCost',
+                          '총 비용: 약 ${totalCost.toStringAsFixed(0)}m',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

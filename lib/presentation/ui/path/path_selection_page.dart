@@ -236,17 +236,30 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                           final Poi? startPoi = pathState.departure;
                           final Poi? endPoi = pathState.destination;
 
-                          debugPrint(
-                            '출발지 POI: ${pathState.departure!.vertexId}',
-                          );
-                          debugPrint(
-                            '목적지 POI: ${pathState.destination!.vertexId}',
-                          );
+                          // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
+                          final List<Poi> activeWaypoints = [];
+                          if (pathState.waypoint1 != null) {
+                            activeWaypoints.add(pathState.waypoint1!);
+                          }
+                          if (pathState.waypoint2 != null) {
+                            activeWaypoints.add(pathState.waypoint2!);
+                          }
 
-                          if (startPoi != null && endPoi != null) {
+                          debugPrint('출발지 POI: ${startPoi!.vertexId}');
+                          debugPrint(
+                            '경유지 POI: ${activeWaypoints.map((e) => e.vertexId).toList()}',
+                          );
+                          debugPrint('목적지 POI: ${endPoi!.vertexId}');
+
+                          // 적어도 출발지, 목적지 둘 다 있어야 길찾기 결과로 이동
+                          if (_isFindPathEnabled) {
                             context.go(
                               '/home/pathSelection/pathResult',
-                              extra: {'start': startPoi, 'end': endPoi},
+                              extra: {
+                                'start': startPoi,
+                                'end': endPoi,
+                                'waypoints': activeWaypoints,
+                              },
                             );
                           }
                         }

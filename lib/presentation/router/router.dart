@@ -163,7 +163,14 @@ class AppRouter {
                       final Poi start = extra['start'] as Poi;
                       final Poi end = extra['end'] as Poi;
 
-                      return PathResultPage(start: start, end: end);
+                      return PathResultPage(
+                        start: start,
+                        end: end,
+                        waypoints:
+                            (extra['waypoints'] as List<dynamic>?)
+                                ?.cast<Poi>() ??
+                            [],
+                      );
                     },
                   ),
                 ],
