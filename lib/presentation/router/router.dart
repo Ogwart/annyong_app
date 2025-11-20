@@ -4,14 +4,12 @@ import 'package:annyong/presentation/ui/measure/measure_result_page.dart';
 import 'package:annyong/presentation/ui/menu/bookmark_page.dart';
 import 'package:annyong/presentation/ui/home/home_page.dart';
 import 'package:annyong/presentation/ui/menu/menu_page.dart';
-import 'package:annyong/presentation/ui/navi/navi_page.dart';
 import 'package:annyong/presentation/ui/path/path_selection_page.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/ui/search/search_result_page.dart';
 import 'package:annyong/presentation/ui/search/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/menu/settings_page.dart';
 import 'package:annyong/presentation/ui/splash/splash_page.dart';
-import 'package:annyong/presentation/ui/path/path_selection_page.dart';
 import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -169,10 +167,6 @@ class AppRouter {
                     },
                   ),
                 ],
-              ),
-              GoRoute(
-                path: "navi",
-                builder: (context, state) => const NaviPage(),
               ),
             ],
           ),

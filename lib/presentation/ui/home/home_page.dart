@@ -210,7 +210,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       // ------------------길찾기 버튼------------------
                       GestureDetector(
                         onTap: () {
-                          context.go('/home/navi');
+                          context.go('/home/pathSelection');
                         },
                         child: Container(
                           width: 80,

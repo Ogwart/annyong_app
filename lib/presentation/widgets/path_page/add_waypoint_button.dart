@@ -1,10 +1,10 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class NaviAddWaypointButton extends StatelessWidget {
+class AddWaypointButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const NaviAddWaypointButton({super.key, required this.onTap});
+  const AddWaypointButton({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -14,4 +14,3 @@ class NaviAddWaypointButton extends StatelessWidget {
     );
   }
 }
-

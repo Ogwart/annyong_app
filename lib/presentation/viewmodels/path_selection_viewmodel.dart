@@ -24,12 +24,12 @@ class PathSelectionViewmodel extends StateNotifier<PathSelectionState> {
     state = PathSelectionState();
   }
 
-  void swapDepartureDestination() {
-    state = state.copyWith(
-      departure: state.destination,
-      destination: state.departure,
-    );
-  }
+  // void swapDepartureDestination() {
+  //   state = state.copyWith(
+  //     departure: state.destination,
+  //     destination: state.departure,
+  //   );
+  // }
 
   void resetPath() {
     state = PathSelectionState();

@@ -6,6 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import 'package:annyong/domain/entity/poi.dart';
+import 'package:annyong/presentation/widgets/path_page/location_input_tile.dart';
+import 'package:annyong/presentation/widgets/path_page/add_waypoint_button.dart';
+import 'package:annyong/presentation/widgets/path_page/reset_button.dart';
+import 'package:annyong/presentation/widgets/path_page/map_preview.dart';
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -15,345 +19,261 @@ class PathSelectionPage extends ConsumerStatefulWidget {
 }
 
 class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
-  final TextEditingController _departureController = TextEditingController();
-  final TextEditingController _destinationController = TextEditingController();
-  final List<TextEditingController> _waypointControllers = [];
   String? _selectedFloor = '1F';
+  String? _departure;
+  String? _destination;
+  final List<String?> _waypoints = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateControllers();
+      // _updateControllers();
+      _updateFromState();
     });
   }
 
-  void _updateControllers() {
+  // 상태로부터 값을 업데이트하는 것으로 변경
+  // --- 기존 코드 ---
+  // void _updateControllers() {
+  //   final pathState = ref.read(pathSelectionProvider);
+  //   _departureController.text = pathState.departure?.name ?? '';
+  //   _destinationController.text = pathState.destination?.name ?? '';
+  //   _waypointControllers[0].text = pathState.waypoint1?.name ?? '';
+  //   _waypointControllers[1].text = pathState.waypoint2?.name ?? '';
+  // }
+  void _updateFromState() {
     final pathState = ref.read(pathSelectionProvider);
-    _departureController.text = pathState.departure?.name ?? '';
-    _destinationController.text = pathState.destination?.name ?? '';
-    _waypointControllers[0].text = pathState.waypoint1?.name ?? '';
-    _waypointControllers[1].text = pathState.waypoint2?.name ?? '';
+    setState(() {
+      _departure = pathState.departure?.name;
+      _destination = pathState.destination?.name;
+      _waypoints.clear();
+      if (pathState.waypoint1 != null) {
+        _waypoints.add(pathState.waypoint1!.name);
+      }
+      if (pathState.waypoint2 != null) {
+        _waypoints.add(pathState.waypoint2!.name);
+      }
+    });
   }
 
-  @override
-  void dispose() {
-    _departureController.dispose();
-    _destinationController.dispose();
-    for (var controller in _waypointControllers) {
-      controller.dispose();
-    }
-    super.dispose();
+  Future<void> _selectLocation(
+    SearchMode searchMode, {
+    int? waypointIndex,
+  }) async {
+    final result = await context.push<Poi>('/home/search', extra: searchMode);
+
+    if (result == null) return;
+
+    setState(() {
+      switch (searchMode) {
+        case SearchMode.departure:
+          _departure = result.name;
+          ref.read(pathSelectionProvider.notifier).setDeparture(result);
+        case SearchMode.destination:
+          _destination = result.name;
+          ref.read(pathSelectionProvider.notifier).setDestination(result);
+        case SearchMode.waypoint1:
+          if (_waypoints.isEmpty) {
+            _waypoints.add(result.name);
+          } else {
+            _waypoints[0] = result.name;
+          }
+          ref.read(pathSelectionProvider.notifier).setWaypoint1(result);
+        case SearchMode.waypoint2:
+          if (_waypoints.length < 2) {
+            _waypoints.add(result.name);
+          } else {
+            _waypoints[1] = result.name;
+          }
+          ref.read(pathSelectionProvider.notifier).setWaypoint2(result);
+        case SearchMode.normal:
+          throw UnimplementedError();
+      }
+    });
   }
 
   // 경유지 추가 로직
   void _addWaypoint() {
-    if (_waypointControllers.length >= 2) return; // 최대 2개 제한
-
+    if (_waypoints.length >= 2) return; // 경유지는 최대 2개까지만 허용
     setState(() {
-      _waypointControllers.add(TextEditingController());
+      _waypoints.add(null);
     });
   }
 
   // 경유지 삭제 로직
   void _removeWaypoint(int index) {
     setState(() {
-      _waypointControllers[index].dispose(); // 메모리 해제
-      _waypointControllers.removeAt(index);
+      _waypoints.removeAt(index);
+      if (index == 0) {
+        ref.read(pathSelectionProvider.notifier).setWaypoint1(null);
+      } else if (index == 1) {
+        ref.read(pathSelectionProvider.notifier).setWaypoint2(null);
+      }
     });
   }
 
-  void _swapDepartureDestination() {
-    // final temp = _departureController.text;
-    // _departureController.text = _destinationController.text;
-    // _destinationController.text = temp;
-    // setState(() {});
-    ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
-  }
+  // 스왑 로직은 오류가 많아서 보류
+  // void _swapDepartureDestination() {
+  //   // final temp = _departureController.text;
+  //   // _departureController.text = _destinationController.text;
+  //   // _destinationController.text = temp;
+  //   // setState(() {});
+  //   ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
+  // }
 
   void _reset() {
-    // _departureController.clear();
-    // _destinationController.clear();
-    // setState(() {});
+    setState(() {
+      _departure = null;
+      _destination = null;
+      _waypoints.clear();
+    });
     ref.read(pathSelectionProvider.notifier).resetPath();
   }
 
   bool get _isFindPathEnabled {
-    return _departureController.text.isNotEmpty &&
-        _destinationController.text.isNotEmpty;
+    // 목적지와 출발지가 모두 설정되어야 경로 검색 버튼이 활성화되도록
+    return _departure != null && _destination != null;
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(pathSelectionProvider, (previous, next) {
-      _updateControllers();
+      _updateFromState();
     });
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: AppColors.grey200),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // 메인 컨텐츠
-            Positioned(
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                color: AppColors.grey200,
-              ),
-            ),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.only(left: 24, right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 출발지와 목적지 입력 필드
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 출발지 필드
-                            _buildLocationField(
-                              controller: _departureController,
-                              hintText: '출발지',
-                              searchMode: SearchMode.departure,
-                            ),
-
-                            // 경유지 필드 (동적 생성)
-                            for (
-                              int i = 0;
-                              i < _waypointControllers.length;
-                              i++
-                            ) ...[
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildLocationField(
-                                      controller: _waypointControllers[i],
-                                      hintText: '경유지 ${i + 1}',
-                                      searchMode: i == 0
-                                          ? SearchMode.waypoint1
-                                          : SearchMode.waypoint2,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // 경유지 삭제 버튼
-                                  GestureDetector(
-                                    onTap: () => _removeWaypoint(i),
-                                    child: Icon(
-                                      Icons.remove_circle_outline,
-                                      color: AppColors.grey400,
-                                      size: 24,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                            const SizedBox(height: 12),
-                            // 목적지 필드
-                            _buildLocationField(
-                              controller: _destinationController,
-                              hintText: '목적지',
-                              searchMode: SearchMode.destination,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // ------------------Swap 버튼-----------------------
-                      GestureDetector(
-                        onTap: _swapDepartureDestination,
-                        child: SizedBox(
-                          width: 48,
-                          height: 112,
-                          child: Image.asset('assets/icons/arrow_swap.png'),
-                        ),
-                      ),
-                    ],
+                  // 출발지 입력 버튼
+                  LocationInputTile(
+                    label: '출발지',
+                    value: _departure,
+                    onTap: () => _selectLocation(SearchMode.departure),
                   ),
-                  const SizedBox(height: 16),
-                  // 초기화 버튼
-                  GestureDetector(
-                    onTap: _reset,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  const SizedBox(height: 12),
+                  // 경유지 입력 버튼들
+                  for (var i = 0; i < _waypoints.length; i++) ...[
+                    LocationInputTile(
+                      label: '경유지 ${i + 1}',
+                      value: _waypoints[i],
+                      onTap: () => _selectLocation(
+                        i == 0 ? SearchMode.waypoint1 : SearchMode.waypoint2,
+                        waypointIndex: i,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.grey300,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '초기화',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.text,
-                        ),
+                      trailing: IconButton(
+                        onPressed: () => _removeWaypoint(i),
+                        icon: Icon(Icons.delete_outline, color: AppColors.text),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                  ],
+                  // 경유지 추가 버튼
+                  if (_waypoints.length < 2) ...[
+                    Center(child: AddWaypointButton(onTap: _addWaypoint)),
+                    const SizedBox(height: 12),
+                  ],
+                  // 목적지 입력 버튼
+                  LocationInputTile(
+                    label: '목적지',
+                    value: _destination,
+                    onTap: () => _selectLocation(SearchMode.destination),
                   ),
                 ],
               ),
             ),
-            // --------------------경유지 추가 버튼-------------------------
-            if (_waypointControllers.length < 2) // 최대 2개 제한 도달 시 사라지게끔 렌더링
-              Positioned(
-                top: 36,
-                right: 80,
-                child: GestureDetector(
-                  onTap: _addWaypoint,
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 24),
-                  ),
-                ),
+            const SizedBox(height: 16),
+            // 초기화 버튼
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ResetButton(onTap: _reset),
               ),
-            // 층 선택 버튼 (오른쪽)
-            Positioned(
-              right: 24,
-              bottom: 100,
-              child: Column(
-                children: [
-                  _buildFloorButton('1F'),
-                  const SizedBox(height: 8),
-                  _buildFloorButton('B1'),
+            ),
+            // 지도 미리보기
+            Expanded(
+              child: MapPreview(
+                floorButtons: [
+                  FloorButtonData(
+                    floor: '1F',
+                    isSelected: _selectedFloor == '1F',
+                    onTap: () {
+                      setState(() {
+                        _selectedFloor = '1F';
+                      });
+                    },
+                  ),
+                  FloorButtonData(
+                    floor: '2F',
+                    isSelected: _selectedFloor == '2F',
+                    onTap: () {
+                      setState(() {
+                        _selectedFloor = '2F';
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
-            // 길찾기 버튼 (하단)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: _isFindPathEnabled
-                    ? () {
-                        // 길찾기 기능 구현
-                        final pathState = ref.read(pathSelectionProvider);
-                        final Poi? startPoi = pathState.departure;
-                        final Poi? endPoi = pathState.destination;
+            // 길찾기 실행 버튼
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isFindPathEnabled
+                      ? () {
+                          final pathState = ref.read(pathSelectionProvider);
+                          final Poi? startPoi = pathState.departure;
+                          final Poi? endPoi = pathState.destination;
 
-                        debugPrint('출발지 POI: ${pathState.departure!.vertexId}');
-                        debugPrint(
-                          '목적지 POI: ${pathState.destination!.vertexId}',
-                        );
-
-                        if (startPoi != null && endPoi != null) {
-                          // 길찾기 결과 페이지로 이동하면서 출발지/목적지 Poi 객체를 전달
-                          context.push(
-                            '/home/pathSelection/pathResult',
-                            extra: {'start': startPoi, 'end': endPoi},
+                          debugPrint(
+                            '출발지 POI: ${pathState.departure!.vertexId}',
                           );
+                          debugPrint(
+                            '목적지 POI: ${pathState.destination!.vertexId}',
+                          );
+
+                          if (startPoi != null && endPoi != null) {
+                            context.push(
+                              '/home/pathSelection/pathResult',
+                              extra: {'start': startPoi, 'end': endPoi},
+                            );
+                          }
                         }
-                      }
-                    : null,
-                child: Container(
-                  margin: const EdgeInsets.all(24),
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: _isFindPathEnabled
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isFindPathEnabled
                         ? AppColors.primary
                         : AppColors.grey300,
-                    borderRadius: BorderRadius.circular(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    disabledBackgroundColor: AppColors.grey300,
                   ),
-                  child: Center(
-                    child: Text(
-                      '길찾기',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: _isFindPathEnabled
-                            ? Colors.white
-                            : AppColors.grey400,
-                      ),
+                  child: Text(
+                    '길찾기',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: _isFindPathEnabled
+                          ? Colors.white
+                          : AppColors.grey400,
                     ),
                   ),
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloorButton(String floor) {
-    final isSelected = _selectedFloor == floor;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFloor = floor;
-        });
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.grey200,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            floor,
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.text,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLocationField({
-    required TextEditingController controller,
-    required String hintText,
-    required SearchMode searchMode,
-  }) {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.grey300,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        readOnly: true,
-        onTap: () {
-          context.push('/home/search', extra: searchMode);
-        },
-        onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 16,
-            color: AppColors.grey400,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-        style: TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 16,
-          color: AppColors.text,
         ),
       ),
     );

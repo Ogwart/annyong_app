@@ -1,13 +1,13 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class NaviLocationInputTile extends StatelessWidget {
+class LocationInputTile extends StatelessWidget {
   final String label;
   final String? value;
   final VoidCallback onTap;
   final Widget? trailing;
 
-  const NaviLocationInputTile({
+  const LocationInputTile({
     super.key,
     required this.label,
     required this.value,
@@ -60,4 +60,3 @@ class NaviLocationInputTile extends StatelessWidget {
     );
   }
 }
-

@@ -1,15 +1,11 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class NaviResetButton extends StatelessWidget {
+class ResetButton extends StatelessWidget {
   final VoidCallback onTap;
   final String label;
 
-  const NaviResetButton({
-    super.key,
-    required this.onTap,
-    this.label = '초기화',
-  });
+  const ResetButton({super.key, required this.onTap, this.label = '초기화'});
 
   @override
   Widget build(BuildContext context) {
@@ -33,4 +29,3 @@ class NaviResetButton extends StatelessWidget {
     );
   }
 }
-

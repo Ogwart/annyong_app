@@ -2,22 +2,22 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:flutter/material.dart';
 
-class NaviFloorButtonData {
+class FloorButtonData {
   final String floor;
   final bool isSelected;
   final VoidCallback? onTap;
 
-  const NaviFloorButtonData({
+  const FloorButtonData({
     required this.floor,
     required this.isSelected,
     this.onTap,
   });
 }
 
-class NaviMapPreview extends StatelessWidget {
-  final List<NaviFloorButtonData> floorButtons;
+class MapPreview extends StatelessWidget {
+  final List<FloorButtonData> floorButtons;
 
-  const NaviMapPreview({super.key, required this.floorButtons});
+  const MapPreview({super.key, required this.floorButtons});
 
   @override
   Widget build(BuildContext context) {
@@ -67,15 +67,10 @@ class NaviMapPreview extends StatelessWidget {
               color: AppColors.primary,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.navigation,
-              color: Colors.white,
-              size: 32,
-            ),
+            child: const Icon(Icons.navigation, color: Colors.white, size: 32),
           ),
         ),
       ],
     );
   }
 }
-
