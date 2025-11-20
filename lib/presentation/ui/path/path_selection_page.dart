@@ -55,32 +55,23 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
 
     if (result == null) return;
 
-    setState(() {
-      switch (searchMode) {
-        case SearchMode.departure:
-          _departure = result.name;
-          ref.read(pathSelectionProvider.notifier).setDeparture(result);
-        case SearchMode.destination:
-          _destination = result.name;
-          ref.read(pathSelectionProvider.notifier).setDestination(result);
-        case SearchMode.waypoint1:
-          if (_waypoints.isEmpty) {
-            _waypoints.add(result.name);
-          } else {
-            _waypoints[0] = result.name;
-          }
-          ref.read(pathSelectionProvider.notifier).setWaypoint1(result);
-        case SearchMode.waypoint2:
-          if (_waypoints.length < 2) {
-            _waypoints.add(result.name);
-          } else {
-            _waypoints[1] = result.name;
-          }
-          ref.read(pathSelectionProvider.notifier).setWaypoint2(result);
-        case SearchMode.normal:
-          throw UnimplementedError();
-      }
-    });
+    // Provider의 Notifier만 호출하고, 실제 상태 변경은
+    // ref.listen이 감지하여 _updateFromState()를 실행하고 화면을 갱신하도록 함
+    final notifier = ref.read(pathSelectionProvider.notifier);
+
+    switch (searchMode) {
+      case SearchMode.departure:
+        notifier.setDeparture(result);
+      case SearchMode.destination:
+        notifier.setDestination(result);
+      case SearchMode.waypoint1:
+        notifier.setWaypoint1(result);
+      case SearchMode.waypoint2:
+        notifier.setWaypoint2(result);
+      case SearchMode.normal:
+        debugPrint('Normal mode selected, no action taken.');
+        break;
+    }
   }
 
   // 경유지 추가 로직
