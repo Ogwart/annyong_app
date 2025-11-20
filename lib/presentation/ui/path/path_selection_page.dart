@@ -28,20 +28,10 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // _updateControllers();
       _updateFromState();
     });
   }
 
-  // 상태로부터 값을 업데이트하는 것으로 변경
-  // --- 기존 코드 ---
-  // void _updateControllers() {
-  //   final pathState = ref.read(pathSelectionProvider);
-  //   _departureController.text = pathState.departure?.name ?? '';
-  //   _destinationController.text = pathState.destination?.name ?? '';
-  //   _waypointControllers[0].text = pathState.waypoint1?.name ?? '';
-  //   _waypointControllers[1].text = pathState.waypoint2?.name ?? '';
-  // }
   void _updateFromState() {
     final pathState = ref.read(pathSelectionProvider);
     setState(() {
@@ -121,6 +111,33 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
   //   // setState(() {});
   //   ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
   // }
+
+  // 길찾기 버튼 클릭 시 실행 로직
+  void _handleFindPath() {
+    debugPrint('----------- [_handleFindPath Start] -----------');
+    final pathState = ref.read(pathSelectionProvider);
+    final Poi? startPoi = pathState.departure;
+    final Poi? endPoi = pathState.destination;
+
+    // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
+    final List<Poi> activeWaypoints = [];
+    if (pathState.waypoint1 != null) {
+      activeWaypoints.add(pathState.waypoint1!);
+    }
+    if (pathState.waypoint2 != null) {
+      activeWaypoints.add(pathState.waypoint2!);
+    }
+
+    debugPrint('출발지 POI: ${startPoi!.vertexId}');
+    debugPrint('경유지 POI: ${activeWaypoints.map((e) => e.vertexId).toList()}');
+    debugPrint('목적지 POI: ${endPoi!.vertexId}');
+    debugPrint('----------- [_handleFindPath End] -----------');
+
+    context.go(
+      '/home/pathSelection/pathResult',
+      extra: {'start': startPoi, 'end': endPoi, 'waypoints': activeWaypoints},
+    );
+  }
 
   void _reset() {
     setState(() {
@@ -230,37 +247,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isFindPathEnabled
-                      ? () {
-                          final pathState = ref.read(pathSelectionProvider);
-                          final Poi? startPoi = pathState.departure;
-                          final Poi? endPoi = pathState.destination;
-
-                          // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
-                          final List<Poi> activeWaypoints = [];
-                          if (pathState.waypoint1 != null) {
-                            activeWaypoints.add(pathState.waypoint1!);
-                          }
-                          if (pathState.waypoint2 != null) {
-                            activeWaypoints.add(pathState.waypoint2!);
-                          }
-
-                          debugPrint('출발지 POI: ${startPoi!.vertexId}');
-                          debugPrint(
-                            '경유지 POI: ${activeWaypoints.map((e) => e.vertexId).toList()}',
-                          );
-                          debugPrint('목적지 POI: ${endPoi!.vertexId}');
-
-                          context.go(
-                            '/home/pathSelection/pathResult',
-                            extra: {
-                              'start': startPoi,
-                              'end': endPoi,
-                              'waypoints': activeWaypoints,
-                            },
-                          );
-                        }
-                      : null,
+                  onPressed: _isFindPathEnabled ? _handleFindPath : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFindPathEnabled
                         ? AppColors.primary
