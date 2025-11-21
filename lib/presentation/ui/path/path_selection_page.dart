@@ -4,6 +4,12 @@ import 'package:annyong/presentation/viewmodels/path_selection_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
+import 'package:annyong/domain/entity/poi.dart';
+import 'package:annyong/presentation/widgets/path_page/location_input_tile.dart';
+import 'package:annyong/presentation/widgets/path_page/add_waypoint_button.dart';
+import 'package:annyong/presentation/widgets/path_page/reset_button.dart';
+import 'package:annyong/presentation/widgets/path_page/map_preview.dart';
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -13,305 +19,249 @@ class PathSelectionPage extends ConsumerStatefulWidget {
 }
 
 class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
-  final TextEditingController _departureController = TextEditingController();
-  final TextEditingController _destinationController = TextEditingController();
   String? _selectedFloor = '1F';
+  String? _departure;
+  String? _destination;
+  final List<String?> _waypoints = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateControllers();
+      _updateFromState();
     });
   }
 
-  void _updateControllers() {
+  void _updateFromState() {
     final pathState = ref.read(pathSelectionProvider);
-    if (pathState.departure != null && _departureController.text != pathState.departure) {
-      _departureController.text = pathState.departure!;
-    }
-    if (pathState.destination != null && _destinationController.text != pathState.destination) {
-      _destinationController.text = pathState.destination!;
+    setState(() {
+      _departure = pathState.departure?.name;
+      _destination = pathState.destination?.name;
+      _waypoints.clear();
+      if (pathState.waypoint1 != null) {
+        _waypoints.add(pathState.waypoint1!.name);
+      }
+      if (pathState.waypoint2 != null) {
+        _waypoints.add(pathState.waypoint2!.name);
+      }
+    });
+  }
+
+  Future<void> _selectLocation(
+    SearchMode searchMode, {
+    int? waypointIndex,
+  }) async {
+    final result = await context.push<Poi>('/home/search', extra: searchMode);
+
+    if (result == null) return;
+
+    // Provider의 Notifier만 호출하고, 실제 상태 변경은
+    // ref.listen이 감지하여 _updateFromState()를 실행하고 화면을 갱신하도록 함
+    final notifier = ref.read(pathSelectionProvider.notifier);
+
+    switch (searchMode) {
+      case SearchMode.departure:
+        notifier.setDeparture(result);
+      case SearchMode.destination:
+        notifier.setDestination(result);
+      case SearchMode.waypoint1:
+        notifier.setWaypoint1(result);
+      case SearchMode.waypoint2:
+        notifier.setWaypoint2(result);
+      case SearchMode.normal:
+        debugPrint('Normal mode selected, no action taken.');
+        break;
     }
   }
 
-  @override
-  void dispose() {
-    _departureController.dispose();
-    _destinationController.dispose();
-    super.dispose();
+  // 경유지 추가 로직
+  void _addWaypoint() {
+    if (_waypoints.length >= 2) return; // 경유지는 최대 2개까지만 허용
+    setState(() {
+      _waypoints.add(null);
+    });
   }
 
-  void _swapDepartureDestination() {
-    final temp = _departureController.text;
-    _departureController.text = _destinationController.text;
-    _destinationController.text = temp;
-    setState(() {});
+  // 경유지 삭제 로직
+  void _removeWaypoint(int index) {
+    setState(() {
+      _waypoints.removeAt(index);
+      if (index == 0) {
+        ref.read(pathSelectionProvider.notifier).setWaypoint1(null);
+      } else if (index == 1) {
+        ref.read(pathSelectionProvider.notifier).setWaypoint2(null);
+      }
+    });
+  }
+
+  // 스왑 로직은 오류가 많아서 보류
+  // void _swapDepartureDestination() {
+  //   // final temp = _departureController.text;
+  //   // _departureController.text = _destinationController.text;
+  //   // _destinationController.text = temp;
+  //   // setState(() {});
+  //   ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
+  // }
+
+  // 길찾기 버튼 클릭 시 실행 로직
+  void _handleFindPath() {
+    debugPrint('----------- [_handleFindPath Start] -----------');
+    final pathState = ref.read(pathSelectionProvider);
+    final Poi? startPoi = pathState.departure;
+    final Poi? endPoi = pathState.destination;
+
+    // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
+    final List<Poi> activeWaypoints = [];
+    if (pathState.waypoint1 != null) {
+      activeWaypoints.add(pathState.waypoint1!);
+    }
+    if (pathState.waypoint2 != null) {
+      activeWaypoints.add(pathState.waypoint2!);
+    }
+
+    debugPrint('출발지 POI: ${startPoi!.vertexId}');
+    debugPrint('경유지 POI: ${activeWaypoints.map((e) => e.vertexId).toList()}');
+    debugPrint('목적지 POI: ${endPoi!.vertexId}');
+    debugPrint('----------- [_handleFindPath End] -----------');
+
+    context.go(
+      '/home/pathSelection/pathResult',
+      extra: {'start': startPoi, 'end': endPoi, 'waypoints': activeWaypoints},
+    );
   }
 
   void _reset() {
-    _departureController.clear();
-    _destinationController.clear();
-    setState(() {});
+    setState(() {
+      _departure = null;
+      _destination = null;
+      _waypoints.clear();
+    });
+    ref.read(pathSelectionProvider.notifier).resetPath();
   }
 
   bool get _isFindPathEnabled {
-    return _departureController.text.isNotEmpty &&
-        _destinationController.text.isNotEmpty;
+    // 목적지와 출발지가 모두 설정되어야 경로 검색 버튼이 활성화되도록
+    return _departure != null && _destination != null;
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(pathSelectionProvider, (previous, next) {
-      _updateControllers();
+      _updateFromState();
     });
+
     return Scaffold(
-      appBar: AppBar(backgroundColor: AppColors.grey200),
+      appBar: AppBar(title: const Text('길찾기 검색')),
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // 메인 컨텐츠
-            Positioned(
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                color: AppColors.grey200,
-              ),
-            ),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.only(left: 24, right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 출발지와 목적지 입력 필드
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 출발지 필드
-                            Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey300,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TextField(
-                                controller: _departureController,
-                                readOnly: true,
-                                onTap: () {
-                                  context.push(
-                                    '/home/search',
-                                    extra: SearchMode.departure,
-                                  );
-                                },
-                                onChanged: (_) => setState(() {}),
-                                decoration: InputDecoration(
-                                  hintText: '출발지',
-                                  hintStyle: TextStyle(
-                                    fontFamily: 'Pretendard',
-                                    fontSize: 16,
-                                    color: AppColors.grey400,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 16,
-                                  ),
-                                ),
-                                style: TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: 16,
-                                  color: AppColors.text,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // 목적지 필드
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.grey300,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: TextField(
-                                      controller: _destinationController,
-                                      readOnly: true,
-                                      onTap: () {
-                                        context.push(
-                                          '/home/search',
-                                          extra: SearchMode.destination,
-                                        );
-                                      },
-                                      onChanged: (_) => setState(() {}),
-                                      decoration: InputDecoration(
-                                        hintText: '목적지',
-                                        hintStyle: TextStyle(
-                                          fontFamily: 'Pretendard',
-                                          fontSize: 16,
-                                          color: AppColors.grey400,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 16,
-                                            ),
-                                      ),
-                                      style: TextStyle(
-                                        fontFamily: 'Pretendard',
-                                        fontSize: 16,
-                                        color: AppColors.text,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // ------------------Swap 버튼-----------------------
-                      GestureDetector(
-                        onTap: _swapDepartureDestination,
-                        child: SizedBox(
-                          width: 48,
-                          height: 112,
-                          child: Image.asset('assets/icons/arrow_swap.png'),
-                        ),
-                      ),
-                    ],
+                  // 출발지 입력 버튼
+                  LocationInputTile(
+                    label: '출발지',
+                    value: _departure,
+                    onTap: () => _selectLocation(SearchMode.departure),
                   ),
-                  const SizedBox(height: 16),
-                  // 초기화 버튼
-                  GestureDetector(
-                    onTap: _reset,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  const SizedBox(height: 12),
+                  // 경유지 입력 버튼들
+                  for (var i = 0; i < _waypoints.length; i++) ...[
+                    LocationInputTile(
+                      label: '경유지 ${i + 1}',
+                      value: _waypoints[i],
+                      onTap: () => _selectLocation(
+                        i == 0 ? SearchMode.waypoint1 : SearchMode.waypoint2,
+                        waypointIndex: i,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.grey300,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '초기화',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.text,
-                        ),
+                      trailing: IconButton(
+                        onPressed: () => _removeWaypoint(i),
+                        icon: Icon(Icons.delete_outline, color: AppColors.text),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                  ],
+                  // 경유지 추가 버튼
+                  if (_waypoints.length < 2) ...[
+                    Center(child: AddWaypointButton(onTap: _addWaypoint)),
+                    const SizedBox(height: 12),
+                  ],
+                  // 목적지 입력 버튼
+                  LocationInputTile(
+                    label: '목적지',
+                    value: _destination,
+                    onTap: () => _selectLocation(SearchMode.destination),
                   ),
                 ],
               ),
             ),
-            // --------------------경유지 추가 버튼-------------------------
-            Positioned(
-              top: 36,
-              right: 80,
-              child: GestureDetector(
-                onTap: () {
-                  // 추가 목적지 기능 구현
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 24),
-                ),
+            const SizedBox(height: 16),
+            // 초기화 버튼
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ResetButton(onTap: _reset),
               ),
             ),
-            // 층 선택 버튼 (오른쪽)
-            Positioned(
-              right: 24,
-              bottom: 100,
-              child: Column(
-                children: [
-                  _buildFloorButton('1F'),
-                  const SizedBox(height: 8),
-                  _buildFloorButton('B1'),
+            // 지도 미리보기
+            Expanded(
+              child: MapPreview(
+                floorButtons: [
+                  FloorButtonData(
+                    floor: '1F',
+                    isSelected: _selectedFloor == '1F',
+                    onTap: () {
+                      setState(() {
+                        _selectedFloor = '1F';
+                      });
+                    },
+                  ),
+                  FloorButtonData(
+                    floor: '2F',
+                    isSelected: _selectedFloor == '2F',
+                    onTap: () {
+                      setState(() {
+                        _selectedFloor = '2F';
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
-            // 길찾기 버튼 (하단)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: _isFindPathEnabled
-                    ? () {
-                        // 길찾기 기능 구현
-                      }
-                    : null,
-                child: Container(
-                  margin: const EdgeInsets.all(24),
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: _isFindPathEnabled
+            // 길찾기 실행 버튼
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isFindPathEnabled ? _handleFindPath : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isFindPathEnabled
                         ? AppColors.primary
                         : AppColors.grey300,
-                    borderRadius: BorderRadius.circular(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    disabledBackgroundColor: AppColors.grey300,
                   ),
-                  child: Center(
-                    child: Text(
-                      '길찾기',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: _isFindPathEnabled
-                            ? Colors.white
-                            : AppColors.grey400,
-                      ),
+                  child: Text(
+                    '길찾기',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: _isFindPathEnabled
+                          ? Colors.white
+                          : AppColors.grey400,
                     ),
                   ),
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloorButton(String floor) {
-    final isSelected = _selectedFloor == floor;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFloor = floor;
-        });
-      },
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.grey200,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            floor,
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.text,
-            ),
-          ),
         ),
       ),
     );

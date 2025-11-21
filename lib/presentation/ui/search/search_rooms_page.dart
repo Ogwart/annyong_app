@@ -1,3 +1,7 @@
+import 'package:annyong/domain/entity/building.dart';
+import 'package:annyong/domain/entity/poi.dart';
+import 'package:annyong/domain/repository/building_repository.dart';
+import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/viewmodels/path_selection_viewmodel.dart';
@@ -5,55 +9,93 @@ import 'package:annyong/presentation/widgets/search_rooms_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
 
 class SearchRoomsPage extends ConsumerStatefulWidget {
   final String searchType;
+  final int categoryId;
   final SearchMode? searchMode;
+  final bool returnResult;
 
-  const SearchRoomsPage({super.key, required this.searchType, this.searchMode});
+  const SearchRoomsPage({
+    super.key,
+    required this.searchType,
+    required this.categoryId,
+    this.searchMode,
+    this.returnResult = false,
+  });
 
   @override
   ConsumerState<SearchRoomsPage> createState() => _SearchRoomsPageState();
 }
 
 class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
+  final BuildingRepository _buildingRepository = BuildingRepository();
+  final PoiRepository _poiRepository = PoiRepository();
+
+  List<Building> _buildings = [];
+  List<Poi> _filteredPois = [];
+  bool _isLoading = true;
+
   String? selectedBuilding;
+  int? selectedBuildingId;
   String? selectedFloor;
   String? selectedClassroom;
 
-  // 임시 데이터 - 나중에 실제 데이터로 교체
-  final List<String> buildings = [
-    '하이테크',
-    '5호관(동)',
-    '5호관(서)',
-    '5호관(남)',
-    '5호관(북)',
-  ];
-
   // 층 목록은 건물 선택 후 표시
-  List<String> floors = [];
+  List<int> floors = [];
   // 강의실 번호 목록은 층 선택 후 표시
-  List<String> classrooms = [];
+  List<Poi> classrooms = [];
 
   @override
   void initState() {
     super.initState();
-    // 기본값 설정 (UI 확인용)
-    selectedBuilding = '하이테크';
-    floors = []; // 하이테크에는 층 목록이 없음
-    selectedFloor = null;
-    classrooms = [];
-    selectedClassroom = null;
+    _loadData();
   }
 
-  void _onBuildingSelected(String building) {
+  Future<void> _loadData() async {
+    try {
+      final buildings = await _buildingRepository.fetchBuildings();
+      final pois = await _poiRepository.fetchPois();
+
+      // 선택된 카테고리에 맞는 POI만 필터링
+      debugPrint('선택된 카테고리 ID: ${widget.categoryId}');
+      final filteredPois = pois
+          .where((poi) => poi.categoryId == widget.categoryId)
+          .toList();
+
+      // 필터링된 POI가 있는 건물만 표시
+      setState(() {
+        _buildings = buildings;
+        _filteredPois = filteredPois;
+        _isLoading = false;
+
+        // 기본값 설정
+        if (_buildings.isNotEmpty) {
+          selectedBuilding = _buildings.first.name;
+          selectedBuildingId = _buildings.first.id;
+        }
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onBuildingSelected(Building building) {
     setState(() {
-      selectedBuilding = building;
+      debugPrint('선택된 건물: ${building.name}');
+      selectedBuilding = building.name;
+      selectedBuildingId = building.id;
       selectedFloor = null;
       selectedClassroom = null;
       // 건물 선택 시 해당 건물의 층 목록 로드
-      if (building == '5호관(남)') {
-        floors = ['B1', '1F', '2F', '3F', '4F', '5F', '6F'];
+      if (selectedBuilding!.contains('5호관')) {
+        floors = [1, 2];
+      } else if (selectedBuilding!.contains('하이테크')) {
+        floors = [1];
       } else {
         floors = [];
       }
@@ -61,37 +103,32 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     });
   }
 
-  void _onFloorSelected(String floor) {
+  void _onFloorSelected(int floor) {
     setState(() {
-      selectedFloor = floor;
+      debugPrint('선택된 층: $floor');
+      selectedFloor = '${floor}F';
       selectedClassroom = null;
-      // 층 선택 시 해당 층의 강의실 목록 로드 (임시 데이터)
-      if (selectedBuilding == '5호관(남)' && floor == '5F') {
-        classrooms = [
-          '5S501',
-          '5S503',
-          '5S505',
-          '5S509',
-          '5S517',
-          '5S518',
-          '5S521',
-          '5S531',
-          '5S532',
-          '5S533',
-          '5S534',
-          '5S535',
-        ];
-      } else {
-        classrooms = [];
-      }
+
+      // 선택된 카테고리 + 선택된 건물 + 선택된 층에 있는 POI 목록 필터링
+      classrooms = _filteredPois
+          .where(
+            (poi) => poi.buildingId == selectedBuildingId && poi.floor == floor,
+          )
+          .toList();
     });
   }
 
-  // TODO: 호수 선택 어떻게 할 건지 회의하고 함수 사용처 결정
-  void _onClassroomSelected(String classroom) {
+  Future<void> _onClassroomSelected(Poi classroom) async {
+    debugPrint('선택된 강의실: ${classroom.name}');
     setState(() {
-      selectedClassroom = classroom;
+      selectedClassroom = classroom.name;
     });
+
+    // 결과 반환 모드인 경우 선택한 강의실 이름 반환
+    if (widget.returnResult) {
+      context.pop(classroom.name);
+      return;
+    }
 
     // 선택한 강의실을 출발지/목적지로 설정
     final pathProvider = ref.read(pathSelectionProvider.notifier);
@@ -99,8 +136,12 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
       pathProvider.setDeparture(classroom);
     } else if (widget.searchMode == SearchMode.destination) {
       pathProvider.setDestination(classroom);
+    } else if (widget.searchMode == SearchMode.waypoint1) {
+      pathProvider.setWaypoint1(classroom);
+    } else if (widget.searchMode == SearchMode.waypoint2) {
+      pathProvider.setWaypoint2(classroom);
     } else {
-      // 기본 모드: 목적지로 설정하고 path_selection으로 이동
+      // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
       pathProvider.setDestination(classroom);
     }
     context.go("/home/pathSelection");
@@ -108,6 +149,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -203,12 +248,12 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                       ),
                     ),
                     child: ListView.builder(
-                      itemCount: buildings.length,
+                      itemCount: _buildings.length,
                       itemBuilder: (context, index) {
-                        final building = buildings[index];
-                        final isSelected = selectedBuilding == building;
+                        final building = _buildings[index];
+                        final isSelected = selectedBuilding == building.name;
                         return CategoryItem(
-                          name: building,
+                          name: building.name,
                           isSelected: isSelected,
                           onTap: () => _onBuildingSelected(building),
                         );
@@ -230,9 +275,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                             itemCount: floors.length,
                             itemBuilder: (context, index) {
                               final floor = floors[index];
-                              final isSelected = selectedFloor == floor;
+                              final floorLabel = '${floor}F';
+                              final isSelected = selectedFloor == floorLabel;
                               return CategoryItem(
-                                name: floor,
+                                name: floorLabel,
                                 isSelected: isSelected,
                                 onTap: () => _onFloorSelected(floor),
                               );
@@ -248,9 +294,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                           itemCount: classrooms.length,
                           itemBuilder: (context, index) {
                             final classroom = classrooms[index];
-                            final isSelected = selectedClassroom == classroom;
+                            final isSelected =
+                                selectedClassroom == classroom.name;
                             return CategoryItemRooms(
-                              name: classroom,
+                              name: classroom.name,
                               isSelected: isSelected,
                               onTap: () => _onClassroomSelected(classroom),
                             );
