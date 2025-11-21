@@ -50,8 +50,15 @@ class CalibrationService {
       startVertex.id,
     );
 
+    print(
+      "CalibrationService: 시작 Vertex ${startVertex.id}에 연결된 Edge 개수: ${startEdges.length}",
+    );
+
     // 양쪽 2개의 이웃 방향(각 엣지 방향)으로 "직선 경로"를 찾음
     for (var startEdge in startEdges) {
+      print(
+        "CalibrationService: Edge 탐색 - toVertexId: ${startEdge.toVertexId}, way: ${startEdge.way}, length: ${startEdge.length}, isStair: ${startEdge.way.isStair}",
+      );
       // 계단 엣지는 제외 (length가 0이고 way가 up/down인 경우)
       if (startEdge.way.isStair && startEdge.length == 0) {
         continue;
@@ -66,7 +73,12 @@ class CalibrationService {
       );
 
       if (endVertex != null) {
+        print(
+          "CalibrationService: 경로 발견 - endVertex: ${endVertex.id}, distance: ${distance}m",
+        );
         availablePaths.add((endVertex, distance));
+      } else {
+        print("CalibrationService: 이 방향으로는 경로를 찾을 수 없음");
       }
     }
 
@@ -155,7 +167,9 @@ class CalibrationService {
     while (true) {
       final currentVertex = await _poiRepo.getVertexById(cId);
       if (currentVertex == null) {
-        print("CalibrationService Error: Vertex data inconsistent.");
+        print(
+          "CalibrationService Error: Vertex data inconsistent at vertexId: $cId",
+        );
         break; // 맵 데이터 오류
       }
 
@@ -164,6 +178,7 @@ class CalibrationService {
 
       // [탐색 종료 조건 1: 목표 거리 도달]
       if (accDist >= idealDistance) {
+        print("CalibrationService: 목표 거리 도달 - ${accDist}m");
         break; // 7m를 넘었으므로 탐색 성공
       }
 
@@ -177,6 +192,7 @@ class CalibrationService {
         if (otherVertexId != pId) {
           // 계단 엣지는 제외
           if (edge.way.isStair && edge.length == 0) {
+            print("CalibrationService: 계단 엣지 제외 - toVertexId: $otherVertexId");
             continue;
           }
           nextEdge = edge;
@@ -187,7 +203,14 @@ class CalibrationService {
       // 탐색 종료 조건 2: 꺾이거나 막다른 길
       // 막다른 길 : 다음 엣지가 없거나
       // 꺾임 : 다음 엣지의 'way'가 현재 'wayToFollow'와 다르면
-      if (nextEdge == null || nextEdge.way != wayToFollow) {
+      if (nextEdge == null) {
+        print("CalibrationService: 막다른 길 - vertexId: $cId, 누적 거리: ${accDist}m");
+        break;
+      }
+      if (nextEdge.way != wayToFollow) {
+        print(
+          "CalibrationService: 경로가 꺾임 - 현재 way: $wayToFollow, 다음 way: ${nextEdge.way}, 누적 거리: ${accDist}m",
+        );
         break;
       }
 

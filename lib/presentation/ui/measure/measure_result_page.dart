@@ -1,16 +1,36 @@
+import 'package:annyong/domain/usecases/stride_service.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class MeasureResultPage extends StatelessWidget {
+class MeasureResultPage extends StatefulWidget {
   final double? strideLength;
 
   const MeasureResultPage({super.key, this.strideLength});
 
   @override
+  State<MeasureResultPage> createState() => _MeasureResultPageState();
+}
+
+class _MeasureResultPageState extends State<MeasureResultPage> {
+  @override
+  void initState() {
+    super.initState();
+    _saveStrideLengthIfValid();
+  }
+
+  Future<void> _saveStrideLengthIfValid() async {
+    final double stride = widget.strideLength ?? 0.0;
+    if (stride > 0) {
+      // 유효한 보폭이면 저장
+      await StrideService.saveStrideLength(stride);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final double stride = strideLength ?? 0.0;
-    final bool isValid = stride > 0 && stride < 2.0; // 0.3m~1.5m 범위 검증 (대략적으로)
+    final double stride = widget.strideLength ?? 0.0;
+    final bool isValid = stride > 0; // 0보다 큰 값만 유효
 
     return Scaffold(
       appBar: AppBar(elevation: 0, title: const Text("측정 결과")),

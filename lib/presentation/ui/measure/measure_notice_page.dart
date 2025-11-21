@@ -81,7 +81,11 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                     // 건너뛰기 버튼
                     GestureDetector(
                       onTap: () {
-                        context.pop();
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go("/home");
+                        }
                       },
                       child: Container(
                         alignment: Alignment.center,
@@ -105,16 +109,16 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                     // 측정 시작 버튼
                     GestureDetector(
                       onTap: () async {
-                        // POI 선택 화면으로 이동
+                        // POI 선택 화면으로 이동 (ShellRoute 밖의 경로 사용)
                         final selectedPoi = await context.push<Poi>(
-                          "/home/search",
+                          "/measureSelectPoi",
                           extra: {"returnResult": true, "searchMode": null},
                         );
 
                         if (selectedPoi != null && context.mounted) {
                           // POI 선택 후 측정 페이지로 이동
-                          context.pop();
-                          context.push("/measure", extra: selectedPoi);
+                          // context.go를 사용하여 스택을 교체 (MeasureNoticePage 제거)
+                          context.go("/measure", extra: selectedPoi);
                         }
                       },
                       child: Container(

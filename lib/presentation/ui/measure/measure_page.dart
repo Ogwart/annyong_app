@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -5,6 +8,8 @@ import 'package:annyong/domain/usecases/calibration_service.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pedometer/pedometer.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MeasurePage extends StatefulWidget {
   final Poi? startPoi;
@@ -23,11 +28,16 @@ class _MeasurePageState extends State<MeasurePage> {
   CalibrationRoute? _route;
   bool _isLoading = true;
   String? _errorMessage;
-  int _stepCount = 0; // 걸음수 (임시로 수동 입력, 나중에 pedometer로 대체)
+  int _stepCount = 0; // 측정 중 이동한 걸음수
+  int _initialStepCount = 0; // 측정 시작 시점의 걸음수
+  StreamSubscription<StepCount>? _stepCountSubscription;
+  bool _isStepCountAvailable = false;
+  String? _stepCountError;
 
   @override
   void initState() {
     super.initState();
+    _requestPermissionAndInit();
     if (widget.startPoi != null) {
       _findRoute();
     } else {
@@ -38,17 +48,111 @@ class _MeasurePageState extends State<MeasurePage> {
     }
   }
 
+  @override
+  void dispose() {
+    _stepCountSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _requestPermissionAndInit() async {
+    // Android에서 활동 인식 권한 요청
+    if (Platform.isAndroid) {
+      final status = await Permission.activityRecognition.request();
+      print("MeasurePage: 활동 인식 권한 상태: $status");
+
+      if (status.isDenied || status.isPermanentlyDenied) {
+        if (mounted) {
+          setState(() {
+            _isStepCountAvailable = false;
+            _stepCountError = "걸음수 측정을 위해 활동 인식 권한이 필요합니다.\n설정에서 권한을 허용해주세요.";
+          });
+        }
+        return;
+      }
+    }
+
+    // 권한이 허용되었거나 iOS인 경우 pedometer 초기화
+    await _initPedometer();
+  }
+
+  Future<void> _initPedometer() async {
+    try {
+      print("MeasurePage: 걸음수 측정 초기화 시작");
+
+      // 현재 걸음수 가져오기 (첫 번째 이벤트로 초기값 설정)
+      _stepCountSubscription = Pedometer.stepCountStream.listen(
+        (StepCount event) {
+          print("MeasurePage: 걸음수 이벤트 수신 - steps: ${event.steps}");
+          if (mounted) {
+            setState(() {
+              // 첫 번째 이벤트면 초기값으로 설정
+              if (_initialStepCount == 0) {
+                _initialStepCount = event.steps;
+                _isStepCountAvailable = true;
+                print("MeasurePage: 초기 걸음수 설정: $_initialStepCount");
+              }
+
+              // 측정 시작 후 이동한 걸음수 = 현재 걸음수 - 시작 시점 걸음수
+              _stepCount = event.steps - _initialStepCount;
+              if (_stepCount < 0) {
+                _stepCount = 0; // 음수 방지
+              }
+            });
+          }
+        },
+        onError: (error) {
+          print("MeasurePage: 걸음수 측정 오류: $error");
+          if (mounted) {
+            setState(() {
+              _isStepCountAvailable = false;
+              _stepCountError =
+                  "걸음수 측정 중 오류: $error\n권한을 확인하거나 실제 기기에서 실행해주세요.";
+            });
+          }
+        },
+        cancelOnError: false,
+      );
+
+      // 스트림이 이벤트를 발생시키지 않는 경우를 대비해 타임아웃 설정
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted && !_isStepCountAvailable && _stepCountError == null) {
+          print("MeasurePage: 걸음수 측정 타임아웃 - 이벤트가 발생하지 않음");
+          setState(() {
+            _stepCountError =
+                "걸음수 측정이 시작되지 않았습니다.\n권한을 확인하거나 기기를 움직여보세요.\n(시뮬레이터에서는 작동하지 않습니다)";
+          });
+        }
+      });
+    } catch (e) {
+      print("MeasurePage: 걸음수 측정 초기화 예외: $e");
+      if (mounted) {
+        setState(() {
+          _isStepCountAvailable = false;
+          _stepCountError = "걸음수 측정 초기화 실패: $e\n실제 기기에서 실행해주세요.";
+        });
+      }
+    }
+  }
+
   Future<void> _findRoute() async {
     try {
+      print(
+        "MeasurePage: 경로 탐색 시작 - POI: ${widget.startPoi?.name}, vertexId: ${widget.startPoi?.vertexId}",
+      );
       final route = await _calibrationService.findTargetRoute(widget.startPoi!);
+      print(
+        "MeasurePage: 경로 탐색 완료 - route: ${route != null ? 'found' : 'null'}",
+      );
       setState(() {
         _route = route;
         _isLoading = false;
         if (route == null) {
-          _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.";
+          _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
         }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("MeasurePage: 경로 탐색 중 예외 발생 - $e");
+      print("Stack trace: $stackTrace");
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
@@ -57,10 +161,17 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   void _onArrived() {
-    if (_route == null || _stepCount == 0) {
+    if (_route == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("걸음수를 입력해주세요.")));
+      ).showSnackBar(const SnackBar(content: Text("경로 정보가 없습니다.")));
+      return;
+    }
+
+    if (_stepCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("걸음수가 0입니다. 이동 후 다시 시도해주세요.")),
+      );
       return;
     }
 
@@ -74,7 +185,7 @@ class _MeasurePageState extends State<MeasurePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(elevation: 0, title: const Text("보폭 측정")),
+      appBar: AppBar(title: const Text("보폭 측정"), centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -91,7 +202,15 @@ class _MeasurePageState extends State<MeasurePage> {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () {
+                        if (mounted) {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go("/home");
+                          }
+                        }
+                      },
                       child: const Text("돌아가기"),
                     ),
                   ],
@@ -151,7 +270,9 @@ class _MeasurePageState extends State<MeasurePage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "총 거리: ${_route!.totalDistance.toStringAsFixed(1)}m (${_route!.mode == "one-way" ? "편도" : "왕복"})",
+                          _route!.destinationPoi.description == null
+                              ? "설명 없음"
+                              : "${_route!.destinationPoi.description}",
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.grey,
@@ -171,39 +292,65 @@ class _MeasurePageState extends State<MeasurePage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // --------------------걸음수 입력--------------------
+                  // --------------------걸음수 표시--------------------
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
                       children: [
-                        const Text(
-                          "걸음수: ",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                        if (_stepCountError != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              _stepCountError!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.red,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 100,
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "걸음수: ",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            onChanged: (value) {
-                              setState(() {
-                                _stepCount = int.tryParse(value) ?? 0;
-                              });
-                            },
-                          ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.grey200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _stepCount.toString(),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                        if (!_isStepCountAvailable)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              "걸음수 측정을 사용할 수 없습니다.",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -233,7 +380,13 @@ class _MeasurePageState extends State<MeasurePage> {
                   // --------------------다음에 측정하기 버튼--------------------
                   GestureDetector(
                     onTap: () {
-                      context.pop();
+                      if (context.mounted) {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go("/home");
+                        }
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
