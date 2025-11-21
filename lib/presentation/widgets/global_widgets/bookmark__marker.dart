@@ -1,15 +1,15 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class BookmarkButton extends StatelessWidget {
+class BookmarkMarker extends StatelessWidget {
   final String bookmarkTitle;
-  const BookmarkButton({super.key, required this.bookmarkTitle});
+  const BookmarkMarker({super.key, required this.bookmarkTitle});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(right: 12),
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 20),
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       alignment: Alignment.center,
       height: 40,
       decoration: BoxDecoration(

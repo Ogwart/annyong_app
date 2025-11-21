@@ -1,3 +1,4 @@
+import 'package:annyong/domain/usecases/favorite_service.dart';
 import 'package:annyong/domain/usecases/stride_service.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ class _SplashPageState extends State<SplashPage> {
   Future<void> _checkFirstLaunch() async {
     // 기본 보폭 초기화
     await StrideService.initializeDefaultStride();
+    // 기본 즐겨찾기 초기화
+    await FavoriteService.initializeDefaultFavorites();
     
     // 첫 실행 여부 확인
     final isFirst = await StrideService.isFirstLaunch();
