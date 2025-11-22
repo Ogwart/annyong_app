@@ -936,47 +936,47 @@
  },
  {
    "vertex_id": 188,
-   "x_coord": 763,
-   "y_coord": 460
+   "x_coord": 1147,
+   "y_coord": 588
  },
  {
    "vertex_id": 189,
-   "x_coord": 793,
-   "y_coord": 501
+   "x_coord": 1177,
+   "y_coord": 629
  },
  {
    "vertex_id": 190,
-   "x_coord": 830,
-   "y_coord": 501
+   "x_coord": 1214,
+   "y_coord": 629
  },
  {
    "vertex_id": 191,
-   "x_coord": 793,
-   "y_coord": 460
+   "x_coord": 1177,
+   "y_coord": 588
  },
  {
    "vertex_id": 192,
-   "x_coord": 830,
-   "y_coord": 460
+   "x_coord": 1214,
+   "y_coord": 588
  },
  {
    "vertex_id": 193,
-   "x_coord": 793,
-   "y_coord": 407
+   "x_coord": 1177,
+   "y_coord": 535
  },
  {
    "vertex_id": 194,
-   "x_coord": 830,
-   "y_coord": 407
+   "x_coord": 1214,
+   "y_coord": 535
  },
  {
    "vertex_id": 195,
-   "x_coord": 793,
-   "y_coord": 354
+   "x_coord": 1177,
+   "y_coord": 482
  },
  {
    "vertex_id": 196,
-   "x_coord": 830,
-   "y_coord": 354
+   "x_coord": 1214,
+   "y_coord": 482
  }
 ]
