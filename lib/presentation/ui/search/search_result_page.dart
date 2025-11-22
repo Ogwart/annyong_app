@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/foundation.dart';
 
 class SearchResultPage extends ConsumerStatefulWidget {
@@ -221,12 +220,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           itemCount: results.length,
                           itemBuilder: (context, index) {
                             final poi = results[index];
-                            final bool isVertexValid = poi.vertexId! > 0;
                             return SearchResultItem(
                               title: poi.name,
                               categoryId: poi.categoryId,
-                              description: "${poi.id}, ${poi.description}",
-                              isCanNavigation: isVertexValid,
+                              description: poi.description ?? '설명 없음',
                               onSelect: () => _handlePoiSelect(poi),
                             );
                           },
