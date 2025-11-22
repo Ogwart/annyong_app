@@ -1,11 +1,13 @@
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class SearchResultItem extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback onSelect;
   final int categoryId;
+  final bool isCanNavigation; // 길찾기 지원 여부
 
   const SearchResultItem({
     super.key,
@@ -13,6 +15,7 @@ class SearchResultItem extends StatelessWidget {
     required this.description,
     required this.onSelect,
     required this.categoryId,
+    this.isCanNavigation = true,
   });
 
   @override
@@ -53,11 +56,21 @@ class SearchResultItem extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           GestureDetector(
-            onTap: onSelect,
+            // isAvailable이 false면 onTap에 null을 주어 클릭 자체가 안 되게 함 (무응답)
+            onTap: () {
+              if (isCanNavigation) {
+                onSelect();
+              } else {
+                Fluttertoast.showToast(msg: "죄송합니다. 길찾기가 지원되지 않는 장소입니다.");
+              }
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                // isAvailable 여부에 따라 색상 변경: 활성화 시 primary, 비활성화 시 grey400
+                color: isCanNavigation
+                    ? AppColors.primary
+                    : AppColors.secondary,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(

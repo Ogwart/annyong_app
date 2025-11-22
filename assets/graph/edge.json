@@ -1433,5 +1433,12 @@
     "vertex2_id": 188,
     "length": 0,
     "way": "connect"
+  },
+  {
+    "edge_id": 221,
+    "vertex1_id": 1,
+    "vertex2_id": 5,
+    "length": 0,
+    "way": "connect"
   }
 ]

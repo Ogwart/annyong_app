@@ -296,9 +296,12 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                             final classroom = classrooms[index];
                             final isSelected =
                                 selectedClassroom == classroom.name;
+                            final bool isVertexValid = classroom.vertexId! > 0;
+
                             return CategoryItemRooms(
                               name: classroom.name,
                               isSelected: isSelected,
+                              isCanNavigation: isVertexValid,
                               onTap: () => _onClassroomSelected(classroom),
                             );
                           },
