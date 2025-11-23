@@ -1,4 +1,3 @@
-import 'package:annyong/domain/repository/building_repository.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/search_result_provider.dart';
@@ -45,9 +44,12 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
 
     // 페이지 진입 시 searchKeyword 설정 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchResultProvider.notifier).setSearchKeyword(_displayKeyword);
-      // 초기값 설정 (5호관 1층)
-      ref.read(searchResultProvider.notifier).reset();
+      final notifier = ref.read(searchResultProvider.notifier);
+      notifier.setSearchKeyword(_displayKeyword);
+      // 초기값 설정 (5호관 1층) - 다음 프레임에 실행
+      Future.microtask(() {
+        notifier.reset();
+      });
     });
   }
 
@@ -105,19 +107,16 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     final notifier = ref.read(searchResultProvider.notifier);
 
     // 화면을 벗어날 때 초기화
-    ref.listen(searchResultProvider, (previous, next) {
-      // 페이지가 dispose될 때를 감지하기 위해 RouterDelegate를 사용
-      // 하지만 더 간단한 방법은 페이지가 pop될 때를 감지하는 것
-    });
-
-    // 현재 건물/층에 맞는 지도 이미지 경로 (2x만 사용)
+    ref.listen(searchResultProvider, (previous, next) {});
     final imagePath = notifier.getImagePath();
 
     return PopScope(
       onPopInvoked: (didPop) {
         if (didPop) {
-          // 화면을 벗어날 때 초기화
-          notifier.reset();
+          // 화면을 벗어날 때 초기화 (다음 프레임에 실행)
+          Future.microtask(() {
+            notifier.reset();
+          });
         }
       },
       child: Scaffold(
@@ -140,6 +139,33 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           state.selectedBuilding,
                           state.selectedFloor,
                         );
+
+                    // 디버깅: 필터링된 POI 정보 로그 출력
+                    debugPrint('=== 검색 결과 POI 마커 정보 ===');
+                    debugPrint('전체 POI 개수: ${allPois.length}');
+                    debugPrint('필터링된 POI 개수: ${filteredPois.length}');
+                    debugPrint(
+                      '현재 건물: ${state.selectedBuilding}, 층: ${state.selectedFloor}',
+                    );
+                    debugPrint('---');
+                    for (var poi in filteredPois) {
+                      final scaledX = poi.xCoord * 0.3;
+                      final scaledY = poi.yCoord * 0.5;
+                      final adjustedX = scaledX - 20;
+                      final adjustedY = scaledY + 285;
+                      final buildingName = poi.buildingId == 1
+                          ? '5호관'
+                          : poi.buildingId == 2
+                          ? '하이테크관'
+                          : '알 수 없음';
+                      debugPrint(
+                        'POI 이름: ${poi.name} | 건물: $buildingName | 층: ${poi.floor}F | '
+                        '원본 좌표: (${poi.xCoord}, ${poi.yCoord}) | '
+                        '변환된 좌표: ($adjustedX, $adjustedY)',
+                      );
+                    }
+                    debugPrint('============================');
+
                     return Stack(
                       children: [
                         // 지도와 마커
@@ -161,19 +187,27 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                               // POI 위치 마커
                               ...filteredPois.map((poi) {
                                 // POI 좌표에 스케일 및 오프셋 적용 (home_page와 동일한 로직)
-                                final scaledX = poi.xCoord * 0.3;
-                                final scaledY = poi.yCoord * 0.5;
-                                final adjustedX = scaledX - 20;
-                                final adjustedY = scaledY + 285;
+                                final scaledX = poi.xCoord * 0.23;
+                                final scaledY = poi.yCoord * 0.27;
+                                final adjustedX = scaledX - 0;
+                                final adjustedY = scaledY + 130;
 
                                 return Positioned(
                                   left: adjustedX - 12,
                                   top: adjustedY - 24,
                                   child: IgnorePointer(
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: AppColors.primary,
-                                      size: 24,
+                                    child: Container(
+                                      color: AppColors.secondary,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.location_on,
+                                            color: AppColors.primary,
+                                            size: 24,
+                                          ),
+                                          Text("${poi.id}"),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
@@ -187,7 +221,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                             padding: const EdgeInsets.all(16.0),
                             child: IconButton(
                               onPressed: () {
-                                notifier.reset();
+                                // 다음 프레임에 초기화 (위젯 빌드 중 상태 변경 방지)
+                                Future.microtask(() {
+                                  notifier.reset();
+                                });
                                 context.pop();
                               },
                               icon: const Icon(

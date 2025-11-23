@@ -46,7 +46,12 @@ class SearchResultNotifier extends StateNotifier<SearchResultState> {
   }
 
   void reset() {
-    state = SearchResultState();
+    // 초기값으로 리셋 (5호관 1층)
+    state = SearchResultState(
+      searchKeyword: state.searchKeyword, // 검색 키워드는 유지
+      selectedBuilding: '5호관',
+      selectedFloor: '1F',
+    );
   }
 
   /// 현재 건물/층에 맞는 지도 이미지 경로 반환 (2x만 사용)
