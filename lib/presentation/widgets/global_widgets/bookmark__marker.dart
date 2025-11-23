@@ -8,8 +8,7 @@ class BookmarkMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(right: 12),
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       alignment: Alignment.center,
       height: 40,
       decoration: BoxDecoration(
@@ -23,13 +22,19 @@ class BookmarkMarker extends StatelessWidget {
           ),
         ],
       ),
-      child: Text(
-        bookmarkTitle,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 14,
-          color: AppColors.text,
-        ),
+      child: Row(
+        children: [
+          Icon(Icons.star_rounded, color: AppColors.point),
+          const SizedBox(width: 4),
+          Text(
+            bookmarkTitle,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: AppColors.text,
+            ),
+          ),
+        ],
       ),
     );
   }
