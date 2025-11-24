@@ -121,19 +121,15 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                         });
 
                         try {
-                          // 1. 주변 비콘을 검색하여 인접 비콘의 MAC 주소를 얻는다
-                          final macAddress = await _beaconScanService.scanNearbyBeacon();
+                          // 1. 주변 비콘을 검색하여 인접 비콘들의 인접 POI ID 리스트를 얻는다
+                          // RSSI가 -40~-70 사이인 비콘들을 찾고, 각 비콘의 인접 POI를 합쳐서 중복 제거
+                          final nearPoiIds = await _beaconScanService.scanNearbyBeaconsAndGetPoiIds();
 
                           List<Poi>? nearPois;
 
-                          // 2. 해당 MAC 주소가 beacon.json에 있다면 인접 poi를 조회한다
-                          if (macAddress != null) {
-                            final nearPoiIds = await _beaconRepository.getNearPoiIdsByMac(macAddress);
-                            
-                            if (nearPoiIds.isNotEmpty) {
-                              // POI ID 리스트로 POI 객체 리스트 조회
-                              nearPois = await _poiRepository.getPoisByIds(nearPoiIds);
-                            }
+                          // 2. 인접 POI ID 리스트가 있다면 POI 객체 리스트로 변환
+                          if (nearPoiIds.isNotEmpty) {
+                            nearPois = await _poiRepository.getPoisByIds(nearPoiIds);
                           }
 
                           if (!mounted) return;

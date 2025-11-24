@@ -87,64 +87,64 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 위치 기반 인접 POI 추천 섹션
-            if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
-              const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 위치 기반 인접 POI 추천 섹션
+              if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
+                const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
+                const SizedBox(height: 12),
+                ...widget.nearPois!.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final poi = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            poi.name.isNotEmpty
+                                ? poi.name
+                                : 'POI ${index + 1}번',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.text,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (widget.returnResult) {
+                              context.pop(poi);
+                            } else {
+                              context.pop(); // 일반 검색 모드에서는 다른 동작 수행
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('선택'),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 20),
+              ],
+              const Text('공간', style: _sectionTitleStyle),
               const SizedBox(height: 12),
-              ...widget.nearPois!.asMap().entries.map((entry) {
-                final index = entry.key;
-                final poi = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          poi.name.isNotEmpty ? poi.name : 'POI ${index + 1}번',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.text,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (widget.returnResult) {
-                            context.pop(poi);
-                          } else {
-                            // 일반 검색 모드에서는 다른 동작 수행
-                            context.pop();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('선택'),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-              const SizedBox(height: 20),
-            ],
-            const Text('공간', style: _sectionTitleStyle),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 150,
-              child: GridView.builder(
-                shrinkWrap: true,
+              GridView.builder(
+                shrinkWrap: true, // 내용물 크기만큼만 높이 차지
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
@@ -163,13 +163,14 @@ class _SearchPageState extends State<SearchPage> {
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text('시설물', style: _sectionTitleStyle),
-            const SizedBox(height: 12),
-            Flexible(
-              child: GridView.builder(
-                shrinkWrap: true,
+
+              const SizedBox(height: 20),
+
+              // 시설물 섹션
+              const Text('시설물', style: _sectionTitleStyle),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true, // 내용물 크기만큼만 높이 차지
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
@@ -188,8 +189,10 @@ class _SearchPageState extends State<SearchPage> {
                   );
                 },
               ),
-            ),
-          ],
+              // 하단 여백 추가 (스크롤 끝부분 여유)
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
