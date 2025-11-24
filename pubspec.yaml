@@ -145,6 +145,7 @@ flutter:
     - assets/poi/building.json
     - assets/poi/poi_category.json
     - assets/poi/poi.json
+    - assets/poi/beacon.json
 
      # - assets/graph/
     - assets/graph/edge.json
