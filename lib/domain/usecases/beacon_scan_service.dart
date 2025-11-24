@@ -10,7 +10,7 @@ class BeaconScanService {
 
   // 비콘 설정 상수
   static const String _beaconName = 'Holy-IOT';
-  static const int _minRssi = -70; // RSSI 최소값 (더 약한 신호)
+  static const int _minRssi = -65; // RSSI 최소값 (더 약한 신호)
   static const int _maxRssi = -40; // RSSI 최대값 (더 강한 신호)
   static const Duration _scanDuration = Duration(seconds: 2); // 스캔 지속 시간 (2초)
 
@@ -83,7 +83,9 @@ class BeaconScanService {
             // 3. RSSI가 -40~-70 사이인지 확인 (인접 비콘 판단)
             if (rssi >= _minRssi && rssi <= _maxRssi) {
               nearbyBeaconMacs.add(macAddress);
-              _beaconRepository.findBeaconByMac(macAddress).then((matchedBeacon) {
+              _beaconRepository.findBeaconByMac(macAddress).then((
+                matchedBeacon,
+              ) {
                 debugPrint(
                   ' -> [Matched] 인접 비콘 발견: MAC=$macAddress, RSSI=$rssi, Name=${device.platformName}, ID: ${matchedBeacon?.beaconId}',
                 );
