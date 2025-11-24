@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -139,13 +138,15 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
           // 걸음수가 증가했는지 확인
           final stepIncrease = newStepCount - _lastStepCount;
           if (stepIncrease > 0) {
-            // 걸음수가 증가했으므로 위치 업데이트
-            _updatePositionOnStep(stepIncrease);
+            // 걸음수가 증가했으므로 위치 업데이트 (걸음수도 함께 업데이트)
+            _updatePositionOnStep(stepIncrease, movedSteps);
             _lastStepCount = newStepCount;
+          } else {
+            // 걸음수는 증가하지 않았지만 상태 업데이트 (다른 이유로 변경될 수 있음)
+            state = AsyncValue.data(
+              currentState.copyWith(stepCount: movedSteps),
+            );
           }
-
-          // 상태 업데이트
-          state = AsyncValue.data(currentState.copyWith(stepCount: movedSteps));
         },
         onError: (error) {
           state = AsyncValue.error(error, StackTrace.current);
@@ -160,21 +161,41 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   /// 걸음수 증가 시 위치 업데이트
   ///
   /// 1걸음당 7.8픽셀
-  void _updatePositionOnStep(int stepIncrease) {
+  /// [stepIncrease] 증가한 걸음수
+  /// [newStepCount] 새로운 총 걸음수 (상태 업데이트용)
+  void _updatePositionOnStep(int stepIncrease, int newStepCount) {
     final currentState = state.value;
     if (currentState == null) return;
     const double pixelsPerStep = 7.8;
-    for (int i = 0; i < stepIncrease; i++) {
-      final dx = pixelsPerStep * math.cos(currentState.heading);
-      final dy = pixelsPerStep * math.sin(currentState.heading);
 
-      // 새로운 위치 계산
-      final newX = currentState.x + dx;
-      final newY = currentState.y + dy;
+    // 현재 위치를 변수로 저장 (각 걸음마다 업데이트된 위치 사용)
+    double currentX = currentState.x;
+    double currentY = currentState.y;
+    final heading = currentState.heading;
 
-      // 상태 업데이트
-      state = AsyncValue.data(currentState.copyWith(x: newX, y: newY));
-    }
+    // 각 걸음마다 이동 거리 계산
+    // 나침반 좌표계(0도=북쪽, 시계방향)를 화면 좌표계(x=동쪽, y=남쪽)로 변환
+    // 북쪽(0도) → y 감소, 동쪽(90도) → x 증가, 남쪽(180도) → y 증가, 서쪽(270도) → x 감소
+    final dx = pixelsPerStep * math.sin(heading); // 동쪽(+) / 서쪽(-)
+    final dy = -pixelsPerStep * math.cos(heading); // 남쪽(+) / 북쪽(-)
+
+    // 총 이동 거리 계산
+    final totalDx = dx * stepIncrease;
+    final totalDy = dy * stepIncrease;
+
+    // 새로운 위치 계산
+    final newX = currentX + totalDx;
+    final newY = currentY + totalDy;
+
+    // 상태 업데이트 (위치와 걸음수 함께 업데이트)
+    state = AsyncValue.data(
+      currentState.copyWith(x: newX, y: newY, stepCount: newStepCount),
+    );
+
+    // 좌표 변경 로그 출력
+    print(
+      '[Navigation] 위치 업데이트: ${stepIncrease}걸음 이동, (${currentX.toStringAsFixed(2)}, ${currentY.toStringAsFixed(2)}) → (${newX.toStringAsFixed(2)}, ${newY.toStringAsFixed(2)}), 층: ${currentState.floor}F, 방향: ${(heading * 180 / math.pi).toStringAsFixed(1)}도, 총 걸음수: $newStepCount',
+    );
   }
 
   /// 비콘 신호로 위치 보정
@@ -270,12 +291,15 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     }
   }
 
-  /// 구독 취소 (페이지 종료 시 호출)
+  /// 구독 취소 및 초기화 (페이지 종료 시 호출)
   void stopNavigation() {
     _stepCountSubscription?.cancel();
     _imuSubscription?.cancel();
     _stepCountSubscription = null;
     _imuSubscription = null;
+
+    // 상태를 초기값으로 리셋
+    state = AsyncValue.data(NavigationState());
   }
 }
 
