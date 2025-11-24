@@ -33,6 +33,7 @@ class AppRouter {
         builder: (context, state) {
           SearchMode? searchMode;
           bool returnResult = false;
+          List<Poi>? nearPois;
           final extra = state.extra;
           if (extra is SearchMode) {
             searchMode = extra;
@@ -45,8 +46,16 @@ class AppRouter {
             if (returnResultValue is bool) {
               returnResult = returnResultValue;
             }
+            final nearPoisValue = extra['nearPois'];
+            if (nearPoisValue is List<Poi>) {
+              nearPois = nearPoisValue;
+            }
           }
-          return SearchPage(searchMode: searchMode, returnResult: returnResult);
+          return SearchPage(
+            searchMode: searchMode,
+            returnResult: returnResult,
+            nearPois: nearPois,
+          );
         },
         routes: [
           GoRoute(

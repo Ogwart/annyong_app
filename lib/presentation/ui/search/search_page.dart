@@ -1,3 +1,4 @@
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/poi_category.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
@@ -11,8 +12,14 @@ enum SearchMode { normal, departure, destination, waypoint1, waypoint2 }
 class SearchPage extends StatefulWidget {
   final SearchMode? searchMode;
   final bool returnResult;
+  final List<Poi>? nearPois;
 
-  const SearchPage({super.key, this.searchMode, this.returnResult = false});
+  const SearchPage({
+    super.key,
+    this.searchMode,
+    this.returnResult = false,
+    this.nearPois,
+  });
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -85,6 +92,53 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 위치 기반 인접 POI 추천 섹션
+            if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
+              const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
+              const SizedBox(height: 12),
+              ...widget.nearPois!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final poi = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          poi.name.isNotEmpty ? poi.name : 'POI ${index + 1}번',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.text,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (widget.returnResult) {
+                            context.pop(poi);
+                          } else {
+                            // 일반 검색 모드에서는 다른 동작 수행
+                            context.pop();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('선택'),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
+            ],
             const Text('공간', style: _sectionTitleStyle),
             const SizedBox(height: 12),
             SizedBox(
