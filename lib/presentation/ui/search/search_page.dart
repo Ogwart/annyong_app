@@ -98,8 +98,8 @@ class _SearchPageState extends State<SearchPage> {
                 const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
                 const SizedBox(height: 12),
                 ...widget.nearPois!.asMap().entries.map((entry) {
-                  final index = entry.key;
                   final poi = entry.value;
+                  final buildingList = ["5서", "5남", "하"];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
@@ -107,9 +107,7 @@ class _SearchPageState extends State<SearchPage> {
                       children: [
                         Expanded(
                           child: Text(
-                            poi.name.isNotEmpty
-                                ? poi.name
-                                : 'POI ${index + 1}번',
+                            "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description ?? ""}",
                             style: const TextStyle(
                               fontSize: 16,
                               color: AppColors.text,
