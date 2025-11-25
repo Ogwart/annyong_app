@@ -12,7 +12,7 @@ class BeaconScanService {
   static const String _beaconName = 'Holy-IOT';
   static const int _minRssi = -65; // RSSI 최소값 (더 약한 신호)
   static const int _maxRssi = -40; // RSSI 최대값 (더 강한 신호)
-  static const Duration _scanDuration = Duration(seconds: 2); // 스캔 지속 시간 (2초)
+  static const Duration _scanDuration = Duration(seconds: 3); // 스캔 지속 시간 (2초)
 
   BeaconScanService(this._beaconRepository);
 
