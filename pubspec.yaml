@@ -43,6 +43,7 @@ dependencies:
   pedometer: ^4.1.1
   permission_handler: ^11.3.1
   shared_preferences: ^2.3.3
+  flutter_compass: ^0.8.1
   flutter_blue_plus: ^1.32.9
 
 dev_dependencies:
@@ -68,78 +69,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    # - assets/map/
-    # 5호관 1층
-    # z=1
-    - assets/map/5_1F/1/0/
-    - assets/map/5_1F/1/1/
-    # z=2
-    - assets/map/5_1F/2/0/
-    - assets/map/5_1F/2/1/
-    - assets/map/5_1F/2/2/
-    - assets/map/5_1F/2/3/
-    - assets/map/5_1F/2/4/
-    - assets/map/5_1F/2/5/
-    - assets/map/5_1F/2/6/
-    # z=3
-    - assets/map/5_1F/3/0/
-    - assets/map/5_1F/3/1/
-    - assets/map/5_1F/3/2/
-    - assets/map/5_1F/3/3/
-    - assets/map/5_1F/3/4/
-    - assets/map/5_1F/3/5/
-    - assets/map/5_1F/3/6/
-    - assets/map/5_1F/3/7/
-    - assets/map/5_1F/3/8/
-    - assets/map/5_1F/3/9/
-    - assets/map/5_1F/3/10/
-    - assets/map/5_1F/3/11/
-    - assets/map/5_1F/3/12/
-    - assets/map/5_1F/3/13/
-    # 5호관 2층
-    # z=1
-    - assets/map/5_2F/1/0/
-    - assets/map/5_2F/1/1/
-    # z=2
-    - assets/map/5_2F/2/0/
-    - assets/map/5_2F/2/1/
-    - assets/map/5_2F/2/2/
-    - assets/map/5_2F/2/3/
-    - assets/map/5_2F/2/4/
-    - assets/map/5_2F/2/5/
-    - assets/map/5_2F/2/6/
-    # z=3
-    - assets/map/5_2F/3/0/
-    - assets/map/5_2F/3/1/
-    - assets/map/5_2F/3/2/
-    - assets/map/5_2F/3/3/
-    - assets/map/5_2F/3/4/
-    - assets/map/5_2F/3/5/
-    - assets/map/5_2F/3/6/
-    - assets/map/5_2F/3/7/
-    - assets/map/5_2F/3/8/
-    - assets/map/5_2F/3/9/
-    - assets/map/5_2F/3/10/
-    - assets/map/5_2F/3/11/
-    - assets/map/5_2F/3/12/
-    - assets/map/5_2F/3/13/
-    # 8호관 1층
-    # z=1
-    - assets/map/8_1F/1/0/
-    - assets/map/8_1F/1/1/
-    # z=2
-    - assets/map/8_1F/2/0/
-    - assets/map/8_1F/2/1/
-    - assets/map/8_1F/2/2/
-    - assets/map/8_1F/2/3/
-    # z=3
-    - assets/map/8_1F/3/1/
-    - assets/map/8_1F/3/2/
-    - assets/map/8_1F/3/3/
-    - assets/map/8_1F/3/4/
-    - assets/map/8_1F/3/5/
-    - assets/map/8_1F/3/6/
-    - assets/map/8_1F/3/7/
+    - assets/map/5_1F/
+    - assets/map/5_2F/
+    - assets/map/8_1F/
     - assets/icons/
 
     # - assets/poi/
@@ -148,7 +80,7 @@ flutter:
     - assets/poi/poi.json
     - assets/poi/beacon.json
 
-     # - assets/graph/
+      # - assets/graph/
     - assets/graph/edge.json
     - assets/graph/vertex.json
 

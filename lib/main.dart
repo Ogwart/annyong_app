@@ -1,6 +1,5 @@
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/presentation/providers/home_page_map_provider.dart';
-import 'package:annyong/presentation/providers/search_result_provider.dart';
 import 'package:annyong/presentation/router/router.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -57,10 +56,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => SearchResultProvider()),
-        ChangeNotifierProvider(create: (_) => HomePageMapProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => HomePageMapProvider())],
       child: MaterialApp.router(
         theme: ThemeData(
           scaffoldBackgroundColor: Colors.white,

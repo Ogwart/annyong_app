@@ -136,7 +136,6 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                                 }
 
                                 if (!mounted) return;
-
                                 // 3. 페이지 이동
                                 final selectedPoi = await context.push<Poi>(
                                   "/measureSelectPoi",

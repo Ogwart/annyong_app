@@ -85,8 +85,9 @@ class BeaconScanService {
     // Bluetooth 지원 여부 및 켜짐 상태 확인은 호출부(Splash)에서 권한 체크 후 수행한다고 가정
     // 안전을 위해 한 번 더 체크
     if (await FlutterBluePlus.isSupported == false) return;
-    if (await FlutterBluePlus.adapterState.first != BluetoothAdapterState.on)
+    if (await FlutterBluePlus.adapterState.first != BluetoothAdapterState.on) {
       return;
+    }
 
     debugPrint(
       '----------- [BeaconScanService] Background Scan Started -----------',
@@ -121,8 +122,9 @@ class BeaconScanService {
 
           // 1. 타겟 비콘 필터링
           if (device.platformName.isNotEmpty &&
-              device.platformName != _beaconName)
+              device.platformName != _beaconName) {
             continue;
+          }
           if (!registeredMacAddresses.contains(macAddress)) continue;
 
           // 2. 칼만 필터 적용
