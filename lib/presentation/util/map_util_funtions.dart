@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/favorite_service.dart';

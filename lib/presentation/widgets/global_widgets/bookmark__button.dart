@@ -4,7 +4,14 @@ import 'package:flutter/material.dart';
 class BookmarkButton extends StatelessWidget {
   final String bookmarkTitle;
   final VoidCallback? onTap;
-  const BookmarkButton({super.key, required this.bookmarkTitle, this.onTap});
+  final bool isSelected;
+
+  const BookmarkButton({
+    super.key,
+    required this.bookmarkTitle,
+    this.onTap,
+    this.isSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +23,7 @@ class BookmarkButton extends StatelessWidget {
         alignment: Alignment.center,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(48),
           boxShadow: [
             BoxShadow(
@@ -31,7 +38,7 @@ class BookmarkButton extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w500,
             fontSize: 14,
-            color: AppColors.text,
+            color: isSelected ? Colors.white : AppColors.text,
           ),
         ),
       ),

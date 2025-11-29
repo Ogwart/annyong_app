@@ -1,6 +1,5 @@
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
-import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 
 class CostCard extends StatelessWidget {
