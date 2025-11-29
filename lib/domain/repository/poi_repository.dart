@@ -151,6 +151,17 @@ class PoiRepository {
     return pois.where((poi) => poi.vertexId == vertexId).toList();
   }
 
+  /// POI ID 리스트로 POI 조회
+  Future<List<Poi>> getPoisByIds(List<int> poiIds) async {
+    final pois = await fetchPois();
+    final poiMap = {for (var poi in pois) poi.id: poi};
+    return poiIds
+        .map((id) => poiMap[id])
+        .where((poi) => poi != null)
+        .cast<Poi>()
+        .toList();
+  }
+
   /// Vertex ID로 연결된 모든 Edge 조회
   Future<List<Edge>> getEdgesForVertex(int vertexId) async {
     await _loadEdges();

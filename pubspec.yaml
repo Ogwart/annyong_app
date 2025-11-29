@@ -44,6 +44,7 @@ dependencies:
   permission_handler: ^11.3.1
   shared_preferences: ^2.3.3
   flutter_compass: ^0.8.1
+  flutter_blue_plus: ^1.32.9
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,7 @@ flutter:
     - assets/poi/building.json
     - assets/poi/poi_category.json
     - assets/poi/poi.json
+    - assets/poi/beacon.json
 
       # - assets/graph/
     - assets/graph/edge.json

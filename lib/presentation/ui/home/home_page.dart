@@ -3,7 +3,6 @@ import 'package:annyong/presentation/viewmodels/path_selection_viewmodel.dart';
 import 'package:annyong/presentation/providers/home_page_map_provider.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/global_widgets/bookmark__button.dart';
-import 'package:annyong/presentation/widgets/global_widgets/bookmark__marker.dart';
 import 'package:annyong/presentation/widgets/global_widgets/poi_button.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
