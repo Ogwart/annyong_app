@@ -1,5 +1,4 @@
 import 'package:annyong/domain/entity/poi.dart';
-import 'package:annyong/domain/repository/beacon_repository.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/presentation/static.dart';
@@ -16,9 +15,9 @@ class MeasureNoticePage extends StatefulWidget {
 
 class _MeasureNoticePageState extends State<MeasureNoticePage> {
   final StaticExample example = StaticExample();
-  final BeaconRepository _beaconRepository = BeaconRepository();
   final PoiRepository _poiRepository = PoiRepository();
-  final BeaconScanService _beaconScanService = BeaconScanService(BeaconRepository());
+  final BeaconScanService _beaconScanService = BeaconScanService();
+
   bool _isLoading = false;
 
   @override
@@ -112,67 +111,70 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                         ),
                       ),
                     ),
-                    //const SizedBox(width: 40),
                     // 측정 시작 버튼
                     GestureDetector(
-                      onTap: _isLoading ? null : () async {
-                        setState(() {
-                          _isLoading = true;
-                        });
+                      onTap: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
 
-                        try {
-                          // 1. 주변 비콘을 검색하여 인접 비콘들의 인접 POI ID 리스트를 얻는다
-                          // RSSI가 -40~-70 사이인 비콘들을 찾고, 각 비콘의 인접 POI를 합쳐서 중복 제거
-                          final nearPoiIds = await _beaconScanService.scanNearbyBeaconsAndGetPoiIds();
+                              try {
+                                // 1. 주변 비콘을 검색하여 인접 비콘들의 인접 POI ID 리스트를 얻는다
+                                // (싱글톤 서비스 내부에서 현재 스캔된 값을 가져옴)
+                                final nearPoiIds = await _beaconScanService
+                                    .scanNearbyBeaconsAndGetPoiIds();
 
-                          List<Poi>? nearPois;
+                                List<Poi>? nearPois;
 
-                          // 2. 인접 POI ID 리스트가 있다면 POI 객체 리스트로 변환
-                          if (nearPoiIds.isNotEmpty) {
-                            nearPois = await _poiRepository.getPoisByIds(nearPoiIds);
-                          }
+                                // 2. 인접 POI ID 리스트가 있다면 POI 객체 리스트로 변환
+                                if (nearPoiIds.isNotEmpty) {
+                                  nearPois = await _poiRepository.getPoisByIds(
+                                    nearPoiIds,
+                                  );
+                                }
 
-                          if (!mounted) return;
+                                if (!mounted) return;
 
-                          // 3-1. 만약 인접 poi 리스트가 존재한다면 위치 기반 인접 POI 추천 탭과 /measureSelectPoi 부분을 함께 보여준다
-                          // 3-2. 만약 인접 poi 리스트가 존재하지 않는다면 /measureSelectPoi 부분만 보여준다
-                          final selectedPoi = await context.push<Poi>(
-                            "/measureSelectPoi",
-                            extra: {
-                              "returnResult": true,
-                              "searchMode": null,
-                              "nearPois": nearPois,
+                                // 3. 페이지 이동
+                                final selectedPoi = await context.push<Poi>(
+                                  "/measureSelectPoi",
+                                  extra: {
+                                    "returnResult": true,
+                                    "searchMode": null,
+                                    "nearPois": nearPois,
+                                  },
+                                );
+
+                                if (selectedPoi != null && context.mounted) {
+                                  // POI 선택 후 측정 페이지로 이동
+                                  context.go("/measure", extra: selectedPoi);
+                                }
+                              } catch (e) {
+                                // 에러 발생 시 기존 방식대로 진행 (인접 POI 없음)
+                                if (mounted) {
+                                  final selectedPoi = await context.push<Poi>(
+                                    "/measureSelectPoi",
+                                    extra: {
+                                      "returnResult": true,
+                                      "searchMode": null,
+                                      "nearPois": null,
+                                    },
+                                  );
+
+                                  if (selectedPoi != null && context.mounted) {
+                                    context.go("/measure", extra: selectedPoi);
+                                  }
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
                             },
-                          );
-
-                          if (selectedPoi != null && context.mounted) {
-                            // POI 선택 후 측정 페이지로 이동
-                            context.go("/measure", extra: selectedPoi);
-                          }
-                        } catch (e) {
-                          // 에러 발생 시 기존 방식대로 진행
-                          if (mounted) {
-                            final selectedPoi = await context.push<Poi>(
-                              "/measureSelectPoi",
-                              extra: {
-                                "returnResult": true,
-                                "searchMode": null,
-                                "nearPois": null,
-                              },
-                            );
-
-                            if (selectedPoi != null && context.mounted) {
-                              context.go("/measure", extra: selectedPoi);
-                            }
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }
-                        }
-                      },
                       child: Container(
                         alignment: Alignment.center,
                         width: 144,
@@ -187,7 +189,9 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : Text(
