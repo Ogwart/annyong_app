@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -90,20 +91,17 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
           if (headingDegrees != null) {
             // 건물 기울기 보정: 나침반의 30도 방향을 0도(북쪽)로 취급
-            // 음수가 되지 않도록 360을 더한 후 모듈로 연산
             final correctedHeadingDegrees =
                 (headingDegrees - buildingOffsetDegrees + 360) % 360;
             final headingRadians = correctedHeadingDegrees * math.pi / 180.0;
             updateHeading(headingRadians);
           }
         },
-        onError: (error) {
-          print('Compass error: $error');
-        },
+        onError: (error) {},
         cancelOnError: false,
       );
     } catch (e) {
-      print('Failed to initialize compass: $e');
+      log("$e");
     }
   }
 
@@ -191,59 +189,26 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     state = AsyncValue.data(
       currentState.copyWith(x: newX, y: newY, stepCount: newStepCount),
     );
-
-    // 좌표 변경 로그 출력
-    print(
-      '[Navigation] 위치 업데이트: $stepIncrease걸음 이동, (${currentX.toStringAsFixed(2)}, ${currentY.toStringAsFixed(2)}) → (${newX.toStringAsFixed(2)}, ${newY.toStringAsFixed(2)}), 층: ${currentState.floor}F, 방향: ${(heading * 180 / math.pi).toStringAsFixed(1)}도, 총 걸음수: $newStepCount',
-    );
   }
 
-  /// 비콘 신호로 위치 보정
-  ///
   /// TODO: 비콘 데이터 준비 후 구현
-  /// 비콘 신호 세기가 -40 이상일 때 해당 비콘의 위치로 사용자 위치를 강제 보정
-  ///
-  /// 예시 구현:
-  /// ```dart
-  /// void correctPositionWithBeacon({
-  ///   required double beaconX,
-  ///   required double beaconY,
-  ///   required int beaconFloor,
-  ///   required double signalStrength, // RSSI 값 (dBm)
-  /// }) {
-  ///   if (signalStrength >= -40) {
-  ///     final currentState = state.value;
-  ///     if (currentState != null) {
-  ///       state = AsyncValue.data(
-  ///         currentState.copyWith(
-  ///           x: beaconX,
-  ///           y: beaconY,
-  ///           floor: beaconFloor,
-  ///         ),
-  ///       );
-  ///     }
-  ///   }
-  /// }
-  /// ```
+  /// 현재 신호 구간 : -65보다 강하면 당겨오기
+
   void correctPositionWithBeacon({
     required double beaconX,
     required double beaconY,
     required int beaconFloor,
-    required double signalStrength, // RSSI 값 (dBm)
+    required double signalStrength,
   }) {
-    // TODO: 비콘 데이터 준비 후 구현
-    // if (signalStrength >= -40) {
-    //   final currentState = state.value;
-    //   if (currentState != null) {
-    //     state = AsyncValue.data(
-    //       currentState.copyWith(
-    //         x: beaconX,
-    //         y: beaconY,
-    //         floor: beaconFloor,
-    //       ),
-    //     );
-    //   }
-    // }
+    if (signalStrength >= 65) {
+      final currentState = state.value;
+      // 길찾기 중일 때만
+      if (currentState != null) {
+        state = AsyncValue.data(
+          currentState.copyWith(x: beaconX, y: beaconY, floor: beaconFloor),
+        );
+      }
+    }
   }
 
   /// 초기 위치 설정 (출발지 설정)

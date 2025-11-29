@@ -6,7 +6,7 @@ import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/path_finder_provider.dart';
 import 'package:annyong/domain/usecases/path_description_builder.dart';
 import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
-import 'package:annyong/presentation/util/home_page_util_funtions.dart';
+import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 
 class PathResultPage extends ConsumerStatefulWidget {
@@ -164,7 +164,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           final floorString = '${widget.start.floor}F';
 
           // 지도 이미지 경로 (2x 해상도 사용)
-          final mapImagePath = HomePageUtilFunctions.getImagePath(
+          final mapImagePath = MapUtilFunctions.getImagePath(
             buildingName,
             floorString,
             '2x',
@@ -308,11 +308,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                             final scaledY = state.y * 0.19;
                             final adjustedX = scaledX - 10;
                             final adjustedY = scaledY + 50;
-
-                            // 변환된 좌표 로그 출력
-                            print(
-                              '[PathResult] 변환된 좌표: 실제=(${state.x.toStringAsFixed(2)}, ${state.y.toStringAsFixed(2)}) → 화면=(${adjustedX.toStringAsFixed(2)}, ${adjustedY.toStringAsFixed(2)}), 층=${state.floor}F',
-                            );
 
                             return Positioned(
                               left: adjustedX - 12,

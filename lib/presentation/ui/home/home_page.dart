@@ -5,7 +5,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/global_widgets/bookmark__button.dart';
 import 'package:annyong/presentation/widgets/global_widgets/bookmark__marker.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
-import 'package:annyong/presentation/util/home_page_util_funtions.dart';
+import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +40,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _loadFavoritePois() async {
-    final pois = await HomePageUtilFunctions.loadFavoritePois();
+    final pois = await MapUtilFunctions.loadFavoritePois();
     setState(() {
       _favoritePois = pois;
     });
@@ -55,10 +55,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _onTransformationChanged() {
     final scale = _transformationController.value.getMaxScaleOnAxis();
-    final resolution = HomePageUtilFunctions.getResolutionFromScale(scale);
+    final resolution = MapUtilFunctions.getResolutionFromScale(scale);
 
     // 현재 건물/층에 맞는 이미지 경로 생성
-    final newImagePath = HomePageUtilFunctions.getImagePath(
+    final newImagePath = MapUtilFunctions.getImagePath(
       _currentBuilding,
       _currentFloor,
       resolution,
@@ -77,8 +77,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _updateImagePath(String building, String floor) {
     final scale = _transformationController.value.getMaxScaleOnAxis();
-    final resolution = HomePageUtilFunctions.getResolutionFromScale(scale);
-    final newImagePath = HomePageUtilFunctions.getImagePath(
+    final resolution = MapUtilFunctions.getResolutionFromScale(scale);
+    final newImagePath = MapUtilFunctions.getImagePath(
       building,
       floor,
       resolution,
@@ -117,17 +117,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               constraints.maxHeight,
             );
             // 좌표 계산용 기준 크기
-            final baseOriginalSize = HomePageUtilFunctions.getImageOriginalSize(
+            final baseOriginalSize = MapUtilFunctions.getImageOriginalSize(
               mapProvider.selectedBuilding,
               mapProvider.selectedFloor,
               '1x',
             );
             // BoxFit.contain일 때 실제 표시되는 이미지 크기
-            final displayedImageSize =
-                HomePageUtilFunctions.getDisplayedImageSize(
-                  containerSize,
-                  baseOriginalSize,
-                );
+            final displayedImageSize = MapUtilFunctions.getDisplayedImageSize(
+              containerSize,
+              baseOriginalSize,
+            );
             // 이미지가 컨테이너 중앙 오도록 하는 오프셋
             final imageOffsetX =
                 (containerSize.width - displayedImageSize.width) / 2;
@@ -159,7 +158,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                   // 즐겨찾기 마커 빌더
-                  ...HomePageUtilFunctions.getFilteredFavoritePois(
+                  ...MapUtilFunctions.getFilteredFavoritePois(
                     _favoritePois,
                     mapProvider.selectedBuilding,
                     mapProvider.selectedFloor,
@@ -182,7 +181,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                     // 마커 크기의 절반만큼 오프셋 + 추가 조정 오프셋(나중에 바꾸려면 여기 수정)
                     const markerSize = 40.0;
-                    final markerOffset = HomePageUtilFunctions.markerOffset;
+                    final markerOffset = MapUtilFunctions.markerOffset;
                     return Positioned(
                       left: transformedX - markerSize / 2 + markerOffset.dx,
                       top: transformedY - markerSize / 2 + markerOffset.dy,
@@ -345,7 +344,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     right: 24,
                     child: Column(
                       children:
-                          HomePageUtilFunctions.getAvailableFloors(
+                          MapUtilFunctions.getAvailableFloors(
                                 mapProvider.selectedBuilding,
                               )
                               .map(

@@ -4,7 +4,7 @@ import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/favorite_service.dart';
 
-class HomePageUtilFunctions {
+class MapUtilFunctions {
   /// 건물, 층, 해상도에 따라 이미지 경로 생성
   static String getImagePath(String building, String floor, String resolution) {
     // 건물에 따라 폴더명 결정
@@ -124,7 +124,8 @@ class HomePageUtilFunctions {
     final floorNumber = getFloorNumber(floor);
     return favoritePois
         .where(
-          (poi) => buildingIds.contains(poi.buildingId) && poi.floor == floorNumber,
+          (poi) =>
+              buildingIds.contains(poi.buildingId) && poi.floor == floorNumber,
         )
         .toList();
   }

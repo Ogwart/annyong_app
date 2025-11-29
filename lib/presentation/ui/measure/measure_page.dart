@@ -58,7 +58,6 @@ class _MeasurePageState extends State<MeasurePage> {
     // Android에서 활동 인식 권한 요청
     if (Platform.isAndroid) {
       final status = await Permission.activityRecognition.request();
-      print("MeasurePage: 활동 인식 권한 상태: $status");
 
       if (status.isDenied || status.isPermanentlyDenied) {
         if (mounted) {
@@ -77,19 +76,15 @@ class _MeasurePageState extends State<MeasurePage> {
 
   Future<void> _initPedometer() async {
     try {
-      print("MeasurePage: 걸음수 측정 초기화 시작");
-
       // 현재 걸음수 가져오기 (첫 번째 이벤트로 초기값 설정)
       _stepCountSubscription = Pedometer.stepCountStream.listen(
         (StepCount event) {
-          print("MeasurePage: 걸음수 이벤트 수신 - steps: ${event.steps}");
           if (mounted) {
             setState(() {
               // 첫 번째 이벤트면 초기값으로 설정
               if (_initialStepCount == 0) {
                 _initialStepCount = event.steps;
                 _isStepCountAvailable = true;
-                print("MeasurePage: 초기 걸음수 설정: $_initialStepCount");
               }
 
               // 측정 시작 후 이동한 걸음수 = 현재 걸음수 - 시작 시점 걸음수
@@ -101,7 +96,6 @@ class _MeasurePageState extends State<MeasurePage> {
           }
         },
         onError: (error) {
-          print("MeasurePage: 걸음수 측정 오류: $error");
           if (mounted) {
             setState(() {
               _isStepCountAvailable = false;
@@ -116,7 +110,6 @@ class _MeasurePageState extends State<MeasurePage> {
       // 스트림이 이벤트를 발생시키지 않는 경우를 대비해 타임아웃 설정
       Future.delayed(const Duration(seconds: 5), () {
         if (mounted && !_isStepCountAvailable && _stepCountError == null) {
-          print("MeasurePage: 걸음수 측정 타임아웃 - 이벤트가 발생하지 않음");
           setState(() {
             _stepCountError =
                 "걸음수 측정이 시작되지 않았습니다.\n권한을 확인하거나 기기를 움직여보세요.\n(시뮬레이터에서는 작동하지 않습니다)";
@@ -124,7 +117,6 @@ class _MeasurePageState extends State<MeasurePage> {
         }
       });
     } catch (e) {
-      print("MeasurePage: 걸음수 측정 초기화 예외: $e");
       if (mounted) {
         setState(() {
           _isStepCountAvailable = false;
@@ -136,13 +128,7 @@ class _MeasurePageState extends State<MeasurePage> {
 
   Future<void> _findRoute() async {
     try {
-      print(
-        "MeasurePage: 경로 탐색 시작 - POI: ${widget.startPoi?.name}, vertexId: ${widget.startPoi?.vertexId}",
-      );
       final route = await _calibrationService.findTargetRoute(widget.startPoi!);
-      print(
-        "MeasurePage: 경로 탐색 완료 - route: ${route != null ? 'found' : 'null'}",
-      );
       setState(() {
         _route = route;
         _isLoading = false;
@@ -151,8 +137,6 @@ class _MeasurePageState extends State<MeasurePage> {
         }
       });
     } catch (e, stackTrace) {
-      print("MeasurePage: 경로 탐색 중 예외 발생 - $e");
-      print("Stack trace: $stackTrace");
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
