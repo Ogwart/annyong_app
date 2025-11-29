@@ -194,7 +194,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
     // 좌표 변경 로그 출력
     print(
-      '[Navigation] 위치 업데이트: ${stepIncrease}걸음 이동, (${currentX.toStringAsFixed(2)}, ${currentY.toStringAsFixed(2)}) → (${newX.toStringAsFixed(2)}, ${newY.toStringAsFixed(2)}), 층: ${currentState.floor}F, 방향: ${(heading * 180 / math.pi).toStringAsFixed(1)}도, 총 걸음수: $newStepCount',
+      '[Navigation] 위치 업데이트: $stepIncrease걸음 이동, (${currentX.toStringAsFixed(2)}, ${currentY.toStringAsFixed(2)}) → (${newX.toStringAsFixed(2)}, ${newY.toStringAsFixed(2)}), 층: ${currentState.floor}F, 방향: ${(heading * 180 / math.pi).toStringAsFixed(1)}도, 총 걸음수: $newStepCount',
     );
   }
 

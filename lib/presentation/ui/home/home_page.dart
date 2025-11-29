@@ -110,223 +110,260 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          alignment: Alignment.center,
-          width: double.infinity,
-          child: Stack(
-            children: [
-              // -------------------지도-------------------
-              Positioned.fill(
-                child: InteractiveViewer(
-                  transformationController: _transformationController,
-                  boundaryMargin: EdgeInsets.all(20),
-                  panEnabled: true,
-                  scaleEnabled: true,
-                  minScale: 0.5,
-                  maxScale: 9.0,
-                  child: Image.asset(_currentImagePath, fit: BoxFit.contain),
-                ),
-              ),
-              // 즐겨찾기 마커
-              ...HomePageUtilFunctions.getFilteredFavoritePois(
-                _favoritePois,
-                mapProvider.selectedBuilding,
-                mapProvider.selectedFloor,
-              ).map((poi) {
-                final transformation = _transformationController.value;
-                // 마커 간격 줄이기 용도
-                final scaledX = poi.xCoord * 0.3;
-                final scaledY = poi.yCoord * 0.5;
-                // 오프셋
-                final adjustedX = scaledX - 20;
-                final adjustedY = scaledY + 285;
-                final transformedX =
-                    transformation.storage[0] * adjustedX +
-                    transformation.storage[4] * adjustedY +
-                    transformation.storage[12];
-                final transformedY =
-                    transformation.storage[1] * adjustedX +
-                    transformation.storage[5] * adjustedY +
-                    transformation.storage[13];
-
-                return Positioned(
-                  left: transformedX - 20,
-                  top: transformedY - 20,
-                  child: GestureDetector(
-                    onTap: () {
-                      // POI를 목적지로 설정하고 path_selection_page로 이동
-                      ref
-                          .read(pathSelectionProvider.notifier)
-                          .setDestination(poi);
-                      context.go('/home/pathSelection');
-                    },
-                    child: BookmarkMarker(bookmarkTitle: poi.name),
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final containerSize = Size(
+              constraints.maxWidth,
+              constraints.maxHeight,
+            );
+            // 좌표 계산용 기준 크기
+            final baseOriginalSize = HomePageUtilFunctions.getImageOriginalSize(
+              mapProvider.selectedBuilding,
+              mapProvider.selectedFloor,
+              '1x',
+            );
+            // BoxFit.contain일 때 실제 표시되는 이미지 크기
+            final displayedImageSize =
+                HomePageUtilFunctions.getDisplayedImageSize(
+                  containerSize,
+                  baseOriginalSize,
                 );
-              }),
-              // 시설물 검색
-              Positioned(
-                top: 10,
-                left: 0,
-                right: 0,
-                child: SizedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // ------------------메뉴 드로우어 버튼------------------
-                      Flexible(
-                        flex: 1,
-                        child: GestureDetector(
-                          onTap: () {
-                            context.go('/home/menu');
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            height: 40,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: AppColors.grey200,
-                            ),
-                            child: const Icon(
-                              Icons.menu,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
+            // 이미지가 컨테이너 중앙 오도록 하는 오프셋
+            final imageOffsetX =
+                (containerSize.width - displayedImageSize.width) / 2;
+            final imageOffsetY =
+                (containerSize.height - displayedImageSize.height) / 2;
+
+            // POI 좌표->화면 좌표
+            final scaleX = displayedImageSize.width / baseOriginalSize.width;
+            final scaleY = displayedImageSize.height / baseOriginalSize.height;
+
+            return Container(
+              alignment: Alignment.center,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  // -------------------지도-------------------
+                  Positioned.fill(
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      boundaryMargin: EdgeInsets.all(20),
+                      panEnabled: true,
+                      scaleEnabled: true,
+                      minScale: 0.5,
+                      maxScale: 9.0,
+                      child: Image.asset(
+                        _currentImagePath,
+                        fit: BoxFit.contain,
                       ),
-                      const SizedBox(width: 12),
-                      // ------------------시설물 검색 버튼------------------
-                      Flexible(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: () {
-                            context.go('/home/search');
-                          },
-                          child: Container(
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: AppColors.grey200,
-                            ),
-                            child: const Text(
-                              "시설물 검색",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.text,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // ------------------길찾기 버튼------------------
-                      Flexible(
-                        flex: 1,
-                        child: GestureDetector(
-                          onTap: () {
-                            context.go('/home/pathSelection');
-                          },
-                          child: Container(
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              color: AppColors.primary,
-                            ),
-                            child: const Text(
-                              "길찾기",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              // -----------------------즐겨찾기-------------------------
-              Positioned(
-                top: 70,
-                left: 24,
-                right: 24,
-                child: SizedBox(
-                  height: 40,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _favoritePois.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final poi = _favoritePois[index];
-                      return BookmarkButton(
-                        bookmarkTitle: poi.name,
+                  // 즐겨찾기 마커 빌더
+                  ...HomePageUtilFunctions.getFilteredFavoritePois(
+                    _favoritePois,
+                    mapProvider.selectedBuilding,
+                    mapProvider.selectedFloor,
+                  ).map((poi) {
+                    final transformation = _transformationController.value;
+
+                    // POI 좌표 -> 1배 줌 상태의 화면 좌표
+                    final initialScreenX = poi.xCoord * scaleX + imageOffsetX;
+                    final initialScreenY = poi.yCoord * scaleY + imageOffsetY;
+
+                    // interactive viewer 참조, 확대율에 따라 좌표 변환
+                    final transformedX =
+                        transformation.storage[0] * initialScreenX +
+                        transformation.storage[4] * initialScreenY +
+                        transformation.storage[12];
+                    final transformedY =
+                        transformation.storage[1] * initialScreenX +
+                        transformation.storage[5] * initialScreenY +
+                        transformation.storage[13];
+
+                    // 마커 크기의 절반만큼 오프셋 + 추가 조정 오프셋(나중에 바꾸려면 여기 수정)
+                    const markerSize = 40.0;
+                    final markerOffset = HomePageUtilFunctions.markerOffset;
+                    return Positioned(
+                      left: transformedX - markerSize / 2 + markerOffset.dx,
+                      top: transformedY - markerSize / 2 + markerOffset.dy,
+                      child: GestureDetector(
                         onTap: () {
-                          // POI를 목적지로 설정하고 path_selection_page로 이동
                           ref
                               .read(pathSelectionProvider.notifier)
                               .setDestination(poi);
                           context.go('/home/pathSelection');
                         },
-                      );
-                    },
-                  ),
-                ),
-              ),
-              // --------------------건물 전환 버튼----------------------
-              Positioned(
-                bottom: 20,
-                left: 24,
-                child: GestureDetector(
-                  onTap: () {
-                    mapProvider.toggleBuilding();
-                  },
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 70,
-                      minHeight: 47,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: AppColors.grey200,
-                    ),
-                    child: Text(
-                      mapProvider.selectedBuilding,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
-                        color: AppColors.text,
+                        child: BookmarkMarker(bookmarkTitle: poi.name),
+                      ),
+                    );
+                  }),
+                  // 시설물 검색
+                  Positioned(
+                    top: 10,
+                    left: 0,
+                    right: 0,
+                    child: SizedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // ------------------메뉴 드로우어 버튼------------------
+                          Flexible(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                context.go('/home/menu');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8),
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: AppColors.grey200,
+                                ),
+                                child: const Icon(
+                                  Icons.menu,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // ------------------시설물 검색 버튼------------------
+                          Flexible(
+                            flex: 2,
+                            child: GestureDetector(
+                              onTap: () {
+                                context.go('/home/search');
+                              },
+                              child: Container(
+                                height: 40,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: AppColors.grey200,
+                                ),
+                                child: const Text(
+                                  "시설물 검색",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.text,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // ------------------길찾기 버튼------------------
+                          Flexible(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: () {
+                                context.go('/home/pathSelection');
+                              },
+                              child: Container(
+                                height: 40,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  color: AppColors.primary,
+                                ),
+                                child: const Text(
+                                  "길찾기",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+                  // -----------------------즐겨찾기-------------------------
+                  Positioned(
+                    top: 70,
+                    left: 24,
+                    right: 24,
+                    child: SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _favoritePois.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final poi = _favoritePois[index];
+                          return BookmarkButton(
+                            bookmarkTitle: poi.name,
+                            onTap: () {
+                              // POI를 목적지로 설정하고 path_selection_page로 이동
+                              ref
+                                  .read(pathSelectionProvider.notifier)
+                                  .setDestination(poi);
+                              context.go('/home/pathSelection');
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  // --------------------건물 전환 버튼----------------------
+                  Positioned(
+                    bottom: 20,
+                    left: 24,
+                    child: GestureDetector(
+                      onTap: () {
+                        mapProvider.toggleBuilding();
+                      },
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 70,
+                          minHeight: 47,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.grey200,
+                        ),
+                        child: Text(
+                          mapProvider.selectedBuilding,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: AppColors.text,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // --------------------층 전환 버튼------------------------
+                  Positioned(
+                    bottom: 20,
+                    right: 24,
+                    child: Column(
+                      children:
+                          HomePageUtilFunctions.getAvailableFloors(
+                                mapProvider.selectedBuilding,
+                              )
+                              .map(
+                                (floor) => FloorButton(
+                                  floor: floor,
+                                  onTap: () =>
+                                      mapProvider.setSelectedFloor(floor),
+                                  isSelected:
+                                      mapProvider.selectedFloor == floor,
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ),
+                ],
               ),
-              // --------------------층 전환 버튼------------------------
-              Positioned(
-                bottom: 20,
-                right: 24,
-                child: Column(
-                  children:
-                      HomePageUtilFunctions.getAvailableFloors(
-                            mapProvider.selectedBuilding,
-                          )
-                          .map(
-                            (floor) => FloorButton(
-                              floor: floor,
-                              onTap: () => mapProvider.setSelectedFloor(floor),
-                              isSelected: mapProvider.selectedFloor == floor,
-                            ),
-                          )
-                          .toList(),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

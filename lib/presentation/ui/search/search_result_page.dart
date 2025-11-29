@@ -92,11 +92,11 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     String building,
     String floor,
   ) {
-    final buildingId = HomePageUtilFunctions.getBuildingId(building);
+    final buildingIds = HomePageUtilFunctions.getBuildingIds(building);
     final floorNumber = HomePageUtilFunctions.getFloorNumber(floor);
     return allPois
         .where(
-          (poi) => poi.buildingId == buildingId && poi.floor == floorNumber,
+          (poi) => buildingIds.contains(poi.buildingId) && poi.floor == floorNumber,
         )
         .toList();
   }
@@ -153,9 +153,9 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                       final scaledY = poi.yCoord * 0.5;
                       final adjustedX = scaledX - 20;
                       final adjustedY = scaledY + 285;
-                      final buildingName = poi.buildingId == 1
+                      final buildingName = (poi.buildingId == 1 || poi.buildingId == 2)
                           ? '5호관'
-                          : poi.buildingId == 2
+                          : poi.buildingId == 3
                           ? '하이테크관'
                           : '알 수 없음';
                       debugPrint(
