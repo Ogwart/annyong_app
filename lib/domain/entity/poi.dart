@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class Poi {
   final int id;
   final String name;

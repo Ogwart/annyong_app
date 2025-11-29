@@ -11,7 +11,7 @@ class BookmarkButton extends StatelessWidget {
       margin: EdgeInsets.only(right: 12),
       padding: EdgeInsets.symmetric(vertical: 4, horizontal: 20),
       alignment: Alignment.center,
-      height: 44,
+      height: 40,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(48),

@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 
 class SearchResultPage extends ConsumerStatefulWidget {
   final String? searchKeyword;
@@ -40,7 +39,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
   void initState() {
     super.initState();
     _displayKeyword = widget.searchKeyword ?? '';
-    debugPrint('선택된 키워드: ${_displayKeyword}');
+    debugPrint('선택된 키워드: $_displayKeyword');
     _poiFuture = _loadPois();
     debugPrint('카테고리 ID: ${widget.categoryId}');
 
@@ -62,9 +61,9 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
 
   // POI 선택 처리 핸들러
   void _handlePoiSelect(Poi poi) {
-    // 결과 반환 모드인 경우 선택한 POI 이름 반환
+    // 결과 반환 모드인 경우 선택한 POI 객체 반환
     if (widget.returnResult) {
-      context.pop(poi.name);
+      context.pop(poi);
       return;
     }
 

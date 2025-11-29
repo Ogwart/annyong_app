@@ -1,3 +1,4 @@
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/poi_category.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
@@ -11,8 +12,14 @@ enum SearchMode { normal, departure, destination, waypoint1, waypoint2 }
 class SearchPage extends StatefulWidget {
   final SearchMode? searchMode;
   final bool returnResult;
+  final List<Poi>? nearPois;
 
-  const SearchPage({super.key, this.searchMode, this.returnResult = false});
+  const SearchPage({
+    super.key,
+    this.searchMode,
+    this.returnResult = false,
+    this.nearPois,
+  });
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -80,17 +87,62 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('공간', style: _sectionTitleStyle),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 150,
-              child: GridView.builder(
-                shrinkWrap: true,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 위치 기반 인접 POI 추천 섹션
+              if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
+                const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
+                const SizedBox(height: 12),
+                ...widget.nearPois!.asMap().entries.map((entry) {
+                  final poi = entry.value;
+                  final buildingList = ["5서", "5남", "하"];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description ?? ""}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppColors.text,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (widget.returnResult) {
+                              context.pop(poi);
+                            } else {
+                              context.pop(); // 일반 검색 모드에서는 다른 동작 수행
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('선택'),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 20),
+              ],
+              const Text('공간', style: _sectionTitleStyle),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true, // 내용물 크기만큼만 높이 차지
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
@@ -109,13 +161,14 @@ class _SearchPageState extends State<SearchPage> {
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text('시설물', style: _sectionTitleStyle),
-            const SizedBox(height: 12),
-            Flexible(
-              child: GridView.builder(
-                shrinkWrap: true,
+
+              const SizedBox(height: 20),
+
+              // 시설물 섹션
+              const Text('시설물', style: _sectionTitleStyle),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true, // 내용물 크기만큼만 높이 차지
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
@@ -134,8 +187,10 @@ class _SearchPageState extends State<SearchPage> {
                   );
                 },
               ),
-            ),
-          ],
+              // 하단 여백 추가 (스크롤 끝부분 여유)
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

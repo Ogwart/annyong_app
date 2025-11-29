@@ -1,21 +1,34 @@
+import 'package:annyong/domain/entity/poi.dart';
+import 'package:annyong/domain/repository/poi_repository.dart';
+import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/presentation/static.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class MeasureNoticePage extends StatelessWidget {
-  MeasureNoticePage({super.key});
+class MeasureNoticePage extends StatefulWidget {
+  const MeasureNoticePage({super.key});
 
-  StaticExample example = StaticExample();
+  @override
+  State<MeasureNoticePage> createState() => _MeasureNoticePageState();
+}
+
+class _MeasureNoticePageState extends State<MeasureNoticePage> {
+  final StaticExample example = StaticExample();
+  final PoiRepository _poiRepository = PoiRepository();
+  final BeaconScanService _beaconScanService = BeaconScanService();
+
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(elevation: 0),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(
@@ -35,6 +48,7 @@ class MeasureNoticePage extends StatelessWidget {
                   ),
                 ),
               ),
+              // -----------------------보폭 측정 안내사항 텍스트-----------------------
               Flexible(
                 flex: 4,
                 child: Container(
@@ -73,7 +87,11 @@ class MeasureNoticePage extends StatelessWidget {
                     // 건너뛰기 버튼
                     GestureDetector(
                       onTap: () {
-                        context.pop();
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go("/home");
+                        }
                       },
                       child: Container(
                         alignment: Alignment.center,
@@ -93,13 +111,70 @@ class MeasureNoticePage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    //const SizedBox(width: 40),
                     // 측정 시작 버튼
                     GestureDetector(
-                      onTap: () {
-                        context.pop();
-                        context.push("/measure");
-                      },
+                      onTap: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              try {
+                                // 1. 주변 비콘을 검색하여 인접 비콘들의 인접 POI ID 리스트를 얻는다
+                                // (싱글톤 서비스 내부에서 현재 스캔된 값을 가져옴)
+                                final nearPoiIds = await _beaconScanService
+                                    .scanNearbyBeaconsAndGetPoiIds();
+
+                                List<Poi>? nearPois;
+
+                                // 2. 인접 POI ID 리스트가 있다면 POI 객체 리스트로 변환
+                                if (nearPoiIds.isNotEmpty) {
+                                  nearPois = await _poiRepository.getPoisByIds(
+                                    nearPoiIds,
+                                  );
+                                }
+
+                                if (!mounted) return;
+
+                                // 3. 페이지 이동
+                                final selectedPoi = await context.push<Poi>(
+                                  "/measureSelectPoi",
+                                  extra: {
+                                    "returnResult": true,
+                                    "searchMode": null,
+                                    "nearPois": nearPois,
+                                  },
+                                );
+
+                                if (selectedPoi != null && context.mounted) {
+                                  // POI 선택 후 측정 페이지로 이동
+                                  context.go("/measure", extra: selectedPoi);
+                                }
+                              } catch (e) {
+                                // 에러 발생 시 기존 방식대로 진행 (인접 POI 없음)
+                                if (mounted) {
+                                  final selectedPoi = await context.push<Poi>(
+                                    "/measureSelectPoi",
+                                    extra: {
+                                      "returnResult": true,
+                                      "searchMode": null,
+                                      "nearPois": null,
+                                    },
+                                  );
+
+                                  if (selectedPoi != null && context.mounted) {
+                                    context.go("/measure", extra: selectedPoi);
+                                  }
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
+                            },
                       child: Container(
                         alignment: Alignment.center,
                         width: 144,
@@ -108,14 +183,25 @@ class MeasureNoticePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(40),
                           color: AppColors.primary,
                         ),
-                        child: Text(
-                          "측정 시작",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                "측정 시작",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                   ],

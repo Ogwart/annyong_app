@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:annyong/domain/entity/building.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/building_repository.dart';
@@ -9,7 +10,6 @@ import 'package:annyong/presentation/widgets/search_rooms_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/foundation.dart';
 
 class SearchRoomsPage extends ConsumerStatefulWidget {
   final String searchType;
@@ -126,7 +126,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
     // 결과 반환 모드인 경우 선택한 강의실 이름 반환
     if (widget.returnResult) {
-      context.pop(classroom.name);
+      context.pop(classroom);
       return;
     }
 

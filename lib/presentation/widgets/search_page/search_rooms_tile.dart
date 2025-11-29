@@ -1,9 +1,10 @@
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class SearchRoomsTile extends StatelessWidget {
+class SearchRoomsTile extends StatefulWidget {
   const SearchRoomsTile({
     super.key,
     required this.title,
@@ -24,20 +25,37 @@ class SearchRoomsTile extends StatelessWidget {
   );
 
   @override
+  State<SearchRoomsTile> createState() => _SearchRoomsTileState();
+}
+
+class _SearchRoomsTileState extends State<SearchRoomsTile> {
+  String _getBasePath() {
+    // 현재 경로에 따라 베이스 경로 결정
+    final location = GoRouterState.of(context).uri.path;
+    if (location.startsWith('/measureSelectPoi')) {
+      return '/measureSelectPoi';
+    }
+    return '/home/search';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final result = await context.push<String>(
-          '/home/search/searchRooms',
+        final basePath = _getBasePath();
+        final result = await context.push<Poi>(
+          '$basePath/searchRooms',
           extra: {
-            'title': title,
-            'searchMode': searchMode,
-            'returnResult': returnResult,
-            'categoryId': categoryId,
+            'title': widget.title,
+            'searchMode': widget.searchMode,
+            'returnResult': widget.returnResult,
+            'categoryId': widget.categoryId,
           },
         );
-        if (returnResult && result != null) {
-          context.pop(result);
+        if (widget.returnResult && result != null) {
+          if (context.mounted) {
+            context.pop(result);
+          }
         }
       },
       child: Container(
@@ -48,7 +66,11 @@ class SearchRoomsTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           color: AppColors.grey200,
         ),
-        child: Text(title, style: _textStyle, textAlign: TextAlign.center),
+        child: Text(
+          widget.title,
+          style: SearchRoomsTile._textStyle,
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

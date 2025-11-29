@@ -26,14 +26,124 @@ class AppRouter {
       GoRoute(
         path: "/measureNotice",
         builder: (context, state) => MeasureNoticePage(),
+      ),
+      // 측정용 POI 선택 페이지 (ShellRoute 밖에서 접근 가능)
+      GoRoute(
+        path: "/measureSelectPoi",
+        builder: (context, state) {
+          SearchMode? searchMode;
+          bool returnResult = false;
+          List<Poi>? nearPois;
+          final extra = state.extra;
+          if (extra is SearchMode) {
+            searchMode = extra;
+          } else if (extra is Map) {
+            final searchModeValue = extra['searchMode'];
+            if (searchModeValue is SearchMode) {
+              searchMode = searchModeValue;
+            }
+            final returnResultValue = extra['returnResult'];
+            if (returnResultValue is bool) {
+              returnResult = returnResultValue;
+            }
+            final nearPoisValue = extra['nearPois'];
+            if (nearPoisValue is List<Poi>) {
+              nearPois = nearPoisValue;
+            }
+          }
+          return SearchPage(
+            searchMode: searchMode,
+            returnResult: returnResult,
+            nearPois: nearPois,
+          );
+        },
         routes: [
-          GoRoute(path: "measure", builder: (context, state) => MeasurePage()),
           GoRoute(
-            path: "measureResult",
-            builder: (context, state) => MeasureResultPage(),
+            path: "searchRooms",
+            builder: (context, state) {
+              final extra = state.extra;
+              String searchType = '';
+              final int categoryId =
+                  extra is Map<String, dynamic> && extra['categoryId'] is int
+                  ? extra['categoryId'] as int
+                  : 0;
+              SearchMode? searchMode;
+              bool returnResult = false;
+              if (extra is Map<String, dynamic>) {
+                searchType = extra['title'] as String? ?? '';
+                final searchModeValue = extra['searchMode'];
+                if (searchModeValue is SearchMode) {
+                  searchMode = searchModeValue;
+                }
+                final returnResultValue = extra['returnResult'];
+                if (returnResultValue is bool) {
+                  returnResult = returnResultValue;
+                }
+              } else if (extra is String) {
+                searchType = extra;
+              }
+              return SearchRoomsPage(
+                searchType: searchType,
+                categoryId: categoryId,
+                searchMode: searchMode,
+                returnResult: returnResult,
+              );
+            },
+          ),
+          GoRoute(
+            path: "searchResult",
+            builder: (context, state) {
+              final extra = state.extra;
+              String searchKeyword = '';
+              final int categoryId =
+                  extra is Map<String, dynamic> && extra['categoryId'] is int
+                  ? extra['categoryId'] as int
+                  : 0;
+              SearchMode? searchMode;
+              bool returnResult = false;
+              if (extra is Map<String, dynamic>) {
+                searchKeyword = extra['title'] as String? ?? '';
+                final searchModeValue = extra['searchMode'];
+                if (searchModeValue is SearchMode) {
+                  searchMode = searchModeValue;
+                }
+                final returnResultValue = extra['returnResult'];
+                if (returnResultValue is bool) {
+                  returnResult = returnResultValue;
+                }
+              } else if (extra is String) {
+                searchKeyword = extra;
+              }
+              return SearchResultPage(
+                searchKeyword: searchKeyword,
+                categoryId: categoryId,
+                searchMode: searchMode,
+                returnResult: returnResult,
+              );
+            },
           ),
         ],
       ),
+      // 측정 페이지
+      GoRoute(
+        path: "/measure",
+        builder: (context, state) {
+          final extra = state.extra;
+          final Poi? startPoi = extra is Poi ? extra : null;
+          return MeasurePage(startPoi: startPoi);
+        },
+        routes: [
+          GoRoute(
+            path: "measureResult",
+            builder: (context, state) {
+              final extra = state.extra;
+              final double? strideLength = extra is double ? extra : null;
+              return MeasureResultPage(strideLength: strideLength);
+            },
+          ),
+        ],
+      ),
+      // 홈 페이지, 메뉴 페이지, 검색 페이지
       ShellRoute(
         builder: (context, state, child) {
           return Scaffold(body: child);

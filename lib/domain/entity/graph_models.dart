@@ -78,4 +78,9 @@ class Edge {
       isReversed: isReversed ?? this.isReversed,
     );
   }
+
+  /// 현재 정점 ID를 받아서 엣지의 다른 쪽 정점 ID를 반환
+  int getOtherVertexId(int currentVertexId) {
+    return toVertexId;
+  }
 }
