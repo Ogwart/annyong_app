@@ -426,37 +426,56 @@ class _MeasurePageState extends State<MeasurePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     // 재시도 옵션 (다른 출발지 선택)
-                    TextButton(
-                      onPressed: () async {
-                        if (mounted) {
-                          // POI 선택 페이지로 이동하여 결과를 기다림
-                          final selectedPoi = await context.push<Poi>(
-                            "/measureSelectPoi",
-                            extra: {"returnResult": true},
-                          );
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            if (mounted) {
+                              // POI 선택 페이지로 이동하여 결과를 기다림
+                              final selectedPoi = await context.push<Poi>(
+                                "/measureSelectPoi",
+                                extra: {"returnResult": true},
+                              );
 
-                          // 선택된 POI가 있으면 상태 업데이트 및 재탐색
-                          if (selectedPoi != null && mounted) {
-                            setState(() {
-                              _targetPoi = selectedPoi;
-                              _isLoading = true; // 로딩 표시
-                              _errorMessage = null; // 에러 초기화
-                              _route = null; // 기존 경로 초기화
-                            });
-                            _findRoute(); // 재탐색 실행
-                          }
-                        }
-                      },
-                      child: Text(
-                        "다른 출발지 선택하기",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w600,
+                              // 선택된 POI가 있으면 상태 업데이트 및 재탐색
+                              if (selectedPoi != null && mounted) {
+                                setState(() {
+                                  _targetPoi = selectedPoi;
+                                  _isLoading = true; // 로딩 표시
+                                  _errorMessage = null; // 에러 초기화
+                                  _route = null; // 기존 경로 초기화
+                                });
+                                _findRoute(); // 재탐색 실행
+                              }
+                            }
+                          },
+                          child: Text(
+                            "다른 출발지 선택하기",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
+                        TextButton(
+                          onPressed: () async {
+                            if (mounted) {
+                              context.go('/home');
+                            }
+                          },
+                          child: Text(
+                            "홈 화면으로 돌아가기",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 40), // 하단 여백
                   ],
