@@ -25,6 +25,9 @@ class _MeasurePageState extends State<MeasurePage> {
     PoiRepository(),
   );
 
+  // widget.startPoi 대신 내부 상태로 관리하여 재선택 시 업데이트 가능하게 함
+  Poi? _targetPoi;
+
   // 지도를 확대/이동하기 위한 컨트롤러
   final TransformationController _transformationController =
       TransformationController();
@@ -44,6 +47,9 @@ class _MeasurePageState extends State<MeasurePage> {
   @override
   void initState() {
     super.initState();
+    // 초기 타겟 설정
+    _targetPoi = widget.startPoi;
+
     _requestPermissionAndInit();
     if (widget.startPoi != null) {
       _findRoute();
@@ -234,20 +240,45 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   Future<void> _findRoute() async {
+    // _targetPoi가 없으면 실행하지 않음
+    if (_targetPoi == null) return;
+
     try {
-      final route = await _calibrationService.findTargetRoute(widget.startPoi!);
+      debugPrint("----------- [_findRoute Start] ----------- ");
+      debugPrint(
+        "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
+      );
+
+      // widget.startPoi 대신 _targetPoi 사용
+      final route = await _calibrationService.findTargetRoute(_targetPoi!);
       setState(() {
         _route = route;
         _isLoading = false;
         if (route == null) {
-          _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
+          // 측정 불가용 UX 화면을 보여주기 위해 _errorMessage를 명시적으로 비워둠
+          // _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
+          _errorMessage = null;
         }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("[Error] 경로 탐색 중 치명적 에러 발생: $e");
+      debugPrint(" -- 스택 트레이스: $stackTrace"); // 에러 파일 위치 디버깅용
+
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
       });
+    }
+    debugPrint("----------- [_findRoute End] ----------- ");
+  }
+
+  Future<void> _goToResultPage(double strideLength) async {
+    // 결과 페이지로 이동하고, 사용자가 '확인'을 눌러서 pop될 때까지 대기
+    await context.push("/measure/measureResult", extra: strideLength);
+
+    // 결과 페이지가 닫히면(측정 완료), 홈으로 이동
+    if (mounted) {
+      context.go("/home");
     }
   }
 
@@ -321,7 +352,142 @@ class _MeasurePageState extends State<MeasurePage> {
               ),
             )
           : _route == null
-          ? const Center(child: Text("경로를 찾을 수 없습니다."))
+          // -------------------- [예외처리용 화면] --------------------
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 상단 실패 아이콘 (정상 화면과 위치 통일)
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(40),
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.grey200,
+                        ),
+                        child: Icon(
+                          Icons.straighten_outlined,
+                          size: 48,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 설명 문구 (정상 화면의 경로 정보와 비슷한 위치)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "직선 경로를 찾기 어려워요",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
+                  const Spacer(),
+
+                  // 선택지 제공 버튼: 기본값(0.7m) 설정
+                  GestureDetector(
+                    onTap: () {
+                      _goToResultPage(0.7);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(40), // 둥근 모서리 통일
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "기본 보폭(70cm)으로 설정",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 재시도 옵션 (다른 출발지 선택)
+                  TextButton(
+                    onPressed: () async {
+                      if (mounted) {
+                        // POI 선택 페이지로 이동하여 결과를 기다림
+                        final selectedPoi = await context.push<Poi>(
+                          "/measureSelectPoi",
+                          extra: {"returnResult": true},
+                        );
+
+                        // 선택된 POI가 있으면 상태 업데이트 및 재탐색
+                        if (selectedPoi != null && mounted) {
+                          setState(() {
+                            _targetPoi = selectedPoi;
+                            _isLoading = true; // 로딩 표시
+                            _errorMessage = null; // 에러 초기화
+                            _route = null; // 기존 경로 초기화
+                          });
+                          _findRoute(); // 재탐색 실행
+                        }
+                      }
+                    },
+                    child: Text(
+                      "다른 출발지 선택하기",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40), // 하단 여백
+                ],
+              ),
+            )
+          // -------------------- [정상 보폭 측정용 화면] --------------------
           : Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
