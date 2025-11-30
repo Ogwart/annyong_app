@@ -295,168 +295,172 @@ class _MeasurePageState extends State<MeasurePage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, color: Colors.red),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (mounted) {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go("/home");
+          ? SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16, color: Colors.red),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (mounted) {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go("/home");
+                            }
                           }
-                        }
-                      },
-                      child: const Text("돌아가기"),
-                    ),
-                  ],
+                        },
+                        child: const Text("돌아가기"),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
           : _route == null
           // -------------------- [예외처리용 화면] --------------------
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // 상단 실패 아이콘 (정상 화면과 위치 통일)
-                  Expanded(
-                    flex: 2,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(40),
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.grey200,
-                        ),
-                        child: Icon(
-                          Icons.straighten_outlined,
-                          size: 48,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // 설명 문구 (정상 화면의 경로 정보와 비슷한 위치)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    margin: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      children: [
-                        const Text(
-                          "직선 경로를 찾기 어려워요",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.text,
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // 상단 실패 아이콘 (정상 화면과 위치 통일)
+                    Expanded(
+                      flex: 2,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(40),
+                          width: 140,
+                          height: 140,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.grey200,
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
+                          child: Icon(
+                            Icons.straighten_outlined,
+                            size: 48,
                             color: Colors.grey[600],
-                            height: 1.5,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
-                  const Spacer(),
-
-                  // 선택지 제공 버튼: 기본값(0.7m) 설정
-                  GestureDetector(
-                    onTap: () {
-                      _goToResultPage(0.7);
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(40), // 둥근 모서리 통일
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withAlpha(30),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    ),
+
+                    // 설명 문구 (정상 화면의 경로 정보와 비슷한 위치)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      margin: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
                         children: [
-                          Text(
-                            "기본 보폭(70cm)으로 설정",
+                          const Text(
+                            "직선 경로를 찾기 어려워요",
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.text,
                             ),
                           ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                            size: 20,
+                          const SizedBox(height: 12),
+                          Text(
+                            "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              height: 1.5,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
 
-                  // 재시도 옵션 (다른 출발지 선택)
-                  TextButton(
-                    onPressed: () async {
-                      if (mounted) {
-                        // POI 선택 페이지로 이동하여 결과를 기다림
-                        final selectedPoi = await context.push<Poi>(
-                          "/measureSelectPoi",
-                          extra: {"returnResult": true},
-                        );
+                    // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
+                    const Spacer(),
 
-                        // 선택된 POI가 있으면 상태 업데이트 및 재탐색
-                        if (selectedPoi != null && mounted) {
-                          setState(() {
-                            _targetPoi = selectedPoi;
-                            _isLoading = true; // 로딩 표시
-                            _errorMessage = null; // 에러 초기화
-                            _route = null; // 기존 경로 초기화
-                          });
-                          _findRoute(); // 재탐색 실행
-                        }
-                      }
-                    },
-                    child: Text(
-                      "다른 출발지 선택하기",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w600,
+                    // 선택지 제공 버튼: 기본값(0.7m) 설정
+                    GestureDetector(
+                      onTap: () {
+                        _goToResultPage(0.7);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(40), // 둥근 모서리 통일
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withAlpha(30),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "기본 보폭(70cm)으로 설정",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 40), // 하단 여백
-                ],
+                    const SizedBox(height: 16),
+
+                    // 재시도 옵션 (다른 출발지 선택)
+                    TextButton(
+                      onPressed: () async {
+                        if (mounted) {
+                          // POI 선택 페이지로 이동하여 결과를 기다림
+                          final selectedPoi = await context.push<Poi>(
+                            "/measureSelectPoi",
+                            extra: {"returnResult": true},
+                          );
+
+                          // 선택된 POI가 있으면 상태 업데이트 및 재탐색
+                          if (selectedPoi != null && mounted) {
+                            setState(() {
+                              _targetPoi = selectedPoi;
+                              _isLoading = true; // 로딩 표시
+                              _errorMessage = null; // 에러 초기화
+                              _route = null; // 기존 경로 초기화
+                            });
+                            _findRoute(); // 재탐색 실행
+                          }
+                        }
+                      },
+                      child: Text(
+                        "다른 출발지 선택하기",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40), // 하단 여백
+                  ],
+                ),
               ),
             )
           // -------------------- [정상 보폭 측정용 화면] --------------------

@@ -179,7 +179,7 @@ class _SearchPageState extends State<SearchPage> {
                 itemCount: facilityCategories.length,
                 itemBuilder: (context, index) {
                   final category = facilityCategories[index];
-                  return SearchFacilitiesTile(
+                    return SearchFacilitiesTile(
                     title: category.name,
                     categoryId: category.id,
                     searchMode: widget.searchMode,
@@ -188,7 +188,7 @@ class _SearchPageState extends State<SearchPage> {
                 },
               ),
               // 하단 여백 추가 (스크롤 끝부분 여유)
-              const SizedBox(height: 40),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
             ],
           ),
         ),
