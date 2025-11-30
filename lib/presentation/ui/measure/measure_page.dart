@@ -558,7 +558,7 @@ class _MeasurePageState extends State<MeasurePage> {
                       );
                     },
                   ),
-
+                  const SizedBox(height: 24),
                   // --------------------안내 텍스트--------------------
                   Text(
                     '목적지까지 이동한 후\n도착 버튼을 눌러주세요',

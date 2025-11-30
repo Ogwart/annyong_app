@@ -73,13 +73,14 @@ class CategoryViewModel extends StateNotifier<CategoryState> {
         '데이터 로드 완료: 카테고리 ${categories.length}개, 전체 POI ${allPois.length}개, 즐겨찾기 ${favoritePois.length}개',
       );
 
-      // 초기 상태는 즐겨찾기(-1)이므로 displayedPois는 favoritePois로 설정
+      // 초기 상태: 아무것도 선택하지 않음 (-2)
+      // displayedPois는 전체 POI (allPois)로 설정
       state = state.copyWith(
         favoritePois: favoritePois,
         allPois: allPois,
         categories: categories,
-        displayedPois: favoritePois,
-        selectedCategoryId: -1,
+        displayedPois: allPois,
+        selectedCategoryId: -2,
       );
     } catch (e) {
       debugPrint('데이터 로드 중 오류 발생: $e');
@@ -87,6 +88,15 @@ class CategoryViewModel extends StateNotifier<CategoryState> {
   }
 
   void onCategorySelected(int categoryId) {
+    // 이미 선택된 카테고리를 다시 선택하면 선택 해제 (-2: 아무것도 선택하지 않음)
+    if (state.selectedCategoryId == categoryId) {
+      state = state.copyWith(
+        selectedCategoryId: -2,
+        displayedPois: state.allPois,
+      );
+      return;
+    }
+
     List<Poi> newDisplayedPois;
     if (categoryId == -1) {
       newDisplayedPois = state.favoritePois;
@@ -99,6 +109,14 @@ class CategoryViewModel extends StateNotifier<CategoryState> {
     state = state.copyWith(
       selectedCategoryId: categoryId,
       displayedPois: newDisplayedPois,
+    );
+  }
+
+  // 빈 공간 클릭 시 호출할 메서드 (모든 마커 표시)
+  void clearSelection() {
+    state = state.copyWith(
+      selectedCategoryId: -2,
+      displayedPois: state.allPois,
     );
   }
 

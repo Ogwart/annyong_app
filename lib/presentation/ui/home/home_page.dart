@@ -6,6 +6,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/widgets/global_widgets/category_button.dart';
 import 'package:annyong/presentation/widgets/global_widgets/poi_button.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
+import 'package:annyong/presentation/widgets/home_page/poi_bottom_sheet.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,9 +46,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
+  // 줌 레벨을 추적하기 위한 변수
+  double _currentScale = 1.0;
+
   void _onTransformationChanged() {
     final scale = _transformationController.value.getMaxScaleOnAxis();
     final resolution = MapUtilFunctions.getResolutionFromScale(scale);
+
+    // 줌 레벨 업데이트
+    if (_currentScale != scale) {
+      // setState는 아래에서 한 번에 호출될 수 있으므로 여기서는 값만 업데이트하고
+      // 필요 시 setState 호출
+      _currentScale = scale;
+    }
 
     // 현재 건물/층에 맞는 이미지 경로 생성
     final newImagePath = MapUtilFunctions.getImagePath(
@@ -137,22 +148,32 @@ class _HomePageState extends ConsumerState<HomePage> {
                 children: [
                   // -------------------지도-------------------
                   Positioned.fill(
-                    child: InteractiveViewer(
-                      transformationController: _transformationController,
-                      boundaryMargin: EdgeInsets.all(20),
-                      panEnabled: true,
-                      scaleEnabled: true,
-                      minScale: 0.5,
-                      maxScale: 9.0,
-                      child: Image.asset(
-                        _currentImagePath,
-                        fit: BoxFit.contain,
+                    child: GestureDetector(
+                      // 빈 공간 클릭 시 선택 초기화
+                      onTap: () {
+                        ref.read(categoryProvider.notifier).clearSelection();
+                      },
+                      child: InteractiveViewer(
+                        transformationController: _transformationController,
+                        boundaryMargin: EdgeInsets.all(20),
+                        panEnabled: true,
+                        scaleEnabled: true,
+                        minScale: 0.5,
+                        maxScale: 9.0,
+                        child: Image.asset(
+                          _currentImagePath,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
                   // 마커 빌더 (선택된 카테고리 또는 즐겨찾기)
                   ...MapUtilFunctions.getFilteredFavoritePois(
-                    categoryState.displayedPois,
+                    // 전체 카테고리 모드이고 줌 레벨이 2.5 미만이면 즐겨찾기만 표시
+                    (categoryState.selectedCategoryId == -2 &&
+                            _currentScale < 2.8)
+                        ? categoryState.favoritePois
+                        : categoryState.displayedPois,
                     mapProvider.selectedBuilding,
                     mapProvider.selectedFloor,
                   ).map((poi) {
@@ -180,12 +201,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                       top: transformedY - markerSize / 2 + markerOffset.dy,
                       child: GestureDetector(
                         onTap: () {
-                          ref
-                              .read(pathSelectionProvider.notifier)
-                              .setDestination(poi);
-                          context.go('/home/pathSelection');
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => PoiBottomSheet(poi: poi),
+                          );
                         },
-                        child: PoiButton(bookmarkTitle: poi.name),
+                        child: PoiButton(
+                          bookmarkTitle: poi.name,
+                          showTitle: _currentScale >= 2.5,
+                          isFavorite: categoryState.favoritePois.any(
+                            (p) => p.id == poi.id,
+                          ),
+                        ),
                       ),
                     );
                   }),
