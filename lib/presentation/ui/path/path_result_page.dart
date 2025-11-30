@@ -27,14 +27,15 @@ class PathResultPage extends ConsumerStatefulWidget {
 }
 
 class _PathResultPageState extends ConsumerState<PathResultPage> {
+  // [현위치 추정용] 중복 실행 방지 플래그
+  bool _isNavigationStarted = false;
+  
   @override
   void initState() {
     super.initState();
     // 페이지 진입 시 길 안내 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navigationNotifier = ref.read(navigationViewModelProvider.notifier);
-      // 출발 POI로 초기 위치 설정
-      navigationNotifier.setInitialPositionFromPoi(widget.start);
     });
   }
 
@@ -140,6 +141,22 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                 ),
               ),
             );
+          }
+
+          // 경로가 산출되었으므로 현위치 추정 시작
+          // ===============================================================
+          if (!_isNavigationStarted) {
+            // 빌드 중에 상태를 변경하면 안 되므로 addPostFrameCallback 사용
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ref.read(navigationViewModelProvider.notifier)
+                   .startNavigation(result.path); // 계산된 Vertex 경로 전달하며 현위치 추정 호출
+                
+                setState(() {
+                  _isNavigationStarted = true; // 중복 실행 방지
+                });
+              }
+            });
           }
 
           // JSON 결과 생성 및 출력

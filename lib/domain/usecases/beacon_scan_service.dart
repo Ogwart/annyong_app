@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:annyong/domain/repository/beacon_repository.dart';
+import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -12,6 +13,9 @@ class KalmanFilter {
   bool _isInitialized = false;
 
   KalmanFilter({required this.R, required this.Q});
+
+  // [NEW] 현재 추정값 반환 Getter
+  double get currentEstimate => _x;
 
   double filter(double measurement) {
     if (!_isInitialized) {
@@ -77,6 +81,34 @@ class BeaconScanService {
   List<int> get currentNearbyPoiIds => _currentNearbyPoiIds;
 
   bool _isScanning = false;
+
+
+  // 현재 추적 중인 비콘 중 가장 가까운 비콘 정보 반환
+  Future<({Beacon beacon, double rssi})?> getNearestTrackedBeacon() async {
+    String? bestMac;
+    double bestRssi = -999.0;
+
+    for (var entry in _beaconInRangeStatus.entries) {
+      // 범위 내(isInside)인 비콘만 대상으로 함
+      if (entry.value == true) {
+        final mac = entry.key;
+        final rssi = _kalmanFilters[mac]?.currentEstimate ?? -100.0;
+        
+        if (rssi > bestRssi) {
+          bestRssi = rssi;
+          bestMac = mac;
+        }
+      }
+    }
+
+    if (bestMac != null) {
+      final beacon = await _poiRepository.findBeaconByMac(bestMac);
+      if (beacon != null) {
+        return (beacon: beacon, rssi: bestRssi);
+      }
+    }
+    return null;
+  }
 
   /// 비콘 스캐닝 시작 (앱 실행 시 호출)
   Future<void> startBackgroundScan() async {
