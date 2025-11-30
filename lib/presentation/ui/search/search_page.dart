@@ -96,23 +96,45 @@ class _SearchPageState extends State<SearchPage> {
               // 위치 기반 인접 POI 추천 섹션
               if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
                 const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 ...widget.nearPois!.asMap().entries.map((entry) {
                   final poi = entry.value;
-                  final buildingList = ["5서", "5남", "하"];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey200, // 연회색 배경색으로 리스트끼리 명확히 분리
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description ?? ""}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.text,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                poi.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                poi.description ?? '설명 없음',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -121,17 +143,28 @@ class _SearchPageState extends State<SearchPage> {
                             if (widget.returnResult) {
                               context.pop(poi);
                             } else {
-                              context.pop(); // 일반 검색 모드에서는 다른 동작 수행
+                              context.pop();
                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10, // 터치 영역 확보를 위해 세로 패딩 약간 증가
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Text('선택'),
+                          child: const Text(
+                            '선택',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
