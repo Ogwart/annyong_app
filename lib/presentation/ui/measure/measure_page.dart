@@ -128,6 +128,10 @@ class _MeasurePageState extends State<MeasurePage> {
 
   Future<void> _findRoute() async {
     try {
+      debugPrint("----------- [_findRoute Start] ----------- ");
+      debugPrint(
+        "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
+      );
       final route = await _calibrationService.findTargetRoute(widget.startPoi!);
       setState(() {
         _route = route;
@@ -137,11 +141,15 @@ class _MeasurePageState extends State<MeasurePage> {
         }
       });
     } catch (e, stackTrace) {
+      debugPrint("[Error] 경로 탐색 중 치명적 에러 발생: $e");
+      debugPrint(" -- 스택 트레이스: $stackTrace"); // 에러 파일 위치 디버깅용
+
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
       });
     }
+    debugPrint("----------- [_findRoute End] ----------- ");
   }
 
   void _onArrived() {

@@ -91,6 +91,10 @@ class PoiRepository {
       final rawWay = rawEdge['way'] as String?;
       final wayType = WayTypeParser.from(rawWay);
 
+      if (length == 0) {
+        debugPrint("[Warning] 길이가 0인 엣지 발견: $v1Id <-> $v2Id (좌표가 동일함)");
+      }
+
       if (v1Id == null ||
           v2Id == null ||
           v1Id < 0 ||

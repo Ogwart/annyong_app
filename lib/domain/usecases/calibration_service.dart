@@ -2,6 +2,7 @@ import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
+import 'package:flutter/foundation.dart';
 
 /// 보폭 측정 서비스
 /// [PoiRepository]에 의존하여 원본 POI 데이터를 가져오고,
@@ -29,6 +30,7 @@ class CalibrationService {
 
     // 1. 시작 POI에 연결된 "시작 정점(Vertex)"을 가져옴
     if (startPoi.vertexId == null) {
+      debugPrint("[FindRoute] 실패: 시작 POI(${startPoi.name})에 vertexId가 없습니다.");
       return null;
     }
 
@@ -36,6 +38,9 @@ class CalibrationService {
       startPoi.vertexId!,
     );
     if (startVertex == null) {
+      debugPrint(
+        "[FindRoute] 실패: Vertex ID(${startPoi.vertexId})에 해당하는 정점 데이터를 찾을 수 없습니다.",
+      );
       return null;
     }
 
@@ -46,6 +51,10 @@ class CalibrationService {
     // 시작 정점에 연결된 모든 엣지(이웃)를 탐색 시작
     final List<Edge> startEdges = await _poiRepo.getEdgesForVertex(
       startVertex.id,
+    );
+
+    debugPrint(
+      "[FindRoute] 탐색 시작: Vertex ${startVertex.id}의 연결된 엣지 수: ${startEdges.length}개",
     );
 
     // 양쪽 2개의 이웃 방향(각 엣지 방향)으로 "직선 경로"를 찾음
@@ -63,6 +72,10 @@ class CalibrationService {
         idealDistance: idealDistance,
       );
 
+      debugPrint(
+        "[FindRoute] 경로 탐색 결과: 거리 $distance m, 도착 Vertex ${endVertex?.id}",
+      );
+
       if (endVertex != null) {
         availablePaths.add((endVertex, distance));
       } else {}
@@ -70,6 +83,7 @@ class CalibrationService {
 
     // 유효한 직선 경로가 아예 없는 경우
     if (availablePaths.isEmpty) {
+      debugPrint("[FindRoute] 실패: 유효한 직선 경로를 찾지 못했습니다.");
       return null;
     }
 
@@ -79,6 +93,9 @@ class CalibrationService {
 
     // 측정 불가 조건 체크
     if (bestDistance < minRoundTripDistance) {
+      debugPrint(
+        "[FindRoute] 실패: 최장 경로($bestDistance m)가 최소 기준($minRoundTripDistance m)보다 짧습니다.",
+      );
       return null;
     }
 
@@ -88,6 +105,9 @@ class CalibrationService {
     );
 
     if (destinationPois.isEmpty) {
+      debugPrint(
+        "[FindRoute] 실패: 도착 지점(Vertex ${bestVertex.id})에 연결된 POI가 없습니다.",
+      );
       return null;
     }
 
@@ -115,6 +135,7 @@ class CalibrationService {
     final String mode = isOneWay ? "one-way" : "round-trip";
 
     // 결정된 거리, 모드 반환
+    debugPrint("[FindRoute] 성공: 경로 발견 (${totalDistance}m, $mode)");
     return CalibrationRoute(
       startPoi: startPoi,
       destinationPoi: destinationPoi,
@@ -140,8 +161,19 @@ class CalibrationService {
     double accDist = accumulatedDistance;
     Vertex? lastStraightVertex;
 
+    // 무한 루프에 빠지는 것을 막기 위해 최대 1000번의 깊이까지만 허용
+    int safetyCounter = 0;
+    const int maxIterations = 1000;
+
     // 직선 경로가 끊길 때까지 while 루프
     while (true) {
+      if (++safetyCounter > maxIterations) {
+        debugPrint(
+          "[Warning] _traceStraightPath: 무한 루프 감지로 인해 강제 종료됨(VertexID: $cId)",
+        );
+        break;
+      }
+
       final currentVertex = await _poiRepo.getVertexById(cId);
       if (currentVertex == null) {
         break; // 맵 데이터 오류
