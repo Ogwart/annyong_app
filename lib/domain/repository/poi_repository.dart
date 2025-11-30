@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:math'; // [추가] 거리 계산을 위해 추가
+import 'dart:math'; // 거리 계산을 위해 추가
 
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -25,6 +26,9 @@ class _MeasurePageState extends State<MeasurePage> {
     PoiRepository(),
   );
 
+  // widget.startPoi 대신 내부 상태로 관리하여 재선택 시 업데이트 가능하게 함
+  Poi? _targetPoi;
+
   // 지도를 확대/이동하기 위한 컨트롤러
   final TransformationController _transformationController =
       TransformationController();
@@ -44,6 +48,9 @@ class _MeasurePageState extends State<MeasurePage> {
   @override
   void initState() {
     super.initState();
+    // 초기 타겟 설정
+    _targetPoi = widget.startPoi;
+
     _requestPermissionAndInit();
     if (widget.startPoi != null) {
       _findRoute();
@@ -69,85 +76,59 @@ class _MeasurePageState extends State<MeasurePage> {
 
   // 지도 초기 위치 설정 (출발지와 목적지 중점이 화면 중앙에 오도록)
   void _initializeMapPosition(Size containerSize) {
-    if (_isMapInitialized || _route == null) return;
+    if (_isMapInitialized ||
+        _route == null ||
+        containerSize.width <= 0 ||
+        containerSize.height <= 0)
+      return;
 
-    // 1. 출발지와 목적지 좌표 (원본 이미지 기준)
-    // 2x 이미지 기준 좌표라고 가정 (POI 좌표계와 일치하는지 확인 필요)
-    // MapUtilFunctions.getImagePath에서 '2x'를 호출하므로 2x 이미지 사용
-    // HomePage 로직에 따르면 1x 이미지 기준으로 POI 좌표가 설정되어 있을 수 있음
-    // 하지만 path_result_page에서는 0.19 곱해서 쓰고 있음.
-    // 여기서는 InteractiveViewer 내부의 Image가 BoxFit.contain으로 들어감.
+    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final floorString = '${_route!.startPoi.floor}F';
 
-    // 2x 이미지 원본 크기
+    // 기존에 '2x'로 되어 있어서 좌표 계산 배율이 틀어졌던 것이기 때문에
+    // 마커 로직과 동일하게 '1x' 기준으로 원본 크기를 가져오도록 변경
     final originalSize = MapUtilFunctions.getImageOriginalSize(
-      _getBuildingName(_route!.startPoi.buildingId),
-      '${_route!.startPoi.floor}F',
-      '2x',
+      buildingName,
+      floorString,
+      '1x',
     );
 
-    // 2x 이미지 기준으로 POI 좌표 변환 (필요하다면)
-    // 여기서는 POI 좌표(xCoord, yCoord)가 어떤 해상도 기준인지 불명확하지만
-    // HomePage에서는 1x 기준으로 계산하여 사용.
-    // path_result_page에서는 xCoord * 0.19로 사용.
+    if (originalSize.width == 0 || originalSize.height == 0) return;
 
-    // 안전하게 가기 위해:
-    // InteractiveViewer의 child인 Image가 BoxFit.contain으로 렌더링될 때의 실제 크기 구하기
     final displayedSize = MapUtilFunctions.getDisplayedImageSize(
       containerSize,
       originalSize,
     );
 
-    // 축소 비율 (원본 대비 화면 표시 비율)
-    final scaleX = displayedSize.width / originalSize.width;
-    final scaleY = displayedSize.height / originalSize.height;
+    // 2. 스케일 계산 (BoxFit.contain이므로 가로/세로 비율 중 맞는 것 하나만 쓰면 됨)
+    // displayedSize는 이미 비율이 맞춰진 크기이므로 width 기준으로 계산
+    final scale = displayedSize.width / originalSize.width;
 
-    // 화면상에서의 출발/도착 좌표 (Zoom 1.0일 때)
-    final p1 = Offset(
-      _route!.startPoi.xCoord * scaleX,
-      _route!.startPoi.yCoord * scaleY,
+    // 3. 여백(Offset) 계산
+    final offsetX = (containerSize.width - displayedSize.width) / 2;
+    final offsetY = (containerSize.height - displayedSize.height) / 2;
+
+    // 4. 출발지 좌표를 화면상 절대 좌표로 변환
+    final startX = _route!.startPoi.xCoord * scale + offsetX;
+    final startY = _route!.startPoi.yCoord * scale + offsetY;
+
+    // 5. 목적지 좌표 계산 (줌 레벨 결정을 위해)
+    final endX = _route!.destinationPoi.xCoord * scale + offsetX;
+    final endY = _route!.destinationPoi.yCoord * scale + offsetY;
+
+    // 6. 줌 레벨 계산 (화면 너비의 40% 정도가 되도록)
+    final dist = math.sqrt(
+      math.pow(startX - endX, 2) + math.pow(startY - endY, 2),
     );
-    final p2 = Offset(
-      _route!.destinationPoi.xCoord * scaleX,
-      _route!.destinationPoi.yCoord * scaleY,
-    );
+    double targetScale = (dist > 0) ? (containerSize.width * 0.4 / dist) : 3.0;
+    targetScale = targetScale.clamp(2.5, 6.0);
 
-    // 중점 (여기서는 시작 지점을 중심으로 설정)
-    // 기존: final center = Offset((p1.dx + p2.dx) / 2, (p1.dy + p2.dy) / 2);
-    final center = p1; // 시작 지점을 중심으로 설정
+    // 7. 중앙 정렬을 위한 이동량(Translation) 계산
+    // 화면 중앙 - (출발지 * 줌배율)
+    final tx = (containerSize.width / 2) - (startX * targetScale);
+    final ty = (containerSize.height / 2) - (startY * targetScale);
 
-    // 두 점 사이 거리
-    double dist = (p1 - p2).distance;
-
-    // 목표 스케일: 두 점 사이 거리가 화면 너비의 약 60% 정도 되도록
-    // (너무 꽉 차면 마커가 잘릴 수 있으므로 여유 있게)
-    // 만약 거리가 너무 가깝다면 최대 스케일 제한
-    double targetScale = containerSize.width * 0.6 / dist;
-
-    // 최소/최대 스케일 보정
-    if (targetScale < 2.0) targetScale = 2.0;
-    if (targetScale > 5.0) targetScale = 5.0;
-
-    // 중앙 정렬을 위한 이동(Translation)
-    // 화면 중앙 - (중점 * 스케일)
-    // 오프셋 보정값 추가 (사용자가 직접 조정 가능)
-    const double offsetXCorrection = -50.0; // x축 보정 (왼쪽으로 이동)
-    const double offsetYCorrection = -50.0; // y축 보정 (위로 이동)
-
-    // tx, ty 계산 시 스케일을 고려하여 center에 곱하는 것이 맞음.
-    // (containerWidth/2) - (centerX * scale) => 중심점을 화면 중앙으로.
-    // 여기에 보정값을 더함.
-    // 하지만 InteractiveViewer에 alignment: Alignment.topLeft를 주었으므로,
-    // (0,0) 기준으로 이동해야 함.
-
-    final tx =
-        containerSize.width / 2 - center.dx * targetScale + offsetXCorrection;
-    final ty =
-        containerSize.height / 2 - center.dy * targetScale + offsetYCorrection;
-
-    // 만약 tx, ty가 양수라면(화면 중앙보다 왼쪽/위쪽 여백이 생김), 0으로 제한하여 빈 공간 최소화 (선택 사항)
-    // 하지만 여기서는 특정 지점을 중앙에 놓는 것이 목표이므로 제한하지 않음.
-
-    // 매트릭스 설정 (scale -> translate 순서 주의)
+    // 8. 매트릭스 적용
     final matrix = Matrix4.identity()
       ..translate(tx, ty)
       ..scale(targetScale);
@@ -155,10 +136,7 @@ class _MeasurePageState extends State<MeasurePage> {
     _transformationController.value = matrix;
     _isMapInitialized = true;
 
-    // 상태 업데이트하여 마커 위치 재계산 유도
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
+    if (mounted) setState(() {});
   }
 
   Future<void> _requestPermissionAndInit() async {
@@ -234,20 +212,45 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   Future<void> _findRoute() async {
+    // _targetPoi가 없으면 실행하지 않음
+    if (_targetPoi == null) return;
+
     try {
-      final route = await _calibrationService.findTargetRoute(widget.startPoi!);
+      debugPrint("----------- [_findRoute Start] ----------- ");
+      debugPrint(
+        "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
+      );
+
+      // widget.startPoi 대신 _targetPoi 사용
+      final route = await _calibrationService.findTargetRoute(_targetPoi!);
       setState(() {
         _route = route;
         _isLoading = false;
         if (route == null) {
-          _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
+          // 측정 불가용 UX 화면을 보여주기 위해 _errorMessage를 명시적으로 비워둠
+          // _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
+          _errorMessage = null;
         }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("[Error] 경로 탐색 중 치명적 에러 발생: $e");
+      debugPrint(" -- 스택 트레이스: $stackTrace"); // 에러 파일 위치 디버깅용
+
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
       });
+    }
+    debugPrint("----------- [_findRoute End] ----------- ");
+  }
+
+  Future<void> _goToResultPage(double strideLength) async {
+    // 결과 페이지로 이동하고, 사용자가 '확인'을 눌러서 pop될 때까지 대기
+    await context.push("/measure/measureResult", extra: strideLength);
+
+    // 결과 페이지가 닫히면(측정 완료), 홈으로 이동
+    if (mounted) {
+      context.go("/home");
     }
   }
 
@@ -321,7 +324,142 @@ class _MeasurePageState extends State<MeasurePage> {
               ),
             )
           : _route == null
-          ? const Center(child: Text("경로를 찾을 수 없습니다."))
+          // -------------------- [예외처리용 화면] --------------------
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 상단 실패 아이콘 (정상 화면과 위치 통일)
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(40),
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.grey200,
+                        ),
+                        child: Icon(
+                          Icons.straighten_outlined,
+                          size: 48,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 설명 문구 (정상 화면의 경로 정보와 비슷한 위치)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "직선 경로를 찾기 어려워요",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
+                  const Spacer(),
+
+                  // 선택지 제공 버튼: 기본값(0.7m) 설정
+                  GestureDetector(
+                    onTap: () {
+                      _goToResultPage(0.7);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(40), // 둥근 모서리 통일
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "기본 보폭(70cm)으로 설정",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 재시도 옵션 (다른 출발지 선택)
+                  TextButton(
+                    onPressed: () async {
+                      if (mounted) {
+                        // POI 선택 페이지로 이동하여 결과를 기다림
+                        final selectedPoi = await context.push<Poi>(
+                          "/measureSelectPoi",
+                          extra: {"returnResult": true},
+                        );
+
+                        // 선택된 POI가 있으면 상태 업데이트 및 재탐색
+                        if (selectedPoi != null && mounted) {
+                          setState(() {
+                            _targetPoi = selectedPoi;
+                            _isLoading = true; // 로딩 표시
+                            _errorMessage = null; // 에러 초기화
+                            _route = null; // 기존 경로 초기화
+                          });
+                          _findRoute(); // 재탐색 실행
+                        }
+                      }
+                    },
+                    child: Text(
+                      "다른 출발지 선택하기",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40), // 하단 여백
+                ],
+              ),
+            )
+          // -------------------- [정상 보폭 측정용 화면] --------------------
           : Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
