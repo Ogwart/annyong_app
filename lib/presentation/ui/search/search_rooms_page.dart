@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'package:annyong/domain/entity/building.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/building_repository.dart';
@@ -74,6 +73,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
         if (_buildings.isNotEmpty) {
           selectedBuilding = _buildings.first.name;
           selectedBuildingId = _buildings.first.id;
+          _updateFloors(_buildings.first.name); // 초기 건물에 대한 층 목록 설정
         }
       });
     } catch (e) {
@@ -84,6 +84,27 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     }
   }
 
+  bool _isFloorAvailable(int floor) {
+    if (selectedBuildingId == null) return false;
+    // 현재 선택된 건물과 층에 해당하는 POI가 _filteredPois에 하나라도 있는지 확인
+    return _filteredPois.any(
+      (poi) => poi.buildingId == selectedBuildingId && poi.floor == floor,
+    );
+  }
+
+  // 층 목록 업데이트 로직 분리
+  void _updateFloors(String buildingName) {
+    if (buildingName.contains('5호관')) {
+      floors = [1, 2];
+    } else if (buildingName.contains('하이테크')) {
+      floors = [1];
+    } else if (buildingName.contains('60주년')) {
+      floors = [1];
+    } else {
+      floors = [];
+    }
+  }
+
   void _onBuildingSelected(Building building) {
     setState(() {
       debugPrint('선택된 건물: ${building.name}');
@@ -91,16 +112,9 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
       selectedBuildingId = building.id;
       selectedFloor = null;
       selectedClassroom = null;
-      // 건물 선택 시 해당 건물의 층 목록 로드
-      if (selectedBuilding!.contains('5호관')) {
-        floors = [1, 2];
-      } else if (selectedBuilding!.contains('하이테크')) {
-        floors = [1];
-      } else if (selectedBuilding!.contains('60주년')) {
-        floors = [1];
-      } else {
-        floors = [];
-      }
+
+      _updateFloors(building.name);
+
       classrooms = [];
     });
   }
@@ -263,7 +277,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                     ),
                   ),
                 ),
-                // -------------------층 컬럼-------------------
+                // -------------------층 컬럼 (수정됨)-------------------
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -279,10 +293,22 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                               final floor = floors[index];
                               final floorLabel = '${floor}F';
                               final isSelected = selectedFloor == floorLabel;
-                              return CategoryItem(
-                                name: floorLabel,
-                                isSelected: isSelected,
-                                onTap: () => _onFloorSelected(floor),
+
+                              // 해당 층에 POI가 존재하는지 확인 -> 만약 없다면 비활성화
+                              final isAvailable = _isFloorAvailable(floor);
+
+                              return Opacity(
+                                // 비활성화 시 흐리게 처리 (연한 회색 효과)
+                                opacity: isAvailable ? 1.0 : 0.3,
+                                child: AbsorbPointer(
+                                  // 비활성화 시 터치 차단
+                                  absorbing: !isAvailable,
+                                  child: CategoryItem(
+                                    name: floorLabel,
+                                    isSelected: isSelected,
+                                    onTap: () => _onFloorSelected(floor),
+                                  ),
+                                ),
                               );
                             },
                           ),
