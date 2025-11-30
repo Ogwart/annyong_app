@@ -77,8 +77,9 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                       children: [
                         _buildNoticeItem(
                           number: "1",
-                          title: "평평한 직선 구간 선택",
-                          content: "계단이나 코너가 없는 곧은 복도에서 측정해야 정확합니다.",
+                          title: "현재 위치 선택",
+                          content:
+                              "다음 화면에서 '현재 위치'를 선택해주세요. 선택한 출발지와 직선 방향에 위치한 적절한 목적지를 탐색합니다.",
                         ),
                         const SizedBox(height: 24),
                         _buildNoticeItem(
