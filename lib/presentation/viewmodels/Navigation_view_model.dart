@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
-import 'package:annyong/domain/service/location_service.dart';
+import 'package:annyong/domain/usecases/location_service.dart';
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/presentation/viewmodels/navigation_state.dart';
 import 'package:flutter/widgets.dart';
