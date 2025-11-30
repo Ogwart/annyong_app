@@ -16,7 +16,7 @@ class PoiButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 즐겨찾기이거나 제목을 표시하지 않는 경우 (축소 상태)
-    if (isFavorite || !showTitle) {
+    if (isFavorite) {
       return Container(
         alignment: Alignment.center,
         height: 30,
