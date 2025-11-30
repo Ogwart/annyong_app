@@ -25,6 +25,9 @@ class _MeasurePageState extends State<MeasurePage> {
     PoiRepository(),
   );
 
+  // widget.startPoi 대신 내부 상태로 관리하여 재선택 시 업데이트 가능하게 함
+  Poi? _targetPoi;
+
   CalibrationRoute? _route;
   bool _isLoading = true;
   String? _errorMessage;
@@ -37,6 +40,9 @@ class _MeasurePageState extends State<MeasurePage> {
   @override
   void initState() {
     super.initState();
+    // 초기 타겟 설정
+    _targetPoi = widget.startPoi;
+
     _requestPermissionAndInit();
     if (widget.startPoi != null) {
       _findRoute();
@@ -127,12 +133,17 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   Future<void> _findRoute() async {
+    // _targetPoi가 없으면 실행하지 않음
+    if (_targetPoi == null) return;
+
     try {
       debugPrint("----------- [_findRoute Start] ----------- ");
       debugPrint(
         "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
       );
-      final route = await _calibrationService.findTargetRoute(widget.startPoi!);
+
+      // widget.startPoi 대신 _targetPoi 사용
+      final route = await _calibrationService.findTargetRoute(_targetPoi!);
       setState(() {
         _route = route;
         _isLoading = false;
@@ -152,6 +163,16 @@ class _MeasurePageState extends State<MeasurePage> {
       });
     }
     debugPrint("----------- [_findRoute End] ----------- ");
+  }
+
+  Future<void> _goToResultPage(double strideLength) async {
+    // 결과 페이지로 이동하고, 사용자가 '확인'을 눌러서 pop될 때까지 대기
+    await context.push("/measure/measureResult", extra: strideLength);
+
+    // 결과 페이지가 닫히면(측정 완료), 홈으로 이동
+    if (mounted) {
+      context.go("/home");
+    }
   }
 
   void _onArrived() {
@@ -270,10 +291,10 @@ class _MeasurePageState extends State<MeasurePage> {
                   // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
                   const Spacer(),
 
-                  // 선택지 제공 버: 기본값(0.7m) 설정
+                  // 선택지 제공 버튼: 기본값(0.7m) 설정
                   GestureDetector(
                     onTap: () {
-                      context.push("/measure/measureResult", extra: 0.7);
+                      _goToResultPage(0.7);
                     },
                     child: Container(
                       width: double.infinity,
@@ -322,12 +343,15 @@ class _MeasurePageState extends State<MeasurePage> {
                           extra: {"returnResult": true},
                         );
 
-                        // 새로운 POI가 선택되었다면 해당 POI로 측정 페이지 갱신(교체)
+                        // 선택된 POI가 있으면 상태 업데이트 및 재탐색
                         if (selectedPoi != null && mounted) {
-                          context.pushReplacement(
-                            "/measure",
-                            extra: selectedPoi,
-                          );
+                          setState(() {
+                            _targetPoi = selectedPoi;
+                            _isLoading = true; // 로딩 표시
+                            _errorMessage = null; // 에러 초기화
+                            _route = null; // 기존 경로 초기화
+                          });
+                          _findRoute(); // 재탐색 실행
                         }
                       }
                     },
