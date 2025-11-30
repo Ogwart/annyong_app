@@ -1,14 +1,17 @@
+import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
+import 'package:annyong/presentation/util/icon_path.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class PoiButton extends StatelessWidget {
-  final String bookmarkTitle;
+  final Poi poi;
   final bool showTitle;
   final bool isFavorite;
 
   const PoiButton({
     super.key,
-    required this.bookmarkTitle,
+    required this.poi,
     this.showTitle = false,
     this.isFavorite = false,
   });
@@ -19,8 +22,8 @@ class PoiButton extends StatelessWidget {
     if (isFavorite) {
       return Container(
         alignment: Alignment.center,
-        height: 30,
-        width: 30,
+        height: 35,
+        width: 35,
         decoration: BoxDecoration(
           color: isFavorite ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(48),
@@ -46,17 +49,16 @@ class PoiButton extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 26,
-          height: 26,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
-            border: BoxBorder.all(color: AppColors.primary, width: 2),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 4),
+            ],
           ),
-          child: const Icon(
-            Icons.location_on,
-            color: AppColors.primary,
-            size: 18,
+          child: SvgPicture.asset(
+            "assets/icons/svg/${iconPath(poi)}.svg",
+            width: 35,
+            height: 35,
           ),
         ),
         const SizedBox(width: 4),
@@ -64,7 +66,7 @@ class PoiButton extends StatelessWidget {
           children: [
             // 외곽선 텍스트 (Stroke)
             Text(
-              bookmarkTitle,
+              poi.name,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -76,7 +78,7 @@ class PoiButton extends StatelessWidget {
             ),
             // 실제 텍스트 (Fill)
             Text(
-              bookmarkTitle,
+              poi.name,
               style: const TextStyle(
                 color: AppColors.text,
                 fontWeight: FontWeight.w600,

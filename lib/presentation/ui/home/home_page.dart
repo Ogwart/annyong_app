@@ -169,9 +169,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   // 마커 빌더 (선택된 카테고리 또는 즐겨찾기)
                   ...MapUtilFunctions.getFilteredFavoritePois(
-                    // 전체 카테고리 모드이고 줌 레벨이 2.5 미만이면 즐겨찾기만 표시
                     (categoryState.selectedCategoryId == -2 &&
-                            _currentScale < 2.8)
+                            _currentScale < 2)
                         ? categoryState.favoritePois
                         : categoryState.displayedPois,
                     mapProvider.selectedBuilding,
@@ -208,8 +207,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           );
                         },
                         child: PoiButton(
-                          bookmarkTitle: poi.name,
-                          showTitle: _currentScale >= 2.5,
+                          poi: poi,
+                          showTitle: _currentScale >= 2,
                           isFavorite: categoryState.favoritePois.any(
                             (p) => p.id == poi.id,
                           ),

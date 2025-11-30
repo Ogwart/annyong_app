@@ -45,6 +45,7 @@ dependencies:
   shared_preferences: ^2.3.3
   flutter_compass: ^0.8.1
   flutter_blue_plus: ^1.32.9
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +75,7 @@ flutter:
     - assets/map/8_1F/
     - assets/map/3_1F/
     - assets/icons/
+    - assets/icons/svg/
 
     # - assets/poi/
     - assets/poi/building.json
