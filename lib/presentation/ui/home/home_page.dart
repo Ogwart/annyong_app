@@ -170,7 +170,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // 마커 빌더 (선택된 카테고리 또는 즐겨찾기)
                   ...MapUtilFunctions.getFilteredFavoritePois(
                     (categoryState.selectedCategoryId == -2 &&
-                            _currentScale < 2)
+                            _currentScale < 1.5)
                         ? categoryState.favoritePois
                         : categoryState.displayedPois,
                     mapProvider.selectedBuilding,
@@ -206,9 +206,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                             builder: (context) => PoiBottomSheet(poi: poi),
                           );
                         },
+                        // zoom level 3부터 글씨 표시
                         child: PoiButton(
                           poi: poi,
-                          showTitle: _currentScale >= 2,
+                          showTitle: _currentScale >= 3,
                           isFavorite: categoryState.favoritePois.any(
                             (p) => p.id == poi.id,
                           ),

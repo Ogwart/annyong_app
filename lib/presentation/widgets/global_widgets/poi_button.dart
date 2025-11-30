@@ -20,29 +20,58 @@ class PoiButton extends StatelessWidget {
   Widget build(BuildContext context) {
     // 즐겨찾기이거나 제목을 표시하지 않는 경우 (축소 상태)
     if (isFavorite) {
-      return Container(
-        alignment: Alignment.center,
-        height: 35,
-        width: 35,
-        decoration: BoxDecoration(
-          color: isFavorite ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(48),
-          border: Border.all(
-            color: isFavorite ? Colors.white : AppColors.primary,
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: Offset(0, 4),
+      return Column(
+        children: [
+          Container(
+            alignment: Alignment.center,
+            height: 35,
+            width: 35,
+            decoration: BoxDecoration(
+              color: isFavorite ? AppColors.primary : Colors.white,
+              borderRadius: BorderRadius.circular(48),
+              border: Border.all(
+                color: isFavorite ? Colors.white : AppColors.primary,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Icon(
-          isFavorite ? Icons.star_rounded : Icons.location_on,
-          color: isFavorite ? Colors.white : AppColors.primary,
-        ),
+            child: Icon(
+              isFavorite ? Icons.star_rounded : Icons.location_on,
+              color: isFavorite ? Colors.white : AppColors.primary,
+            ),
+          ),
+          Stack(
+            children: [
+              // 외곽선 텍스트 (Stroke)
+              Text(
+                poi.name,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 3
+                    ..color = Colors.white,
+                ),
+              ),
+              // 실제 텍스트 (Fill)
+              Text(
+                poi.name,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
       );
     }
 
@@ -62,31 +91,33 @@ class PoiButton extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Stack(
-          children: [
-            // 외곽선 텍스트 (Stroke)
-            Text(
-              poi.name,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                foreground: Paint()
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = 3
-                  ..color = Colors.white,
-              ),
-            ),
-            // 실제 텍스트 (Fill)
-            Text(
-              poi.name,
-              style: const TextStyle(
-                color: AppColors.text,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
+        ?showTitle == true
+            ? Stack(
+                children: [
+                  // 외곽선 텍스트 (Stroke)
+                  Text(
+                    poi.name,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 3
+                        ..color = Colors.white,
+                    ),
+                  ),
+                  // 실제 텍스트 (Fill)
+                  Text(
+                    poi.name,
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              )
+            : null,
       ],
     );
   }
