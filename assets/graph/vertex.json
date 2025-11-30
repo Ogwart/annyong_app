@@ -1,982 +1,1392 @@
 [
  {
    "vertex_id": 1,
-   "x_coord": 323,
-   "y_coord": 116
+   "x_coord": 207,
+   "y_coord": 684
  },
  {
    "vertex_id": 2,
-   "x_coord": 295,
-   "y_coord": 116
+   "x_coord": 163,
+   "y_coord": 692
  },
  {
    "vertex_id": 3,
-   "x_coord": 242,
-   "y_coord": 116
+   "x_coord": 188,
+   "y_coord": 692
  },
  {
    "vertex_id": 4,
-   "x_coord": 217,
-   "y_coord": 116
+   "x_coord": 207,
+   "y_coord": 692
  },
  {
    "vertex_id": 5,
-   "x_coord": 208,
-   "y_coord": 598
+   "x_coord": 231,
+   "y_coord": 692
  },
  {
    "vertex_id": 6,
-   "x_coord": 208,
-   "y_coord": 639
+   "x_coord": 163,
+   "y_coord": 711
  },
  {
    "vertex_id": 7,
-   "x_coord": 208,
-   "y_coord": 676
+   "x_coord": 188,
+   "y_coord": 711
  },
  {
    "vertex_id": 8,
-   "x_coord": 208,
-   "y_coord": 748
+   "x_coord": 207,
+   "y_coord": 711
  },
  {
    "vertex_id": 9,
-   "x_coord": 279,
-   "y_coord": 748
+   "x_coord": 231,
+   "y_coord": 711
  },
  {
    "vertex_id": 10,
-   "x_coord": 352,
-   "y_coord": 748
+   "x_coord": 163,
+   "y_coord": 725
  },
  {
    "vertex_id": 11,
-   "x_coord": 425,
-   "y_coord": 748
+   "x_coord": 188,
+   "y_coord": 725
  },
  {
    "vertex_id": 12,
-   "x_coord": 495,
-   "y_coord": 748
+   "x_coord": 207,
+   "y_coord": 725
  },
  {
    "vertex_id": 13,
-   "x_coord": 567,
-   "y_coord": 748
+   "x_coord": 231,
+   "y_coord": 725
  },
  {
    "vertex_id": 14,
-   "x_coord": 630,
+   "x_coord": 163,
    "y_coord": 748
  },
  {
    "vertex_id": 15,
-   "x_coord": 567,
-   "y_coord": 791
- },
- {
-   "vertex_id": 16,
-   "x_coord": 601,
-   "y_coord": 791
- },
- {
-   "vertex_id": 17,
-   "x_coord": 629,
-   "y_coord": 791
- },
- {
-   "vertex_id": 18,
-   "x_coord": 657,
-   "y_coord": 791
- },
- {
-   "vertex_id": 19,
-   "x_coord": 666,
+   "x_coord": 188,
    "y_coord": 748
  },
  {
+   "vertex_id": 16,
+   "x_coord": 207,
+   "y_coord": 748
+ },
+ {
+   "vertex_id": 17,
+   "x_coord": 231,
+   "y_coord": 748
+ },
+ {
+   "vertex_id": 18,
+   "x_coord": 163,
+   "y_coord": 758
+ },
+ {
+   "vertex_id": 19,
+   "x_coord": 188,
+   "y_coord": 758
+ },
+ {
    "vertex_id": 20,
-   "x_coord": 698,
+   "x_coord": 252,
    "y_coord": 748
  },
  {
    "vertex_id": 21,
-   "x_coord": 724,
+   "x_coord": 302,
    "y_coord": 748
  },
  {
    "vertex_id": 22,
-   "x_coord": 762,
+   "x_coord": 332,
    "y_coord": 748
  },
  {
    "vertex_id": 23,
-   "x_coord": 801,
+   "x_coord": 377,
    "y_coord": 748
  },
  {
    "vertex_id": 24,
-   "x_coord": 801,
-   "y_coord": 717
+   "x_coord": 402,
+   "y_coord": 748
  },
  {
    "vertex_id": 25,
-   "x_coord": 762,
-   "y_coord": 717
+   "x_coord": 408,
+   "y_coord": 748
  },
  {
    "vertex_id": 26,
-   "x_coord": 724,
-   "y_coord": 717
+   "x_coord": 426,
+   "y_coord": 748
  },
  {
    "vertex_id": 27,
-   "x_coord": 686,
-   "y_coord": 717
+   "x_coord": 444,
+   "y_coord": 748
  },
  {
    "vertex_id": 28,
-   "x_coord": 839,
-   "y_coord": 717
+   "x_coord": 452,
+   "y_coord": 748
  },
  {
    "vertex_id": 29,
-   "x_coord": 877,
-   "y_coord": 717
+   "x_coord": 470,
+   "y_coord": 748
  },
  {
    "vertex_id": 30,
-   "x_coord": 915,
-   "y_coord": 717
+   "x_coord": 488,
+   "y_coord": 748
  },
  {
    "vertex_id": 31,
-   "x_coord": 953,
-   "y_coord": 717
+   "x_coord": 503,
+   "y_coord": 748
  },
  {
    "vertex_id": 32,
-   "x_coord": 991,
-   "y_coord": 717
+   "x_coord": 517,
+   "y_coord": 748
  },
  {
    "vertex_id": 33,
-   "x_coord": 1029,
-   "y_coord": 717
+   "x_coord": 555,
+   "y_coord": 748
  },
  {
    "vertex_id": 34,
-   "x_coord": 1067,
-   "y_coord": 717
+   "x_coord": 591,
+   "y_coord": 748
  },
  {
    "vertex_id": 35,
-   "x_coord": 1067,
-   "y_coord": 741
+   "x_coord": 621,
+   "y_coord": 739
  },
  {
    "vertex_id": 36,
-   "x_coord": 1067,
-   "y_coord": 771
+   "x_coord": 591,
+   "y_coord": 762
  },
  {
    "vertex_id": 37,
-   "x_coord": 1029,
-   "y_coord": 771
+   "x_coord": 621,
+   "y_coord": 762
  },
  {
    "vertex_id": 38,
-   "x_coord": 991,
-   "y_coord": 771
+   "x_coord": 555,
+   "y_coord": 794
  },
  {
    "vertex_id": 39,
-   "x_coord": 953,
-   "y_coord": 771
+   "x_coord": 591,
+   "y_coord": 794
  },
  {
    "vertex_id": 40,
-   "x_coord": 915,
-   "y_coord": 771
+   "x_coord": 591,
+   "y_coord": 803
  },
  {
    "vertex_id": 41,
-   "x_coord": 877,
-   "y_coord": 771
+   "x_coord": 636,
+   "y_coord": 794
  },
  {
    "vertex_id": 42,
-   "x_coord": 839,
-   "y_coord": 771
- },
- {
-   "vertex_id": 43,
-   "x_coord": 801,
-   "y_coord": 771
+   "x_coord": 657,
+   "y_coord": 794
  },
  {
    "vertex_id": 44,
-   "x_coord": 1105,
-   "y_coord": 771
+   "x_coord": 686,
+   "y_coord": 794
  },
  {
    "vertex_id": 45,
-   "x_coord": 1143,
-   "y_coord": 771
+   "x_coord": 686,
+   "y_coord": 803
  },
  {
    "vertex_id": 46,
-   "x_coord": 1196,
-   "y_coord": 771
+   "x_coord": 676,
+   "y_coord": 739
  },
  {
    "vertex_id": 47,
-   "x_coord": 1249,
-   "y_coord": 771
+   "x_coord": 695,
+   "y_coord": 739
  },
  {
    "vertex_id": 48,
-   "x_coord": 1285,
-   "y_coord": 771
+   "x_coord": 714,
+   "y_coord": 739
  },
  {
    "vertex_id": 49,
-   "x_coord": 1322,
-   "y_coord": 771
+   "x_coord": 695,
+   "y_coord": 761
  },
  {
    "vertex_id": 50,
-   "x_coord": 1361,
-   "y_coord": 771
+   "x_coord": 714,
+   "y_coord": 761
  },
  {
    "vertex_id": 51,
-   "x_coord": 1400,
-   "y_coord": 771
+   "x_coord": 676,
+   "y_coord": 719
  },
  {
    "vertex_id": 52,
-   "x_coord": 1439,
-   "y_coord": 771
+   "x_coord": 711,
+   "y_coord": 719
  },
  {
    "vertex_id": 53,
-   "x_coord": 1478,
-   "y_coord": 771
+   "x_coord": 746,
+   "y_coord": 719
  },
  {
    "vertex_id": 54,
-   "x_coord": 1517,
-   "y_coord": 771
+   "x_coord": 781,
+   "y_coord": 719
  },
  {
    "vertex_id": 55,
-   "x_coord": 1556,
-   "y_coord": 771
+   "x_coord": 820,
+   "y_coord": 719
  },
  {
    "vertex_id": 56,
-   "x_coord": 1596,
-   "y_coord": 771
+   "x_coord": 855,
+   "y_coord": 719
  },
  {
    "vertex_id": 57,
-   "x_coord": 1143,
-   "y_coord": 800
+   "x_coord": 890,
+   "y_coord": 719
  },
  {
    "vertex_id": 58,
-   "x_coord": 1196,
-   "y_coord": 800
+   "x_coord": 927,
+   "y_coord": 719
  },
  {
    "vertex_id": 59,
-   "x_coord": 1249,
-   "y_coord": 800
+   "x_coord": 962,
+   "y_coord": 719
  },
  {
    "vertex_id": 60,
-   "x_coord": 1143,
-   "y_coord": 829
+   "x_coord": 998,
+   "y_coord": 719
  },
  {
    "vertex_id": 61,
-   "x_coord": 1196,
-   "y_coord": 829
+   "x_coord": 1034,
+   "y_coord": 719
  },
  {
    "vertex_id": 62,
-   "x_coord": 1249,
-   "y_coord": 829
+   "x_coord": 1064,
+   "y_coord": 719
  },
  {
    "vertex_id": 63,
-   "x_coord": 1143,
-   "y_coord": 726
+   "x_coord": 1075,
+   "y_coord": 719
  },
  {
    "vertex_id": 64,
-   "x_coord": 1196,
-   "y_coord": 726
+   "x_coord": 781,
+   "y_coord": 748
  },
  {
    "vertex_id": 65,
-   "x_coord": 1249,
-   "y_coord": 726
+   "x_coord": 820,
+   "y_coord": 748
  },
  {
    "vertex_id": 66,
-   "x_coord": 1285,
-   "y_coord": 738
+   "x_coord": 781,
+   "y_coord": 772
  },
  {
    "vertex_id": 67,
-   "x_coord": 1322,
-   "y_coord": 717
+   "x_coord": 820,
+   "y_coord": 772
  },
  {
    "vertex_id": 68,
-   "x_coord": 1361,
-   "y_coord": 717
+   "x_coord": 850,
+   "y_coord": 772
  },
  {
    "vertex_id": 69,
-   "x_coord": 1400,
-   "y_coord": 717
+   "x_coord": 884,
+   "y_coord": 772
  },
  {
    "vertex_id": 70,
-   "x_coord": 1439,
-   "y_coord": 717
+   "x_coord": 931,
+   "y_coord": 772
  },
  {
    "vertex_id": 71,
-   "x_coord": 1478,
-   "y_coord": 717
+   "x_coord": 968,
+   "y_coord": 772
  },
  {
    "vertex_id": 72,
-   "x_coord": 1517,
-   "y_coord": 717
+   "x_coord": 993,
+   "y_coord": 772
  },
  {
    "vertex_id": 73,
-   "x_coord": 1556,
-   "y_coord": 717
+   "x_coord": 1040,
+   "y_coord": 772
  },
  {
    "vertex_id": 74,
-   "x_coord": 1596,
-   "y_coord": 717
+   "x_coord": 1064,
+   "y_coord": 772
  },
  {
    "vertex_id": 75,
-   "x_coord": 1249,
+   "x_coord": 1064,
    "y_coord": 738
  },
  {
    "vertex_id": 76,
-   "x_coord": 1322,
+   "x_coord": 1098,
    "y_coord": 738
  },
  {
    "vertex_id": 77,
-   "x_coord": 1596,
-   "y_coord": 747
+   "x_coord": 1143,
+   "y_coord": 738
  },
  {
    "vertex_id": 78,
-   "x_coord": 1626,
-   "y_coord": 747
+   "x_coord": 1197,
+   "y_coord": 738
  },
  {
    "vertex_id": 79,
-   "x_coord": 1596,
-   "y_coord": 693
+   "x_coord": 1215,
+   "y_coord": 738
  },
  {
    "vertex_id": 80,
-   "x_coord": 1596,
-   "y_coord": 669
+   "x_coord": 1248,
+   "y_coord": 738
  },
  {
    "vertex_id": 81,
-   "x_coord": 1596,
-   "y_coord": 645
+   "x_coord": 1098,
+   "y_coord": 754
  },
  {
    "vertex_id": 82,
-   "x_coord": 1596,
-   "y_coord": 621
+   "x_coord": 1143,
+   "y_coord": 754
  },
  {
    "vertex_id": 83,
-   "x_coord": 1555,
-   "y_coord": 621
+   "x_coord": 1197,
+   "y_coord": 754
  },
  {
    "vertex_id": 84,
-   "x_coord": 208,
-   "y_coord": 643
+   "x_coord": 1248,
+   "y_coord": 754
  },
  {
    "vertex_id": 85,
-   "x_coord": 208,
-   "y_coord": 712
+   "x_coord": 1098,
+   "y_coord": 772
  },
  {
    "vertex_id": 86,
-   "x_coord": 1343,
-   "y_coord": 738
+   "x_coord": 1111,
+   "y_coord": 772
  },
  {
    "vertex_id": 87,
-   "x_coord": 1364,
-   "y_coord": 738
+   "x_coord": 1120,
+   "y_coord": 772
  },
  {
    "vertex_id": 88,
    "x_coord": 1143,
-   "y_coord": 692
+   "y_coord": 772
  },
  {
    "vertex_id": 89,
-   "x_coord": 1143,
-   "y_coord": 677
+   "x_coord": 1197,
+   "y_coord": 772
  },
  {
    "vertex_id": 90,
-   "x_coord": 1196,
-   "y_coord": 677
+   "x_coord": 1248,
+   "y_coord": 772
  },
  {
    "vertex_id": 91,
-   "x_coord": 1249,
-   "y_coord": 677
+   "x_coord": 1132,
+   "y_coord": 800
  },
  {
    "vertex_id": 92,
-   "x_coord": 1196,
-   "y_coord": 692
+   "x_coord": 1143,
+   "y_coord": 800
  },
  {
    "vertex_id": 93,
-   "x_coord": 1249,
-   "y_coord": 692
+   "x_coord": 1160,
+   "y_coord": 800
  },
  {
    "vertex_id": 94,
-   "x_coord": 293,
-   "y_coord": 133
+   "x_coord": 1197,
+   "y_coord": 800
  },
  {
    "vertex_id": 95,
+   "x_coord": 1232,
+   "y_coord": 800
+ },
+ {
+   "vertex_id": 96,
+   "x_coord": 1248,
+   "y_coord": 800
+ },
+ {
+   "vertex_id": 97,
+   "x_coord": 1260,
+   "y_coord": 800
+ },
+ {
+   "vertex_id": 98,
+   "x_coord": 1132,
+   "y_coord": 813
+ },
+ {
+   "vertex_id": 99,
+   "x_coord": 1260,
+   "y_coord": 813
+ },
+ {
+   "vertex_id": 100,
+   "x_coord": 1132,
+   "y_coord": 829
+ },
+ {
+   "vertex_id": 101,
+   "x_coord": 1160,
+   "y_coord": 829
+ },
+ {
+   "vertex_id": 102,
+   "x_coord": 1197,
+   "y_coord": 829
+ },
+ {
+   "vertex_id": 103,
+   "x_coord": 1278,
+   "y_coord": 738
+ },
+ {
+   "vertex_id": 104,
+   "x_coord": 1310,
+   "y_coord": 738
+ },
+ {
+   "vertex_id": 105,
+   "x_coord": 1330,
+   "y_coord": 738
+ },
+ {
+   "vertex_id": 106,
+   "x_coord": 1310,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 107,
+   "x_coord": 1330,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 108,
+   "x_coord": 1347,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 109,
+   "x_coord": 1357,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 110,
+   "x_coord": 1394,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 111,
+   "x_coord": 1429,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 112,
+   "x_coord": 1466,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 113,
+   "x_coord": 1490,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 114,
+   "x_coord": 1501,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 115,
+   "x_coord": 1538,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 116,
+   "x_coord": 1270,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 117,
+   "x_coord": 1290,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 118,
+   "x_coord": 1330,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 119,
+   "x_coord": 1361,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 120,
+   "x_coord": 1399,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 121,
+   "x_coord": 1424,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 122,
+   "x_coord": 1471,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 123,
+   "x_coord": 1477,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 124,
+   "x_coord": 1492,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 125,
+   "x_coord": 1543,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 126,
+   "x_coord": 1567,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 127,
+   "x_coord": 1584,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 128,
+   "x_coord": 1615,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 129,
+   "x_coord": 1622,
+   "y_coord": 772
+ },
+ {
+   "vertex_id": 130,
+   "x_coord": 1615,
+   "y_coord": 747
+ },
+ {
+   "vertex_id": 131,
+   "x_coord": 1615,
+   "y_coord": 737
+ },
+ {
+   "vertex_id": 132,
+   "x_coord": 1584,
+   "y_coord": 737
+ },
+ {
+   "vertex_id": 133,
+   "x_coord": 1584,
+   "y_coord": 716
+ },
+ {
+   "vertex_id": 134,
+   "x_coord": 1584,
+   "y_coord": 673
+ },
+ {
+   "vertex_id": 135,
+   "x_coord": 1584,
+   "y_coord": 640
+ },
+ {
+   "vertex_id": 136,
+   "x_coord": 1615,
+   "y_coord": 623
+ },
+ {
+   "vertex_id": 137,
+   "x_coord": 1615,
+   "y_coord": 640
+ },
+ {
+   "vertex_id": 138,
+   "x_coord": 1615,
+   "y_coord": 673
+ },
+ {
+   "vertex_id": 139,
+   "x_coord": 1665,
+   "y_coord": 640
+ },
+ {
+   "vertex_id": 140,
+   "x_coord": 1665,
+   "y_coord": 673
+ },
+ {
+   "vertex_id": 141,
+   "x_coord": 1584,
+   "y_coord": 697
+ },
+ {
+   "vertex_id": 141,
+   "x_coord": 1584,
+   "y_coord": 697
+ },
+ {
+   "vertex_id": 501,
    "x_coord": 262,
    "y_coord": 133
  },
  {
-   "vertex_id": 96,
+   "vertex_id": 502,
    "x_coord": 209,
    "y_coord": 133
  },
  {
-   "vertex_id": 97,
+   "vertex_id": 503,
    "x_coord": 209,
    "y_coord": 173
  },
  {
-   "vertex_id": 98,
+   "vertex_id": 504,
    "x_coord": 209,
    "y_coord": 213
  },
  {
-   "vertex_id": 99,
+   "vertex_id": 505,
    "x_coord": 209,
    "y_coord": 253
  },
  {
-   "vertex_id": 100,
+   "vertex_id": 506,
    "x_coord": 209,
    "y_coord": 293
  },
  {
-   "vertex_id": 101,
+   "vertex_id": 507,
    "x_coord": 209,
    "y_coord": 333
  },
  {
-   "vertex_id": 102,
+   "vertex_id": 508,
    "x_coord": 209,
    "y_coord": 373
  },
  {
-   "vertex_id": 103,
+   "vertex_id": 509,
    "x_coord": 209,
    "y_coord": 413
  },
  {
-   "vertex_id": 104,
+   "vertex_id": 510,
    "x_coord": 209,
    "y_coord": 453
  },
  {
-   "vertex_id": 105,
+   "vertex_id": 511,
    "x_coord": 209,
    "y_coord": 493
  },
  {
-   "vertex_id": 106,
+   "vertex_id": 512,
    "x_coord": 209,
    "y_coord": 533
  },
  {
-   "vertex_id": 107,
+   "vertex_id": 513,
    "x_coord": 209,
    "y_coord": 573
  },
  {
-   "vertex_id": 108,
+   "vertex_id": 514,
    "x_coord": 209,
    "y_coord": 594
  },
  {
-   "vertex_id": 109,
+   "vertex_id": 515,
    "x_coord": 209,
    "y_coord": 625
  },
  {
-   "vertex_id": 110,
+   "vertex_id": 516,
    "x_coord": 209,
    "y_coord": 648
  },
  {
-   "vertex_id": 111,
+   "vertex_id": 517,
    "x_coord": 209,
    "y_coord": 678
  },
  {
-   "vertex_id": 112,
+   "vertex_id": 518,
    "x_coord": 209,
    "y_coord": 713
  },
  {
-   "vertex_id": 113,
+   "vertex_id": 519,
    "x_coord": 209,
    "y_coord": 753
  },
  {
-   "vertex_id": 114,
+   "vertex_id": 520,
    "x_coord": 162,
    "y_coord": 573
  },
  {
-   "vertex_id": 115,
+   "vertex_id": 521,
    "x_coord": 162,
-   "y_coord": 608
+   "y_coord": 619
  },
  {
-   "vertex_id": 116,
+   "vertex_id": 522,
    "x_coord": 162,
-   "y_coord": 643
+   "y_coord": 649
  },
  {
-   "vertex_id": 117,
+   "vertex_id": 523,
    "x_coord": 162,
-   "y_coord": 678
+   "y_coord": 694
  },
  {
-   "vertex_id": 118,
+   "vertex_id": 524,
    "x_coord": 162,
    "y_coord": 713
  },
  {
-   "vertex_id": 119,
+   "vertex_id": 525,
    "x_coord": 162,
    "y_coord": 753
  },
  {
-   "vertex_id": 120,
+   "vertex_id": 526,
    "x_coord": 256,
    "y_coord": 753
  },
  {
-   "vertex_id": 121,
+   "vertex_id": 527,
    "x_coord": 303,
    "y_coord": 753
  },
  {
-   "vertex_id": 122,
+   "vertex_id": 528,
    "x_coord": 350,
    "y_coord": 753
  },
  {
-   "vertex_id": 123,
+   "vertex_id": 529,
    "x_coord": 397,
    "y_coord": 753
  },
  {
-   "vertex_id": 124,
+   "vertex_id": 530,
    "x_coord": 444,
    "y_coord": 753
  },
  {
-   "vertex_id": 125,
-   "x_coord": 491,
+   "vertex_id": 531,
+   "x_coord": 473,
    "y_coord": 753
  },
  {
-   "vertex_id": 126,
+   "vertex_id": 532,
    "x_coord": 538,
    "y_coord": 753
  },
  {
-   "vertex_id": 127,
-   "x_coord": 585,
+   "vertex_id": 533,
+   "x_coord": 589,
    "y_coord": 753
  },
  {
-   "vertex_id": 128,
+   "vertex_id": 534,
    "x_coord": 632,
    "y_coord": 753
  },
  {
-   "vertex_id": 129,
+   "vertex_id": 535,
    "x_coord": 660,
    "y_coord": 753
  },
  {
-   "vertex_id": 130,
+   "vertex_id": 536,
    "x_coord": 728,
    "y_coord": 753
  },
  {
-   "vertex_id": 131,
+   "vertex_id": 537,
    "x_coord": 761,
    "y_coord": 753
  },
  {
-   "vertex_id": 132,
+   "vertex_id": 538,
    "x_coord": 800,
    "y_coord": 753
  },
  {
-   "vertex_id": 133,
+   "vertex_id": 539,
    "x_coord": 800,
    "y_coord": 777
  },
  {
-   "vertex_id": 134,
+   "vertex_id": 540,
    "x_coord": 839,
    "y_coord": 777
  },
  {
-   "vertex_id": 135,
+   "vertex_id": 541,
    "x_coord": 878,
    "y_coord": 777
  },
  {
-   "vertex_id": 136,
+   "vertex_id": 542,
    "x_coord": 917,
    "y_coord": 777
  },
  {
-   "vertex_id": 137,
+   "vertex_id": 543,
    "x_coord": 956,
    "y_coord": 777
  },
  {
-   "vertex_id": 138,
-   "x_coord": 995,
+   "vertex_id": 544,
+   "x_coord": 982,
    "y_coord": 777
  },
  {
-   "vertex_id": 139,
+   "vertex_id": 545,
    "x_coord": 1034,
    "y_coord": 777
  },
  {
-   "vertex_id": 140,
+   "vertex_id": 546,
    "x_coord": 1073,
    "y_coord": 777
  },
  {
-   "vertex_id": 141,
+   "vertex_id": 547,
    "x_coord": 800,
    "y_coord": 721
  },
  {
-   "vertex_id": 142,
+   "vertex_id": 548,
    "x_coord": 839,
    "y_coord": 721
  },
  {
-   "vertex_id": 143,
+   "vertex_id": 549,
    "x_coord": 878,
    "y_coord": 721
  },
  {
-   "vertex_id": 144,
+   "vertex_id": 550,
    "x_coord": 917,
    "y_coord": 721
  },
  {
-   "vertex_id": 145,
+   "vertex_id": 551,
    "x_coord": 956,
    "y_coord": 721
  },
  {
-   "vertex_id": 146,
+   "vertex_id": 552,
    "x_coord": 995,
    "y_coord": 721
  },
  {
-   "vertex_id": 147,
+   "vertex_id": 553,
    "x_coord": 1034,
    "y_coord": 721
  },
  {
-   "vertex_id": 148,
+   "vertex_id": 554,
    "x_coord": 1073,
    "y_coord": 721
  },
  {
-   "vertex_id": 149,
+   "vertex_id": 555,
    "x_coord": 761,
    "y_coord": 721
  },
  {
-   "vertex_id": 150,
+   "vertex_id": 556,
    "x_coord": 722,
    "y_coord": 721
  },
  {
-   "vertex_id": 151,
+   "vertex_id": 557,
    "x_coord": 683,
    "y_coord": 721
  },
  {
-   "vertex_id": 152,
+   "vertex_id": 558,
    "x_coord": 1073,
    "y_coord": 749
  },
  {
-   "vertex_id": 153,
-   "x_coord": 1109,
+   "vertex_id": 559,
+   "x_coord": 1115,
    "y_coord": 749
  },
  {
-   "vertex_id": 154,
+   "vertex_id": 560,
    "x_coord": 1145,
    "y_coord": 749
  },
  {
-   "vertex_id": 155,
+   "vertex_id": 561,
    "x_coord": 1198,
    "y_coord": 749
  },
  {
-   "vertex_id": 156,
+   "vertex_id": 562,
    "x_coord": 1251,
    "y_coord": 749
  },
  {
-   "vertex_id": 157,
+   "vertex_id": 563,
    "x_coord": 1145,
    "y_coord": 728
  },
  {
-   "vertex_id": 158,
+   "vertex_id": 564,
    "x_coord": 1198,
    "y_coord": 728
  },
  {
-   "vertex_id": 159,
+   "vertex_id": 565,
    "x_coord": 1251,
    "y_coord": 728
  },
  {
-   "vertex_id": 160,
+   "vertex_id": 566,
    "x_coord": 1145,
    "y_coord": 698
  },
  {
-   "vertex_id": 161,
+   "vertex_id": 567,
    "x_coord": 1198,
    "y_coord": 698
  },
  {
-   "vertex_id": 162,
+   "vertex_id": 568,
    "x_coord": 1251,
    "y_coord": 698
  },
  {
-   "vertex_id": 163,
+   "vertex_id": 569,
    "x_coord": 1145,
    "y_coord": 682
  },
  {
-   "vertex_id": 164,
+   "vertex_id": 570,
    "x_coord": 1198,
    "y_coord": 682
  },
  {
-   "vertex_id": 165,
+   "vertex_id": 571,
    "x_coord": 1251,
    "y_coord": 682
  },
  {
-   "vertex_id": 166,
+   "vertex_id": 572,
    "x_coord": 1251,
    "y_coord": 776
  },
  {
-   "vertex_id": 167,
+   "vertex_id": 573,
    "x_coord": 1322,
    "y_coord": 749
  },
  {
-   "vertex_id": 168,
+   "vertex_id": 574,
    "x_coord": 1322,
    "y_coord": 776
  },
  {
-   "vertex_id": 169,
+   "vertex_id": 575,
    "x_coord": 1362,
    "y_coord": 776
  },
  {
-   "vertex_id": 170,
+   "vertex_id": 576,
    "x_coord": 1402,
    "y_coord": 776
  },
  {
-   "vertex_id": 171,
+   "vertex_id": 577,
    "x_coord": 1442,
    "y_coord": 776
  },
  {
-   "vertex_id": 172,
+   "vertex_id": 578,
    "x_coord": 1482,
    "y_coord": 776
  },
  {
-   "vertex_id": 173,
+   "vertex_id": 579,
    "x_coord": 1522,
    "y_coord": 776
  },
  {
-   "vertex_id": 174,
+   "vertex_id": 580,
    "x_coord": 1562,
    "y_coord": 776
  },
  {
-   "vertex_id": 175,
+   "vertex_id": 581,
    "x_coord": 1602,
    "y_coord": 776
  },
  {
-   "vertex_id": 176,
+   "vertex_id": 582,
    "x_coord": 1602,
    "y_coord": 748
  },
  {
-   "vertex_id": 177,
+   "vertex_id": 583,
    "x_coord": 1630,
    "y_coord": 748
  },
  {
-   "vertex_id": 178,
+   "vertex_id": 584,
    "x_coord": 1602,
    "y_coord": 720
  },
  {
-   "vertex_id": 179,
+   "vertex_id": 585,
    "x_coord": 1578,
    "y_coord": 720
  },
  {
-   "vertex_id": 180,
+   "vertex_id": 586,
    "x_coord": 1578,
    "y_coord": 693
  },
  {
-   "vertex_id": 181,
+   "vertex_id": 587,
    "x_coord": 1578,
    "y_coord": 666
  },
  {
-   "vertex_id": 182,
+   "vertex_id": 588,
    "x_coord": 1522,
    "y_coord": 720
  },
  {
-   "vertex_id": 183,
+   "vertex_id": 589,
    "x_coord": 1482,
    "y_coord": 720
  },
  {
-   "vertex_id": 184,
+   "vertex_id": 590,
    "x_coord": 1442,
    "y_coord": 720
  },
  {
-   "vertex_id": 185,
+   "vertex_id": 591,
    "x_coord": 1402,
    "y_coord": 720
  },
  {
-   "vertex_id": 186,
+   "vertex_id": 592,
    "x_coord": 1362,
    "y_coord": 720
  },
  {
-   "vertex_id": 187,
+   "vertex_id": 593,
    "x_coord": 1322,
    "y_coord": 720
  },
  {
-   "vertex_id": 188,
-   "x_coord": 1147,
-   "y_coord": 588
+   "vertex_id": 594,
+   "x_coord": 766,
+   "y_coord": 753
  },
  {
-   "vertex_id": 189,
-   "x_coord": 1177,
-   "y_coord": 629
+   "vertex_id": 595,
+   "x_coord": 766,
+   "y_coord": 777
  },
  {
-   "vertex_id": 190,
-   "x_coord": 1214,
-   "y_coord": 629
+   "vertex_id": 596,
+   "x_coord": 780,
+   "y_coord": 721
  },
  {
-   "vertex_id": 191,
-   "x_coord": 1177,
-   "y_coord": 588
+   "vertex_id": 597,
+   "x_coord": 780,
+   "y_coord": 753
  },
  {
-   "vertex_id": 192,
-   "x_coord": 1214,
-   "y_coord": 588
+   "vertex_id": 598,
+   "x_coord": 1586,
+   "y_coord": 748
  },
  {
-   "vertex_id": 193,
-   "x_coord": 1177,
-   "y_coord": 535
+   "vertex_id": 599,
+   "x_coord": 1115,
+   "y_coord": 777
  },
  {
-   "vertex_id": 194,
-   "x_coord": 1214,
-   "y_coord": 535
+   "vertex_id": 1000,
+   "x_coord": 1065,
+   "y_coord": 566
  },
  {
-   "vertex_id": 195,
-   "x_coord": 1177,
-   "y_coord": 482
+   "vertex_id": 1001,
+   "x_coord": 973,
+   "y_coord": 512
  },
  {
-   "vertex_id": 196,
-   "x_coord": 1214,
-   "y_coord": 482
+   "vertex_id": 1002,
+   "x_coord": 973,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1003,
+   "x_coord": 791,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1004,
+   "x_coord": 791,
+   "y_coord": 451
+ },
+ {
+   "vertex_id": 1005,
+   "x_coord": 609,
+   "y_coord": 512
+ },
+ {
+   "vertex_id": 1006,
+   "x_coord": 609,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1007,
+   "x_coord": 1163,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1008,
+   "x_coord": 1209,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1009,
+   "x_coord": 1186,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1010,
+   "x_coord": 1186,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1011,
+   "x_coord": 1186,
+   "y_coord": 579
+ },
+ {
+   "vertex_id": 1012,
+   "x_coord": 1186,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1013,
+   "x_coord": 1247,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1014,
+   "x_coord": 1247,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1015,
+   "x_coord": 1306,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1016,
+   "x_coord": 1306,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1017,
+   "x_coord": 1306,
+   "y_coord": 579
+ },
+ {
+   "vertex_id": 1018,
+   "x_coord": 1247,
+   "y_coord": 451
+ },
+ {
+   "vertex_id": 1019,
+   "x_coord": 1247,
+   "y_coord": 422
+ },
+ {
+   "vertex_id": 1020,
+   "x_coord": 1247,
+   "y_coord": 480
+ },
+ {
+   "vertex_id": 1021,
+   "x_coord": 1247,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1022,
+   "x_coord": 1320,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1023,
+   "x_coord": 1342,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1025,
+   "x_coord": 1306,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1026,
+   "x_coord": 1275,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1027,
+   "x_coord": 1342,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1028,
+   "x_coord": 1368,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1029,
+   "x_coord": 1247,
+   "y_coord": 591
+ },
+ {
+   "vertex_id": 1030,
+   "x_coord": 1247,
+   "y_coord": 620
+ },
+ {
+   "vertex_id": 1031,
+   "x_coord": 1186,
+   "y_coord": 620
+ },
+ {
+   "vertex_id": 1032,
+   "x_coord": 1149,
+   "y_coord": 504
+ },
+ {
+   "vertex_id": 1033,
+   "x_coord": 1163,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1034,
+   "x_coord": 1163,
+   "y_coord": 545
+ },
+ {
+   "vertex_id": 1035,
+   "x_coord": 1124,
+   "y_coord": 566
+ },
+ {
+   "vertex_id": 1036,
+   "x_coord": 1247,
+   "y_coord": 579
+ },
+ {
+   "vertex_id": 1037,
+   "x_coord": 1124,
+   "y_coord": 593
+ },
+ {
+   "vertex_id": 1038,
+   "x_coord": 1368,
+   "y_coord": 504
  }
 ]

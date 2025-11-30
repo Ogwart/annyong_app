@@ -96,6 +96,8 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
         floors = [1, 2];
       } else if (selectedBuilding!.contains('하이테크')) {
         floors = [1];
+      } else if (selectedBuilding!.contains('60주년')) {
+        floors = [1];
       } else {
         floors = [];
       }
