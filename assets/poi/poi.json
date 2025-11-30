@@ -57,7 +57,7 @@
  {
    "poi_id": 10,
    "poi_name": "소화전",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -90,7 +90,7 @@
  {
    "poi_id": 13,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -112,7 +112,7 @@
  {
    "poi_id": 15,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -134,7 +134,7 @@
  {
    "poi_id": 17,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -156,7 +156,7 @@
  {
    "poi_id": 19,
    "poi_name": "정수기",
-   "description": "",
+   "description": null,
    "poi_category_id": 8,
    "building_id": 1,
    "floor": 1,
@@ -189,7 +189,7 @@
  {
    "poi_id": 22,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -200,7 +200,7 @@
  {
    "poi_id": 23,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -211,7 +211,7 @@
  {
    "poi_id": 24,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -244,7 +244,7 @@
  {
    "poi_id": 27,
    "poi_name": "소화전",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -255,7 +255,7 @@
  {
    "poi_id": 28,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -343,7 +343,7 @@
  {
    "poi_id": 40,
    "poi_name": "소화전",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -596,7 +596,7 @@
  {
    "poi_id": 116,
    "poi_name": "소화기",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -651,7 +651,7 @@
  {
    "poi_id": 123,
    "poi_name": "소화기",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -662,7 +662,7 @@
  {
    "poi_id": 124,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -673,7 +673,7 @@
  {
    "poi_id": 125,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -717,7 +717,7 @@
  {
    "poi_id": 129,
    "poi_name": "소화전",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -728,7 +728,7 @@
  {
    "poi_id": 130,
    "poi_name": "쓰레기통",
-   "description": "",
+   "description": null,
    "poi_category_id": 12,
    "building_id": 1,
    "floor": 2,
@@ -750,7 +750,7 @@
  {
    "poi_id": 132,
    "poi_name": "소화기",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -761,7 +761,7 @@
  {
    "poi_id": 133,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -772,7 +772,7 @@
  {
    "poi_id": 134,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -783,7 +783,7 @@
  {
    "poi_id": 135,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -816,7 +816,7 @@
  {
    "poi_id": 138,
    "poi_name": "소화기",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -838,7 +838,7 @@
  {
    "poi_id": 140,
    "poi_name": "계단",
-   "description": "",
+   "description": null,
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -981,7 +981,7 @@
  {
    "poi_id": 244,
    "poi_name": "소화기",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 2,
    "floor": 1,
@@ -1036,7 +1036,7 @@
  {
    "poi_id": 250,
    "poi_name": "소화전",
-   "description": "",
+   "description": null,
    "poi_category_id": 11,
    "building_id": 2,
    "floor": 1,
