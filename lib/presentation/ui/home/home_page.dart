@@ -1,14 +1,12 @@
 import 'package:annyong/presentation/viewmodels/home_map_viewmodel.dart';
 import 'package:annyong/presentation/viewmodels/path_selection_viewmodel.dart';
+import 'package:annyong/presentation/viewmodels/category_view_model.dart';
 import 'package:annyong/presentation/providers/home_page_map_provider.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
-import 'package:annyong/presentation/widgets/global_widgets/bookmark__button.dart';
+import 'package:annyong/presentation/widgets/global_widgets/category_button.dart';
 import 'package:annyong/presentation/widgets/global_widgets/poi_button.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
-import 'package:annyong/domain/entity/poi.dart';
-import 'package:annyong/domain/entity/poi_category.dart';
-import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,11 +23,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   late final TransformationController _transformationController =
       TransformationController();
   String _currentImagePath = 'assets/map/5_1F/5_1F_1x.jpg';
-  List<Poi> _favoritePois = [];
-  List<PoiCategory> _categories = [];
-  int _selectedCategoryId = -1; // -1: 즐겨찾기
-  List<Poi> _allPois = [];
-  List<Poi> _displayedPois = [];
   String _currentBuilding = '5호관';
   String _currentFloor = '1F';
 
@@ -37,48 +30,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _transformationController.addListener(_onTransformationChanged);
-    _loadData();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeMapProvider.notifier).resetMapReady();
       // 홈 페이지로 돌아올 때 출발지/목적지 초기화
       ref.read(pathSelectionProvider.notifier).reset();
-    });
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final favoritePois = await MapUtilFunctions.loadFavoritePois();
-      final allPois = await PoiRepository().fetchPois();
-      final categories = await PoiRepository().fetchCategories();
-
-      debugPrint(
-        '데이터 로드 완료: 카테고리 ${categories.length}개, 전체 POI ${allPois.length}개, 즐겨찾기 ${favoritePois.length}개',
-      );
-
-      if (mounted) {
-        setState(() {
-          _favoritePois = favoritePois;
-          _allPois = allPois;
-          _categories = categories;
-          // 초기 상태: 즐겨찾기
-          _displayedPois = _favoritePois;
-        });
-      }
-    } catch (e) {
-      debugPrint('데이터 로드 중 오류 발생: $e');
-    }
-  }
-
-  void _onCategorySelected(int categoryId) {
-    setState(() {
-      _selectedCategoryId = categoryId;
-      if (categoryId == -1) {
-        _displayedPois = _favoritePois;
-      } else {
-        _displayedPois = _allPois
-            .where((poi) => poi.categoryId == categoryId)
-            .toList();
-      }
     });
   }
 
@@ -132,6 +88,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final mapProvider = context.watch<HomePageMapProvider>();
+    final categoryState = ref.watch(categoryProvider);
 
     // 건물/층이 변경되면 이미지 경로 업데이트
     if (mapProvider.selectedBuilding != _currentBuilding ||
@@ -195,7 +152,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   // 마커 빌더 (선택된 카테고리 또는 즐겨찾기)
                   ...MapUtilFunctions.getFilteredFavoritePois(
-                    _displayedPois,
+                    categoryState.displayedPois,
                     mapProvider.selectedBuilding,
                     mapProvider.selectedFloor,
                   ).map((poi) {
@@ -323,26 +280,46 @@ class _HomePageState extends ConsumerState<HomePage> {
                     top: 60,
                     left: 24,
                     right: 24,
-                    height: 40,
+                    height: 50,
                     child: SizedBox(
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _categories.length + 1,
-                        itemBuilder: (BuildContext context, int index) {
-                          if (index == 0) {
-                            return BookmarkButton(
-                              bookmarkTitle: '즐겨찾기',
-                              isSelected: _selectedCategoryId == -1,
-                              onTap: () => _onCategorySelected(-1),
+                      child: Padding(
+                        padding: EdgeInsetsGeometry.all(4),
+                        child: ListView.builder(
+                          // key를 추가하여 상태가 변경되어도 스크롤 위치가 유지되도록 함
+                          key: const PageStorageKey('category_list'),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: categoryState.categories.length + 1,
+                          itemBuilder: (BuildContext context, int index) {
+                            if (index == 0) {
+                              return Center(
+                                child: CategoryButton(
+                                  bookmarkTitle: '즐겨찾기',
+                                  isSelected:
+                                      categoryState.selectedCategoryId == -1,
+                                  onTap: () => ref
+                                      .read(categoryProvider.notifier)
+                                      .onCategorySelected(-1),
+                                ),
+                              );
+                            }
+                            final category =
+                                categoryState.categories[index - 1];
+                            return Center(
+                              child: CategoryButton(
+                                bookmarkTitle: category.name.replaceAll(
+                                  '\n',
+                                  '/',
+                                ),
+                                isSelected:
+                                    categoryState.selectedCategoryId ==
+                                    category.id,
+                                onTap: () => ref
+                                    .read(categoryProvider.notifier)
+                                    .onCategorySelected(category.id),
+                              ),
                             );
-                          }
-                          final category = _categories[index - 1];
-                          return BookmarkButton(
-                            bookmarkTitle: category.name.replaceAll('\n', '/'),
-                            isSelected: _selectedCategoryId == category.id,
-                            onTap: () => _onCategorySelected(category.id),
-                          );
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ),

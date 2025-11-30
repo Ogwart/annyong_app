@@ -136,7 +136,7 @@ class _MeasurePageState extends State<MeasurePage> {
           _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
         }
       });
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
