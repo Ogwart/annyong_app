@@ -87,61 +87,72 @@ class CalibrationService {
       return null;
     }
 
-    // 찾은 경로들 중 가장 긴 경로 선택
+    // 이전 커밋까지는 찾은 경로들 중 가장 긴 경로만 확인 후 유효하지 않다면(연결된 POI없음) null을 반환해서 예외 처리에 취약했음
+    // 그래서 차순위 후보 경로들도 순회하며 유효한지(POI가 있는지) 확인하여 예외 처리 보강
     availablePaths.sort((a, b) => b.$2.compareTo(a.$2)); // 내림차순 정렬
-    final (bestVertex, bestDistance) = availablePaths.first;
 
-    // 측정 불가 조건 체크
-    if (bestDistance < minRoundTripDistance) {
+    for (final (bestVertex, bestDistance) in availablePaths) {
       debugPrint(
-        "[FindRoute] 실패: 최장 경로($bestDistance m)가 최소 기준($minRoundTripDistance m)보다 짧습니다.",
+        "[FindRoute] 후보 경로 확인 중: 거리 $bestDistance m, 도착 Vertex ${bestVertex.id}",
       );
-      return null;
-    }
 
-    // 마지막 Vertex에 연결된 POI 찾기
-    final List<Poi> destinationPois = await _poiRepo.getPoisByVertexId(
-      bestVertex.id,
-    );
-
-    if (destinationPois.isEmpty) {
-      debugPrint(
-        "[FindRoute] 실패: 도착 지점(Vertex ${bestVertex.id})에 연결된 POI가 없습니다.",
-      );
-      return null;
-    }
-
-    // 가장 가까운 POI 선택 (Vertex와의 거리가 가장 가까운 것)
-    Poi destinationPoi = destinationPois.first;
-    double minDistance = _poiRepo.getStraightLineDistance(
-      destinationPoi,
-      bestVertex,
-    );
-    for (final poi in destinationPois) {
-      final distance = _poiRepo.getStraightLineDistance(poi, bestVertex);
-      if (distance < minDistance) {
-        minDistance = distance;
-        destinationPoi = poi;
+      // 1. 측정 불가 거리 조건 체크 (너무 짧으면 패스)
+      if (bestDistance < minRoundTripDistance) {
+        debugPrint("   pass: 거리가 너무 짧음 ($bestDistance m)");
+        continue;
       }
+
+      // 2. 도착 Vertex에 연결된 POI가 있는지 확인
+      final List<Poi> destinationPois = await _poiRepo.getPoisByVertexId(
+        bestVertex.id,
+      );
+
+      if (destinationPois.isEmpty) {
+        debugPrint("   pass: 도착 지점(Vertex ${bestVertex.id})에 연결된 POI가 없음");
+        continue; // 이 경로를 포기하고 다음 경로(차선책)로 넘어감
+      }
+
+      // 3. 유효한 경로를 찾았으므로 도착지 설정 로직 진행
+      // 가장 가까운 POI 선택 (Vertex와의 거리가 가장 가까운 것)
+      Poi destinationPoi = destinationPois.first;
+      double minDistance = _poiRepo.getStraightLineDistance(
+        destinationPoi,
+        bestVertex,
+      );
+
+      for (final poi in destinationPois) {
+        final distance = _poiRepo.getStraightLineDistance(poi, bestVertex);
+        if (distance < minDistance) {
+          minDistance = distance;
+          destinationPoi = poi;
+        }
+      }
+
+      // 편도/왕복 모드 및 총 거리 결정
+      final bool isOneWay = bestDistance >= minOneWayDistance;
+
+      final double totalDistance = isOneWay
+          ? bestDistance // 5.6m 이상 (편도)
+          : bestDistance * 2.0; // 1m~5.6m (왕복)
+
+      final String mode = isOneWay ? "one-way" : "round-trip";
+
+      debugPrint(
+        "[FindRoute] 최종 성공: 도착지 ${destinationPoi.name} (거리: $totalDistance, 모드: $mode)",
+      );
+
+      // 찾았으면 바로 반환
+      return CalibrationRoute(
+        startPoi: startPoi,
+        destinationPoi: destinationPoi,
+        totalDistance: totalDistance,
+        mode: mode,
+      );
     }
 
-    // 편도/왕복 모드 및 총 거리 결정
-    final bool isOneWay = bestDistance >= minOneWayDistance;
-
-    final double totalDistance = isOneWay
-        ? bestDistance // 5.6m 이상 (편도)
-        : bestDistance * 2.0; // 1m~5.6m (왕복)
-
-    final String mode = isOneWay ? "one-way" : "round-trip";
-
-    // 결정된 거리, 모드 반환
-    debugPrint("[FindRoute] 성공: 경로 발견 (${totalDistance}m, $mode)");
-    return CalibrationRoute(
-      startPoi: startPoi,
-      destinationPoi: destinationPoi,
-      totalDistance: totalDistance,
-      mode: mode,
-    );
+    // 반복문이 끝날 때까지 return이 안 되었다면 최종 실패로 간주
+    debugPrint("[FindRoute] 실패: 모든 후보 경로가 유효하지 않습니다 (POI 없음 등).");
+    return null;
   }
 
   /// 한쪽 방향으로 "직선"이 끝날 때까지 탐색하는 헬퍼 함수
