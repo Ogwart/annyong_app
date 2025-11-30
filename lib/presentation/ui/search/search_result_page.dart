@@ -360,14 +360,13 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           itemCount: results.length,
                           itemBuilder: (context, index) {
                             final poi = results[index];
-                            final buildingList = ["5서", "5남", "하"];
                             return SearchResultItem(
                               title: poi.name,
                               categoryId: poi.categoryId,
-                              // 디버깅을 위해 시연 전까진 POI 속성을 덧붙여 설명
-                              // description: poi.description ?? '설명 없음',
-                              description:
-                                  "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description}",
+                              description: poi.description ?? '설명 없음',
+                              // 디버깅용
+                              // description:
+                              //     "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description}",
                               onSelect: () => _handlePoiSelect(poi),
                             );
                           },
