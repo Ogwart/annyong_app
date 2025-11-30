@@ -124,15 +124,22 @@ class _SearchPageState extends State<SearchPage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                poi.description ?? '설명 없음',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                              // 설명부분은 단어 단위로 줄바꿈
+                              Wrap(
+                                spacing: 3.0, // 단어 사이의 간격
+                                runSpacing: 2.0, // 줄 사이의 간격
+                                children: (poi.description ?? '설명 없음')
+                                    .split(' ') // 공백을 기준으로 단어 쪼개기
+                                    .map((word) {
+                                      return Text(
+                                        word,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.text,
+                                        ),
+                                      );
+                                    })
+                                    .toList(),
                               ),
                             ],
                           ),
