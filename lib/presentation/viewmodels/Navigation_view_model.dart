@@ -191,7 +191,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     );
   }
 
-  /// TODO: 비콘 데이터 준비 후 구현
+  /// TODO: 테스트 진행 후 기준 숫자 변경
   /// 현재 신호 구간 : -65보다 강하면 당겨오기
 
   void correctPositionWithBeacon({
@@ -200,7 +200,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     required int beaconFloor,
     required double signalStrength,
   }) {
-    if (signalStrength >= 65) {
+    if (signalStrength >= -65) {
       final currentState = state.value;
       // 길찾기 중일 때만
       if (currentState != null) {
