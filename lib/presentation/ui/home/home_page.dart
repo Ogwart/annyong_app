@@ -282,44 +282,40 @@ class _HomePageState extends ConsumerState<HomePage> {
                     right: 24,
                     height: 50,
                     child: SizedBox(
-                      child: Padding(
-                        padding: EdgeInsetsGeometry.all(4),
-                        child: ListView.builder(
-                          // key를 추가하여 상태가 변경되어도 스크롤 위치가 유지되도록 함
-                          key: const PageStorageKey('category_list'),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: categoryState.categories.length + 1,
-                          itemBuilder: (BuildContext context, int index) {
-                            if (index == 0) {
-                              return Center(
-                                child: CategoryButton(
-                                  bookmarkTitle: '즐겨찾기',
-                                  isSelected:
-                                      categoryState.selectedCategoryId == -1,
-                                  onTap: () => ref
-                                      .read(categoryProvider.notifier)
-                                      .onCategorySelected(-1),
-                                ),
-                              );
-                            }
-                            final category =
-                                categoryState.categories[index - 1];
+                      child: ListView.builder(
+                        // key를 추가하여 상태가 변경되어도 스크롤 위치가 유지되도록 함
+                        key: const PageStorageKey('category_list'),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categoryState.categories.length + 1,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (index == 0) {
                             return Center(
                               child: CategoryButton(
-                                bookmarkTitle: category.name.replaceAll(
-                                  '\n',
-                                  '/',
-                                ),
+                                bookmarkTitle: '즐겨찾기',
                                 isSelected:
-                                    categoryState.selectedCategoryId ==
-                                    category.id,
+                                    categoryState.selectedCategoryId == -1,
                                 onTap: () => ref
                                     .read(categoryProvider.notifier)
-                                    .onCategorySelected(category.id),
+                                    .onCategorySelected(-1),
                               ),
                             );
-                          },
-                        ),
+                          }
+                          final category = categoryState.categories[index - 1];
+                          return Center(
+                            child: CategoryButton(
+                              bookmarkTitle: category.name.replaceAll(
+                                '\n',
+                                '/',
+                              ),
+                              isSelected:
+                                  categoryState.selectedCategoryId ==
+                                  category.id,
+                              onTap: () => ref
+                                  .read(categoryProvider.notifier)
+                                  .onCategorySelected(category.id),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
