@@ -7,6 +7,7 @@ import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/location_service.dart';
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
+import 'package:annyong/domain/usecases/handover_service.dart';
 import 'package:annyong/presentation/viewmodels/navigation_state.dart';
 import 'package:flutter/widgets.dart';
 
@@ -17,12 +18,13 @@ import 'package:flutter_compass/flutter_compass.dart';
 //상태를 따로 navigation_state 파일에 정의
 class NavigationViewModel extends AsyncNotifier<NavigationState> {
   final PoiRepository _poiRepository = PoiRepository();
-  final LocationService _locationService = LocationService();
   final BeaconScanService _beaconScanService = BeaconScanService();
+  final HandoverService _handoverService = HandoverService();
 
   StreamSubscription<StepCount>? _stepCountSubscription;
   StreamSubscription<dynamic>? _imuSubscription; // IMU 센서 스트림 (방향 데이터)
   int _lastStepCount = 0;
+
   //1초에 비콘 신호 1번만 받도록 하는 타이머 
   Timer? _beaconMonitorTimer; 
 
@@ -30,13 +32,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   static const double pixelsPerMeter = 10.0; // 1px = 10cm
   static const double stepLengthMeters = 0.7; // 1걸음 = 70cm
   static const double vertexBufferMeters = 2.0; // 정점 버퍼 2m
-
-  // 실내외 전환 RSSI 임계값
-  static const int rssiThresholdReady = -65;
-  static const int rssiThresholdExit = -90;
-
-  // 현재 타겟팅된 Door 비콘 (Handover용)
-  String? _targetDoorBeaconMac;
 
   //안내 시작했을 때만 IMU 센서값을 받기 시작하도록 수정
   @override
@@ -168,17 +163,23 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     _beaconMonitorTimer?.cancel();
     _beaconMonitorTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) async {
       final currentState = state.value;
-      if (currentState == null || currentState.handoverStatus == HandoverStatus.outdoor) return;
+      if (currentState == null) return;
 
       // 1. 가장 가까운 비콘 조회
       final nearest = await _beaconScanService.getNearestTrackedBeacon();
       
-      // 2. Handover 로직 체크
-      await checkHandoverLogic(
+      //HandoverService에 로직 위임
+      final newState = await _handoverService.checkHandoverLogic(
+        currentState: currentState,
         nearestBeaconType: nearest?.beacon.type,
         nearestBeaconMac: nearest?.beacon.macId,
         currentRssi: nearest?.rssi.toInt(),
       );
+
+      // 상태 변경이 있을 때만 업데이트
+      if (newState != null) {
+        state = AsyncValue.data(newState);
+      }
 
       // 3. 위치 보정 (실내 주행 중일 때, 신호가 강하면)
       if (currentState.handoverStatus == HandoverStatus.indoor && nearest != null) {
@@ -199,8 +200,8 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     // 나침반 좌표계(0도=북쪽, 시계방향)를 화면 좌표계(x=동쪽, y=남쪽)로 변환
     // 북쪽(0도) → y 감소, 동쪽(90도) → x 증가, 남쪽(180도) → y 증가, 서쪽(270도) → x 감소
     final pixelsPerStep = stepLengthMeters * pixelsPerMeter;
-    final dx = pixelsPerStep * math.sin(s.heading) * stepIncrease;
-    final dy = -pixelsPerStep * math.cos(s.heading) * stepIncrease; // 화면 좌표계
+    final dx = pixelsPerStep * math.sin(currentState.heading) * stepIncrease;
+    final dy = -pixelsPerStep * math.cos(currentState.heading) * stepIncrease; // 화면 좌표계
 
     final newRawX = currentState.rawPixelX + dx;
     final newRawY = currentState.rawPixelY + dy;
@@ -212,7 +213,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     );
 
     // 2. Map Matching Logic
-    switch (s.matchingMode) {
+    switch (currentState.matchingMode) {
       case MapMatchingMode.onEdge:
         nextState = await _handleOnEdge(nextState, stepIncrease, pixelsPerStep);
         break;
@@ -224,26 +225,34 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         break;
     }
 
-    //TODO
-    // 3. Handover 상태 체크 (걸음마다)
-    // 여기서는 비콘 정보 없이 위치 기반 체크만 수행 (Connect Edge 진입 등)
-    // 비콘 정보는 Timer에서 별도로 체크함
+    // 3. Handover 상태 체크 (위치 기반)
+    // 현재 상태가 'Indoor'가 아닐 때만(즉, 문 근처거나 전환 중일 때만) 위치 기반 체크를 수행
+    if (nextState.handoverStatus != HandoverStatus.indoor) {
+      
+      final handoverUpdate = await _handoverService.checkHandoverLogic(
+        currentState: nextState,
+        nearestBeaconType: null, // 걸음 이벤트이므로 비콘 정보 없음
+        nearestBeaconMac: null,
+        currentRssi: null,
+      );
+
+      if (handoverUpdate != null) {
+        nextState = handoverUpdate;
+      }
+    }
+
+    // 최종 상태 업데이트
     state = AsyncValue.data(nextState);
-    
-    // 위치 변경 후 핸드오버 로직 재확인 (비콘값은 null로 넘겨서 위치기반 로직만 타게 함)
-    // (실제로는 비콘값도 캐싱해서 같이 넘기는게 좋음)
   }
 
   /// 비콘 신호를 이용한 강력한 위치 보정 
-  /// [beaconVertex]: 비콘이 위치한(혹은 가장 가까운) 정점 정보
   void correctPositionWithBeacon({
-    required Vertex beaconVertex, // 좌표 대신 Vertex 객체를 통째로 받음
-    required int beaconFloor,
+    required Beacon beacon,
     required double rssi,
   }) {
     // 1. 신호 강도 체크 (너무 약하면 보정 안 함)
     // -65dBm은 꽤 가까운 거리(약 1~2m)
-    if (signalStrength < -65) return;
+    if (rssi < -65) return;
 
 		// 2. 비콘과 연결된 Vertex 찾기 (전략 패턴: 나중에 로직 수정 용이)
     final Vertex? targetVertex = await _resolveTargetVertexFromBeacon(beacon);
@@ -254,7 +263,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     }
   }
 		
-  /// [전략] 비콘 정보로부터 보정할 목표 Vertex를 결정하는 로직
+  /// 비콘 정보로부터 보정할 목표 Vertex를 결정하는 로직
   /// 나중에 비콘의 x,y를 직접 쓰거나 다른 로직으로 바꿀 때 이 함수만 수정하면 됨
   Future<Vertex?> _resolveTargetVertexFromBeacon(Beacon beacon) async {
     // A. near_poi_ids가 비어있으면 보정 불가
@@ -538,86 +547,35 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     return math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2));
   }
 
-  // --- Handover Logic ---
-  Future<void> checkHandoverLogic({
-    required String? nearestBeaconType,
-    required String? nearestBeaconMac,
-    required int? currentRssi,
-  }) async {
+  // 7. 사용자 응답 처리 (UI 호출용)
+  Future<void> confirmIndoorEntry() async {
     final s = state.value;
-    if (s == null || s.handoverStatus == HandoverStatus.outdoor) return;
+    if (s == null) return;
 
-    switch (s.handoverStatus) {
-      case HandoverStatus.indoor:
-        // Door 비콘 감지 시 GPS 예열
-        if (nearestBeaconType == 'door' &&
-            currentRssi != null &&
-            currentRssi >= rssiThresholdReady) {
-          _targetDoorBeaconMac = nearestBeaconMac;
-          await _locationService.startLocationStream();
-          state = AsyncValue.data(s.copyWith(
-            handoverStatus: HandoverStatus.handoverReady,
-          ));
-          log("[Handover] Ready: Door beacon detected. GPS Start.");
-        }
-        break;
-
-      case HandoverStatus.handoverReady:
-        // 취소 조건: 문에서 멀어짐
-        if (nearestBeaconMac != _targetDoorBeaconMac ||
-            (currentRssi != null && currentRssi < rssiThresholdReady - 10)) {
-          _locationService.stopLocationStream();
-          _targetDoorBeaconMac = null;
-          state = AsyncValue.data(s.copyWith(handoverStatus: HandoverStatus.indoor));
-          log("[Handover] Cancelled.");
-          return;
-        }
-
-        // Connect Edge 진입 확인
-        bool isOnConnect = false;
-        if (s.matchingMode == MapMatchingMode.onEdge &&
-            s.currentEdge?.way == WayType.connect) {
-          isOnConnect = true;
-        }
-
-        if (isOnConnect) {
-          state = AsyncValue.data(s.copyWith(
-            handoverStatus: HandoverStatus.transitioning,
-          ));
-          log("[Handover] Transitioning: Entered CONNECT edge.");
-        }
-        break;
-
-      case HandoverStatus.transitioning:
-        // 실외 판정: 비콘 끊김 OR GPS 확보
-        bool beaconLost = (nearestBeaconMac != _targetDoorBeaconMac) ||
-                          (currentRssi == null || currentRssi < rssiThresholdExit);
-        bool gpsReady = _locationService.isGpsSignalGood();
-        bool walkedEnough = s.edgeAccumulatedDistance > (3.0 * pixelsPerMeter);
-
-        if ((beaconLost && walkedEnough) || gpsReady) {
-          _switchToOutdoorMode();
-        }
-        break;
-      default:
-        break;
-    }
+    final newState = await _handoverService.confirmIndoorEntry(s);
+    state = AsyncValue.data(newState);
   }
 
-  void _switchToOutdoorMode() {
-    final s = state.value!;
-    state = AsyncValue.data(s.copyWith(handoverStatus: HandoverStatus.outdoor));
-    log("[Handover] COMPLETE: Switched to Outdoor.");
-    // UI 전환 콜백 등 추가
-  }
+  void rejectIndoorEntry() {
+    final s = state.value;
+    if (s == null) return;
 
+    final newState = _handoverService.rejectIndoorEntry(s);
+    state = AsyncValue.data(newState);
+  }
+}
 
   /// 구독 취소 및 초기화 (페이지 종료 시 호출)
   void stopNavigation() {
     _stepCountSubscription?.cancel();
     _imuSubscription?.cancel();
+    _beaconMonitorTimer?.cancel();
+    
     _stepCountSubscription = null;
     _imuSubscription = null;
+    _beaconMonitorTimer = null;
+    
+    _handoverService.dispose();
 
     // 상태를 초기값으로 리셋
     state = AsyncValue.data(NavigationState());

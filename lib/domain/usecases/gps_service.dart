@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 
-class LocationService {
+class GpsService {
   StreamSubscription<Position>? _positionStreamSubscription;
   
   // 현재 GPS 위치 및 정확도 캐싱

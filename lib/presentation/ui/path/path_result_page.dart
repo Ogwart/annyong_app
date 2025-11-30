@@ -71,6 +71,16 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 네비게이션 상태 구독
+    final navigationState = ref.watch(navigationViewModelProvider);
+
+    // 상태 리스너: 'outdoorChecking' 상태가 되면 다이얼로그 띄우기
+    ref.listen(navigationViewModelProvider, (previous, next) {
+      if (next.value?.handoverStatus == HandoverStatus.outdoorChecking) {
+        _showIndoorConfirmationDialog(context);
+      }
+    });
+    
     final pathfinderAsync = ref.watch(pathFinderProvider);
 
     return Scaffold(
@@ -146,14 +156,13 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           // 경로가 산출되었으므로 현위치 추정 시작
           // ===============================================================
           if (!_isNavigationStarted) {
-            // 빌드 중에 상태를 변경하면 안 되므로 addPostFrameCallback 사용
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 ref.read(navigationViewModelProvider.notifier)
-                   .startNavigation(result.path); // 계산된 Vertex 경로 전달하며 현위치 추정 호출
+                   .startNavigation(result.path);
                 
                 setState(() {
-                  _isNavigationStarted = true; // 중복 실행 방지
+                  _isNavigationStarted = true;
                 });
               }
             });
@@ -187,128 +196,194 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             '2x',
           );
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ------------------출발, 경유, 도착, 총 비용------------------
-                CostCard(
-                  departure: widget.start.name,
-                  destination: widget.end.name,
-                  totalCost: totalCost,
-                  waypoints: widget.waypoints,
-                ),
-                const SizedBox(height: 20),
-                // ------------------지도 및 사용자 위치------------------
-                Container(
-                  height: 300,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey200,
-                    borderRadius: BorderRadius.circular(20),
+          // 네비게이션 상태에 따라 화면 분기 (실외 vs 실내)
+          return navigationState.when(
+            data: (state) {
+              // A. 실외 상태면 OutdoorPage 반환
+              if (state.handoverStatus == HandoverStatus.outdoor) {
+                return const OutdoorPage();
+              }
+              
+              // B. 실내 상태 (지도 + 걸음수 패널)
+              return Stack(
+                children: [
+                  // 1. 스크롤 가능한 지도 영역
+                  _buildIndoorMapView(
+                    context, 
+                    state, 
+                    totalCost, 
+                    mapImagePath
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Stack(
-                      children: [
-                        // 지도 이미지
-                        Positioned.fill(
-                          child: Image.asset(mapImagePath, fit: BoxFit.contain),
-                        ),
-                        // 사용자 위치 마커 (현재 층일 때만 표시)
-                        navigationState.when(
-                          data: (state) {
-                            // 현재 지도 층과 사용자 층이 일치할 때만 마커 표시
-                            if (state.floor != widget.start.floor) {
-                              return const SizedBox.shrink();
-                            }
 
-                            // 사용자 좌표를 화면 좌표로 변환
-                            // (search_result_page와 동일한 변환 로직 사용)
-                            final scaledX = state.x * 0.19;
-                            final scaledY = state.y * 0.19;
-                            final adjustedX = scaledX - 10;
-                            final adjustedY = scaledY + 50;
-
-                            return Positioned(
-                              left: adjustedX - 12,
-                              top: adjustedY - 24,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.person_pin_circle,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                              ),
-                            );
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                        // 도착지 마커 (현재 층일 때만 표시)
-                        if (widget.end.floor == widget.start.floor)
-                          Builder(
-                            builder: (context) {
-                              // 도착지 POI 좌표를 화면 좌표로 변환
-                              final scaledX = widget.end.xCoord * 0.19;
-                              final scaledY = widget.end.yCoord * 0.19;
-                              final adjustedX = scaledX - 10;
-                              final adjustedY = scaledY + 50;
-
-                              return Positioned(
-                                left: adjustedX - 12,
-                                top: adjustedY - 24,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: Colors.red,
-                                    size: 24,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                  // 2. 상단 고정 걸음수 패널 (여기 추가!)
+                  // 주의: CountSteps는 AsyncValue를 받도록 설계되어 있으니, 
+                  // 그냥 AsyncValue.data(state)로 다시 감싸서 넘기거나,
+                  // CountSteps를 수정해서 state만 받게 하는 게 깔끔함.
+        
+                  // 여기서는 간단하게 CountSteps를 수정하는 걸 추천합니다.
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    right: 12,
+                    child: CountSteps(state: state), // AsyncValue가 아닌 state 직접 전달
+                  ),              
+                ]
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const Center(child: Text("Navigation State Error")),
           );
         },
       ),
     );
   }
+
+  // [이동 & 수정] 기존 build 메서드 내의 거대한 위젯 트리를 여기로 옮김
+  Widget _buildIndoorMapView(
+    BuildContext context,
+    NavigationState state, // AsyncValue가 아닌 실제 데이터 받음
+    double totalCost,
+    String mapImagePath,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ------------------출발, 경유, 도착, 총 비용------------------
+          CostCard(
+            departure: widget.start.name,
+            destination: widget.end.name,
+            totalCost: totalCost,
+            waypoints: widget.waypoints,
+          ),
+          const SizedBox(height: 20),
+          // ------------------지도 및 사용자 위치------------------
+          Container(
+            height: 300,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: AppColors.grey200,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // 지도 이미지
+                  Positioned.fill(
+                    child: Image.asset(mapImagePath, fit: BoxFit.contain),
+                  ),
+                  
+                  // [수정] 사용자 위치 마커 (state를 바로 사용)
+                  if (state.floor == widget.start.floor)
+                    Builder(builder: (context) {
+                        final scaledX = state.x * 0.19;
+                        final scaledY = state.y * 0.19;
+                        final adjustedX = scaledX - 10;
+                        final adjustedY = scaledY + 50;
+
+                        return Positioned(
+                          left: adjustedX - 12,
+                          top: adjustedY - 24,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.person_pin_circle,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                        );
+                    }),
+                  
+                  
+                  // 도착지 마커
+                  if (widget.end.floor == widget.start.floor)
+                    Builder(
+                      builder: (context) {
+                        final scaledX = widget.end.xCoord * 0.19;
+                        final scaledY = widget.end.yCoord * 0.19;
+                        final adjustedX = scaledX - 10;
+                        final adjustedY = scaledY + 50;
+
+                        return Positioned(
+                          left: adjustedX - 12,
+                          top: adjustedY - 24,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                              size: 24,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  } 
+
+  // 실내 진입 확인 다이얼로그
+  void _showIndoorConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 바깥 터치로 닫기 금지
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("실내 진입 확인"),
+          content: const Text("실내로 들어오셨나요?\n지도를 실내 모드로 전환합니다."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx); // 다이얼로그 닫기
+                ref.read(navigationViewModelProvider.notifier).rejectIndoorEntry();
+              },
+              child: const Text("아니요"),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx); // 다이얼로그 닫기
+                ref.read(navigationViewModelProvider.notifier).confirmIndoorEntry();
+              },
+              child: const Text("네, 들어왔습니다"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
+
 
 class CountSteps extends StatelessWidget {
   const CountSteps({super.key, required this.navigationState});

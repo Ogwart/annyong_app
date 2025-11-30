@@ -13,6 +13,7 @@ enum HandoverStatus {
   handoverReady,   // 문 근처(Door 비콘) 감지 -> GPS 신호 받기 시작
   transitioning,   // Connect Edge 진입 -> 문 통과 중
   outdoor,         // 실외 확정
+  outdoorChecking, // 실외 -> 실내 진입 감지 (사용자에게 물어보는 중)
 }
 
 class NavigationState {
