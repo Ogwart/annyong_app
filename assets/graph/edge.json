@@ -1,1472 +1,1958 @@
 [
  {
    "edge_id": 1,
-   "vertex1_id": 1,
-   "vertex2_id": 2,
-   "length": 28,
+   "vertex1_id": 135,
+   "vertex2_id": 137,
    "way": "horizon"
  },
  {
    "edge_id": 2,
-   "vertex1_id": 2,
-   "vertex2_id": 3,
-   "length": 0,
-   "way": "down"
+   "vertex1_id": 135,
+   "vertex2_id": 134,
+   "way": "vertical"
  },
  {
    "edge_id": 3,
-   "vertex1_id": 2,
-   "vertex2_id": 95,
-   "length": 0,
-   "way": "up"
+   "vertex1_id": 137,
+   "vertex2_id": 138,
+   "way": "vertical"
  },
  {
    "edge_id": 4,
-   "vertex1_id": 3,
-   "vertex2_id": 4,
-   "length": 25,
+   "vertex1_id": 134,
+   "vertex2_id": 138,
    "way": "horizon"
  },
  {
    "edge_id": 5,
-   "vertex1_id": 5,
-   "vertex2_id": 6,
-   "length": 45,
+   "vertex1_id": 136,
+   "vertex2_id": 137,
    "way": "vertical"
  },
  {
    "edge_id": 6,
-   "vertex1_id": 6,
-   "vertex2_id": 7,
-   "length": 0,
-   "way": "up"
- },
- {
-   "edge_id": 7,
-   "vertex1_id": 7,
-   "vertex2_id": 110,
-   "length": 0,
-   "way": "up"
- },
- {
-   "edge_id": 8,
-   "vertex1_id": 7,
-   "vertex2_id": 85,
-   "length": 36,
+   "vertex1_id": 134,
+   "vertex2_id": 141,
    "way": "vertical"
  },
  {
+   "edge_id": 7,
+   "vertex1_id": 115,
+   "vertex2_id": 133,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 8,
+   "vertex1_id": 114,
+   "vertex2_id": 115,
+   "way": "horizon"
+ },
+ {
    "edge_id": 9,
-   "vertex1_id": 8,
-   "vertex2_id": 85,
-   "length": 36,
+   "vertex1_id": 133,
+   "vertex2_id": 132,
    "way": "vertical"
  },
  {
    "edge_id": 10,
-   "vertex1_id": 8,
-   "vertex2_id": 9,
-   "length": 71,
+   "vertex1_id": 132,
+   "vertex2_id": 131,
    "way": "horizon"
  },
  {
    "edge_id": 11,
-   "vertex1_id": 9,
-   "vertex2_id": 10,
-   "length": 73,
+   "vertex1_id": 127,
+   "vertex2_id": 128,
    "way": "horizon"
  },
  {
    "edge_id": 12,
-   "vertex1_id": 10,
-   "vertex2_id": 11,
-   "length": 73,
+   "vertex1_id": 126,
+   "vertex2_id": 127,
    "way": "horizon"
  },
  {
    "edge_id": 13,
-   "vertex1_id": 11,
-   "vertex2_id": 12,
-   "length": 70,
-   "way": "horizon"
+   "vertex1_id": 132,
+   "vertex2_id": 127,
+   "way": "vertical"
  },
  {
    "edge_id": 14,
-   "vertex1_id": 12,
-   "vertex2_id": 13,
-   "length": 72,
-   "way": "horizon"
+   "vertex1_id": 130,
+   "vertex2_id": 128,
+   "way": "vertical"
  },
  {
    "edge_id": 15,
-   "vertex1_id": 13,
-   "vertex2_id": 14,
-   "length": 63,
+   "vertex1_id": 128,
+   "vertex2_id": 129,
    "way": "horizon"
  },
  {
    "edge_id": 16,
-   "vertex1_id": 13,
-   "vertex2_id": 15,
-   "length": 43,
-   "way": "vertical"
+   "vertex1_id": 125,
+   "vertex2_id": 126,
+   "way": "horizon"
  },
  {
    "edge_id": 17,
-   "vertex1_id": 14,
-   "vertex2_id": 19,
-   "length": 0,
-   "way": "up"
+   "vertex1_id": 124,
+   "vertex2_id": 125,
+   "way": "horizon"
  },
  {
    "edge_id": 18,
-   "vertex1_id": 15,
-   "vertex2_id": 16,
-   "length": 34,
+   "vertex1_id": 123,
+   "vertex2_id": 124,
    "way": "horizon"
  },
  {
    "edge_id": 19,
-   "vertex1_id": 16,
-   "vertex2_id": 17,
-   "length": 0,
-   "way": "down"
+   "vertex1_id": 122,
+   "vertex2_id": 123,
+   "way": "horizon"
  },
  {
    "edge_id": 20,
-   "vertex1_id": 17,
-   "vertex2_id": 18,
-   "length": 28,
+   "vertex1_id": 121,
+   "vertex2_id": 122,
    "way": "horizon"
  },
  {
    "edge_id": 21,
-   "vertex1_id": 19,
-   "vertex2_id": 21,
-   "length": 32,
+   "vertex1_id": 120,
+   "vertex2_id": 121,
    "way": "horizon"
  },
  {
    "edge_id": 22,
-   "vertex1_id": 19,
-   "vertex2_id": 128,
-   "length": null,
-   "way": "up"
+   "vertex1_id": 119,
+   "vertex2_id": 120,
+   "way": "horizon"
  },
  {
    "edge_id": 23,
-   "vertex1_id": 21,
-   "vertex2_id": 22,
-   "length": 0,
-   "way": "down"
+   "vertex1_id": 118,
+   "vertex2_id": 119,
+   "way": "horizon"
  },
  {
    "edge_id": 24,
-   "vertex1_id": 21,
-   "vertex2_id": 131,
-   "length": 0,
-   "way": "up"
+   "vertex1_id": 117,
+   "vertex2_id": 118,
+   "way": "horizon"
  },
  {
    "edge_id": 25,
-   "vertex1_id": 22,
-   "vertex2_id": 23,
-   "length": 39,
+   "vertex1_id": 113,
+   "vertex2_id": 114,
    "way": "horizon"
  },
  {
    "edge_id": 26,
-   "vertex1_id": 23,
-   "vertex2_id": 24,
-   "length": 31,
-   "way": "vertical"
+   "vertex1_id": 112,
+   "vertex2_id": 113,
+   "way": "horizon"
  },
  {
    "edge_id": 27,
-   "vertex1_id": 23,
-   "vertex2_id": 43,
-   "length": 23,
-   "way": "vertical"
+   "vertex1_id": 111,
+   "vertex2_id": 112,
+   "way": "horizon"
  },
  {
    "edge_id": 28,
-   "vertex1_id": 24,
-   "vertex2_id": 25,
-   "length": 39,
+   "vertex1_id": 110,
+   "vertex2_id": 111,
    "way": "horizon"
  },
  {
    "edge_id": 29,
-   "vertex1_id": 24,
-   "vertex2_id": 28,
-   "length": 38,
+   "vertex1_id": 109,
+   "vertex2_id": 110,
    "way": "horizon"
  },
  {
    "edge_id": 30,
-   "vertex1_id": 25,
-   "vertex2_id": 26,
-   "length": 38,
+   "vertex1_id": 108,
+   "vertex2_id": 109,
    "way": "horizon"
  },
  {
    "edge_id": 31,
-   "vertex1_id": 26,
-   "vertex2_id": 27,
-   "length": 38,
+   "vertex1_id": 107,
+   "vertex2_id": 108,
    "way": "horizon"
  },
  {
    "edge_id": 32,
-   "vertex1_id": 28,
-   "vertex2_id": 29,
-   "length": 38,
+   "vertex1_id": 106,
+   "vertex2_id": 107,
    "way": "horizon"
  },
  {
    "edge_id": 33,
-   "vertex1_id": 29,
-   "vertex2_id": 30,
-   "length": 38,
+   "vertex1_id": 104,
+   "vertex2_id": 105,
    "way": "horizon"
  },
  {
    "edge_id": 34,
-   "vertex1_id": 30,
-   "vertex2_id": 31,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 107,
+   "vertex2_id": 105,
+   "way": "vertical"
  },
  {
    "edge_id": 35,
-   "vertex1_id": 31,
-   "vertex2_id": 32,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 106,
+   "vertex2_id": 104,
+   "way": "vertical"
  },
  {
    "edge_id": 36,
-   "vertex1_id": 32,
-   "vertex2_id": 33,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 105,
+   "vertex2_id": 118,
+   "way": "vertical"
  },
  {
    "edge_id": 37,
-   "vertex1_id": 33,
-   "vertex2_id": 34,
-   "length": 38,
+   "vertex1_id": 103,
+   "vertex2_id": 104,
    "way": "horizon"
  },
  {
    "edge_id": 38,
-   "vertex1_id": 34,
-   "vertex2_id": 35,
-   "length": 27,
-   "way": "vertical"
+   "vertex1_id": 80,
+   "vertex2_id": 103,
+   "way": "horizon"
  },
  {
    "edge_id": 39,
-   "vertex1_id": 35,
-   "vertex2_id": 36,
-   "length": 27,
-   "way": "vertical"
+   "vertex1_id": 90,
+   "vertex2_id": 116,
+   "way": "horizon"
  },
  {
    "edge_id": 40,
-   "vertex1_id": 36,
-   "vertex2_id": 37,
-   "length": 38,
+   "vertex1_id": 116,
+   "vertex2_id": 117,
    "way": "horizon"
  },
  {
    "edge_id": 41,
-   "vertex1_id": 36,
-   "vertex2_id": 44,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 80,
+   "vertex2_id": 84,
+   "way": "vertical"
  },
  {
    "edge_id": 42,
-   "vertex1_id": 37,
-   "vertex2_id": 38,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 84,
+   "vertex2_id": 90,
+   "way": "vertical"
  },
  {
    "edge_id": 43,
-   "vertex1_id": 38,
-   "vertex2_id": 39,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 78,
+   "vertex2_id": 83,
+   "way": "vertical"
  },
  {
    "edge_id": 44,
-   "vertex1_id": 39,
-   "vertex2_id": 40,
-   "length": 38,
-   "way": "horizon"
+   "vertex1_id": 83,
+   "vertex2_id": 89,
+   "way": "vertical"
  },
  {
    "edge_id": 45,
-   "vertex1_id": 40,
-   "vertex2_id": 41,
-   "length": 38,
+   "vertex1_id": 78,
+   "vertex2_id": 80,
    "way": "horizon"
  },
  {
    "edge_id": 46,
-   "vertex1_id": 41,
-   "vertex2_id": 42,
-   "length": 38,
+   "vertex1_id": 83,
+   "vertex2_id": 84,
    "way": "horizon"
  },
  {
    "edge_id": 47,
-   "vertex1_id": 42,
-   "vertex2_id": 43,
-   "length": 38,
+   "vertex1_id": 89,
+   "vertex2_id": 90,
    "way": "horizon"
  },
  {
    "edge_id": 48,
-   "vertex1_id": 44,
-   "vertex2_id": 45,
-   "length": 38,
+   "vertex1_id": 94,
+   "vertex2_id": 95,
    "way": "horizon"
  },
  {
    "edge_id": 49,
-   "vertex1_id": 45,
-   "vertex2_id": 46,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 90,
+   "vertex2_id": 96,
+   "way": "vertical"
  },
  {
    "edge_id": 50,
-   "vertex1_id": 45,
-   "vertex2_id": 57,
-   "length": 29,
+   "vertex1_id": 97,
+   "vertex2_id": 99,
    "way": "vertical"
  },
  {
    "edge_id": 51,
-   "vertex1_id": 45,
-   "vertex2_id": 63,
-   "length": 45,
-   "way": "vertical"
- },
- {
-   "edge_id": 52,
-   "vertex1_id": 46,
-   "vertex2_id": 47,
-   "length": 53,
+   "vertex1_id": 96,
+   "vertex2_id": 97,
    "way": "horizon"
  },
  {
-   "edge_id": 53,
-   "vertex1_id": 46,
-   "vertex2_id": 58,
-   "length": 29,
+   "edge_id": 52,
+   "vertex1_id": 89,
+   "vertex2_id": 94,
    "way": "vertical"
+ },
+ {
+   "edge_id": 53,
+   "vertex1_id": 93,
+   "vertex2_id": 94,
+   "way": "horizon"
  },
  {
    "edge_id": 54,
-   "vertex1_id": 46,
-   "vertex2_id": 64,
-   "length": 45,
-   "way": "vertical"
+   "vertex1_id": 92,
+   "vertex2_id": 93,
+   "way": "horizon"
  },
  {
    "edge_id": 55,
-   "vertex1_id": 47,
-   "vertex2_id": 48,
-   "length": 36,
+   "vertex1_id": 91,
+   "vertex2_id": 92,
    "way": "horizon"
  },
  {
    "edge_id": 56,
-   "vertex1_id": 47,
-   "vertex2_id": 59,
-   "length": 29,
-   "way": "vertical"
+   "vertex1_id": 100,
+   "vertex2_id": 101,
+   "way": "horizon"
  },
  {
    "edge_id": 57,
-   "vertex1_id": 47,
-   "vertex2_id": 75,
-   "length": 33,
-   "way": "vertical"
+   "vertex1_id": 101,
+   "vertex2_id": 102,
+   "way": "horizon"
  },
  {
    "edge_id": 58,
-   "vertex1_id": 48,
-   "vertex2_id": 49,
-   "length": 37,
-   "way": "horizon"
+   "vertex1_id": 94,
+   "vertex2_id": 102,
+   "way": "vertical"
  },
  {
    "edge_id": 59,
-   "vertex1_id": 49,
-   "vertex2_id": 50,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 93,
+   "vertex2_id": 101,
+   "way": "vertical"
  },
  {
    "edge_id": 60,
-   "vertex1_id": 50,
-   "vertex2_id": 51,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 91,
+   "vertex2_id": 98,
+   "way": "vertical"
  },
  {
    "edge_id": 61,
-   "vertex1_id": 51,
-   "vertex2_id": 52,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 98,
+   "vertex2_id": 100,
+   "way": "vertical"
  },
  {
    "edge_id": 62,
-   "vertex1_id": 52,
-   "vertex2_id": 53,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 88,
+   "vertex2_id": 92,
+   "way": "vertical"
  },
  {
    "edge_id": 63,
-   "vertex1_id": 53,
-   "vertex2_id": 54,
-   "length": 39,
+   "vertex1_id": 88,
+   "vertex2_id": 89,
    "way": "horizon"
  },
  {
    "edge_id": 64,
-   "vertex1_id": 54,
-   "vertex2_id": 55,
-   "length": 39,
+   "vertex1_id": 82,
+   "vertex2_id": 83,
    "way": "horizon"
  },
  {
    "edge_id": 65,
-   "vertex1_id": 55,
-   "vertex2_id": 56,
-   "length": 39,
+   "vertex1_id": 77,
+   "vertex2_id": 78,
    "way": "horizon"
  },
  {
    "edge_id": 66,
-   "vertex1_id": 56,
-   "vertex2_id": 77,
-   "length": 24,
+   "vertex1_id": 77,
+   "vertex2_id": 82,
    "way": "vertical"
  },
  {
    "edge_id": 67,
-   "vertex1_id": 57,
-   "vertex2_id": 58,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 82,
+   "vertex2_id": 88,
+   "way": "vertical"
  },
  {
    "edge_id": 68,
-   "vertex1_id": 57,
-   "vertex2_id": 60,
-   "length": 29,
-   "way": "vertical"
- },
- {
-   "edge_id": 69,
-   "vertex1_id": 58,
-   "vertex2_id": 59,
-   "length": 53,
-   "way": "vertical"
- },
- {
-   "edge_id": 70,
-   "vertex1_id": 58,
-   "vertex2_id": 61,
-   "length": 29,
-   "way": "vertical"
- },
- {
-   "edge_id": 71,
-   "vertex1_id": 59,
-   "vertex2_id": 62,
-   "length": 29,
-   "way": "vertical"
- },
- {
-   "edge_id": 72,
-   "vertex1_id": 60,
-   "vertex2_id": 61,
-   "length": 53,
+   "vertex1_id": 76,
+   "vertex2_id": 77,
    "way": "horizon"
  },
  {
-   "edge_id": 73,
-   "vertex1_id": 61,
-   "vertex2_id": 62,
-   "length": 53,
+   "edge_id": 69,
+   "vertex1_id": 81,
+   "vertex2_id": 82,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 70,
+   "vertex1_id": 87,
+   "vertex2_id": 88,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 71,
+   "vertex1_id": 86,
+   "vertex2_id": 87,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 72,
+   "vertex1_id": 85,
+   "vertex2_id": 86,
    "way": "horizon"
  },
  {
    "edge_id": 74,
-   "vertex1_id": 63,
-   "vertex2_id": 88,
-   "length": null,
-   "way": "down"
+   "vertex1_id": 76,
+   "vertex2_id": 81,
+   "way": "vertical"
  },
  {
    "edge_id": 75,
-   "vertex1_id": 64,
-   "vertex2_id": 161,
-   "length": null,
-   "way": "up"
+   "vertex1_id": 81,
+   "vertex2_id": 85,
+   "way": "vertical"
  },
  {
    "edge_id": 76,
-   "vertex1_id": 65,
-   "vertex2_id": 75,
-   "length": 12,
-   "way": "vertical"
+   "vertex1_id": 74,
+   "vertex2_id": 85,
+   "way": "horizon"
  },
  {
    "edge_id": 77,
-   "vertex1_id": 65,
-   "vertex2_id": 93,
-   "length": 0,
-   "way": "down"
+   "vertex1_id": 75,
+   "vertex2_id": 76,
+   "way": "horizon"
  },
  {
    "edge_id": 78,
-   "vertex1_id": 66,
-   "vertex2_id": 75,
-   "length": 36,
-   "way": "horizon"
- },
- {
-   "edge_id": 79,
-   "vertex1_id": 66,
-   "vertex2_id": 76,
-   "length": 37,
-   "way": "horizon"
- },
- {
-   "edge_id": 80,
-   "vertex1_id": 67,
-   "vertex2_id": 68,
-   "length": 39,
-   "way": "horizon"
- },
- {
-   "edge_id": 81,
-   "vertex1_id": 67,
-   "vertex2_id": 76,
-   "length": 21,
+   "vertex1_id": 75,
+   "vertex2_id": 74,
    "way": "vertical"
  },
  {
-   "edge_id": 82,
-   "vertex1_id": 68,
-   "vertex2_id": 69,
-   "length": 39,
-   "way": "horizon"
+   "edge_id": 79,
+   "vertex1_id": 62,
+   "vertex2_id": 75,
+   "way": "vertical"
  },
  {
-   "edge_id": 83,
-   "vertex1_id": 69,
-   "vertex2_id": 70,
-   "length": 39,
+   "edge_id": 81,
+   "vertex1_id": 62,
+   "vertex2_id": 63,
    "way": "horizon"
  },
  {
    "edge_id": 84,
-   "vertex1_id": 70,
-   "vertex2_id": 71,
-   "length": 39,
+   "vertex1_id": 73,
+   "vertex2_id": 74,
    "way": "horizon"
  },
  {
    "edge_id": 85,
-   "vertex1_id": 71,
-   "vertex2_id": 72,
-   "length": 39,
+   "vertex1_id": 72,
+   "vertex2_id": 73,
    "way": "horizon"
  },
  {
    "edge_id": 86,
-   "vertex1_id": 72,
-   "vertex2_id": 73,
-   "length": 39,
+   "vertex1_id": 61,
+   "vertex2_id": 62,
    "way": "horizon"
  },
  {
    "edge_id": 87,
-   "vertex1_id": 73,
-   "vertex2_id": 74,
-   "length": 39,
+   "vertex1_id": 60,
+   "vertex2_id": 61,
    "way": "horizon"
  },
  {
    "edge_id": 88,
-   "vertex1_id": 74,
-   "vertex2_id": 77,
-   "length": 30,
-   "way": "vertical"
+   "vertex1_id": 59,
+   "vertex2_id": 60,
+   "way": "horizon"
  },
  {
    "edge_id": 89,
-   "vertex1_id": 74,
-   "vertex2_id": 79,
-   "length": 24,
-   "way": "vertical"
+   "vertex1_id": 58,
+   "vertex2_id": 59,
+   "way": "horizon"
  },
  {
    "edge_id": 90,
-   "vertex1_id": 76,
-   "vertex2_id": 86,
-   "length": 21,
+   "vertex1_id": 71,
+   "vertex2_id": 72,
    "way": "horizon"
  },
  {
    "edge_id": 91,
-   "vertex1_id": 77,
-   "vertex2_id": 78,
-   "length": 30,
+   "vertex1_id": 70,
+   "vertex2_id": 71,
    "way": "horizon"
  },
  {
    "edge_id": 92,
-   "vertex1_id": 78,
-   "vertex2_id": 177,
-   "length": null,
-   "way": "up"
+   "vertex1_id": 69,
+   "vertex2_id": 70,
+   "way": "horizon"
  },
  {
    "edge_id": 93,
-   "vertex1_id": 79,
-   "vertex2_id": 80,
-   "length": 24,
-   "way": "vertical"
+   "vertex1_id": 57,
+   "vertex2_id": 58,
+   "way": "horizon"
  },
  {
    "edge_id": 94,
-   "vertex1_id": 80,
-   "vertex2_id": 81,
-   "length": 24,
-   "way": "vertical"
+   "vertex1_id": 56,
+   "vertex2_id": 57,
+   "way": "horizon"
  },
  {
    "edge_id": 95,
-   "vertex1_id": 81,
-   "vertex2_id": 82,
-   "length": 24,
-   "way": "vertical"
+   "vertex1_id": 55,
+   "vertex2_id": 56,
+   "way": "horizon"
  },
  {
    "edge_id": 96,
-   "vertex1_id": 82,
-   "vertex2_id": 83,
-   "length": 41,
+   "vertex1_id": 68,
+   "vertex2_id": 69,
    "way": "horizon"
  },
  {
    "edge_id": 97,
-   "vertex1_id": 86,
-   "vertex2_id": 87,
-   "length": 21,
+   "vertex1_id": 67,
+   "vertex2_id": 68,
    "way": "horizon"
  },
  {
    "edge_id": 98,
-   "vertex1_id": 88,
-   "vertex2_id": 89,
-   "length": 15,
+   "vertex1_id": 55,
+   "vertex2_id": 65,
    "way": "vertical"
  },
  {
    "edge_id": 99,
-   "vertex1_id": 89,
-   "vertex2_id": 90,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 65,
+   "vertex2_id": 67,
+   "way": "vertical"
  },
  {
    "edge_id": 100,
-   "vertex1_id": 90,
-   "vertex2_id": 91,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 64,
+   "vertex2_id": 66,
+   "way": "vertical"
  },
  {
    "edge_id": 101,
-   "vertex1_id": 90,
-   "vertex2_id": 92,
-   "length": 15,
+   "vertex1_id": 54,
+   "vertex2_id": 64,
    "way": "vertical"
  },
  {
    "edge_id": 102,
-   "vertex1_id": 91,
-   "vertex2_id": 92,
-   "length": 15,
-   "way": "vertical"
+   "vertex1_id": 54,
+   "vertex2_id": 55,
+   "way": "horizon"
  },
  {
    "edge_id": 103,
-   "vertex1_id": 95,
-   "vertex2_id": 96,
-   "length": 53,
+   "vertex1_id": 64,
+   "vertex2_id": 65,
    "way": "horizon"
  },
  {
    "edge_id": 104,
-   "vertex1_id": 96,
-   "vertex2_id": 97,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 66,
+   "vertex2_id": 67,
+   "way": "horizon"
  },
  {
    "edge_id": 105,
-   "vertex1_id": 97,
-   "vertex2_id": 98,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 53,
+   "vertex2_id": 54,
+   "way": "horizon"
  },
  {
    "edge_id": 106,
-   "vertex1_id": 98,
-   "vertex2_id": 99,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 52,
+   "vertex2_id": 53,
+   "way": "horizon"
  },
  {
    "edge_id": 107,
-   "vertex1_id": 99,
-   "vertex2_id": 100,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 51,
+   "vertex2_id": 52,
+   "way": "horizon"
  },
  {
    "edge_id": 108,
-   "vertex1_id": 100,
-   "vertex2_id": 101,
-   "length": 40,
-   "way": "vertical"
- },
- {
-   "edge_id": 109,
-   "vertex1_id": 101,
-   "vertex2_id": 102,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 34,
+   "vertex2_id": 35,
+   "way": "horizon"
  },
  {
    "edge_id": 110,
-   "vertex1_id": 102,
-   "vertex2_id": 103,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 36,
+   "vertex2_id": 37,
+   "way": "horizon"
  },
  {
    "edge_id": 111,
-   "vertex1_id": 103,
-   "vertex2_id": 104,
-   "length": 40,
-   "way": "vertical"
- },
- {
-   "edge_id": 112,
-   "vertex1_id": 104,
-   "vertex2_id": 105,
-   "length": 40,
+   "vertex1_id": 34,
+   "vertex2_id": 36,
    "way": "vertical"
  },
  {
    "edge_id": 113,
-   "vertex1_id": 105,
-   "vertex2_id": 106,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 33,
+   "vertex2_id": 34,
+   "way": "horizon"
  },
  {
    "edge_id": 114,
-   "vertex1_id": 106,
-   "vertex2_id": 107,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 38,
+   "vertex2_id": 39,
+   "way": "horizon"
  },
  {
    "edge_id": 115,
-   "vertex1_id": 107,
-   "vertex2_id": 108,
-   "length": 21,
+   "vertex1_id": 36,
+   "vertex2_id": 39,
    "way": "vertical"
  },
  {
    "edge_id": 116,
-   "vertex1_id": 107,
-   "vertex2_id": 114,
-   "length": 116,
-   "way": "horizon"
+   "vertex1_id": 33,
+   "vertex2_id": 38,
+   "way": "vertical"
  },
  {
-   "edge_id": 118,
-   "vertex1_id": 109,
-   "vertex2_id": 108,
-   "length": 0,
-   "way": "up"
+   "edge_id": 117,
+   "vertex1_id": 39,
+   "vertex2_id": 40,
+   "way": "vertical"
  },
  {
    "edge_id": 119,
-   "vertex1_id": 109,
-   "vertex2_id": 110,
-   "length": 23,
-   "way": "vertical"
+   "vertex1_id": 41,
+   "vertex2_id": 42,
+   "way": "horizon"
  },
  {
    "edge_id": 120,
-   "vertex1_id": 110,
-   "vertex2_id": 111,
-   "length": 0,
-   "way": "up"
+   "vertex1_id": 42,
+   "vertex2_id": 44,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 121,
+   "vertex1_id": 44,
+   "vertex2_id": 45,
+   "way": "vertical"
  },
  {
    "edge_id": 122,
-   "vertex1_id": 111,
-   "vertex2_id": 112,
-   "length": 35,
-   "way": "vertical"
- },
- {
-   "edge_id": 123,
-   "vertex1_id": 112,
-   "vertex2_id": 113,
-   "length": 40,
-   "way": "vertical"
+   "vertex1_id": 32,
+   "vertex2_id": 33,
+   "way": "horizon"
  },
  {
    "edge_id": 124,
-   "vertex1_id": 112,
-   "vertex2_id": 118,
-   "length": 47,
+   "vertex1_id": 31,
+   "vertex2_id": 32,
    "way": "horizon"
  },
  {
    "edge_id": 125,
-   "vertex1_id": 113,
-   "vertex2_id": 119,
-   "length": 47,
+   "vertex1_id": 30,
+   "vertex2_id": 31,
    "way": "horizon"
  },
  {
    "edge_id": 126,
-   "vertex1_id": 113,
-   "vertex2_id": 120,
-   "length": 47,
+   "vertex1_id": 29,
+   "vertex2_id": 30,
    "way": "horizon"
  },
  {
    "edge_id": 127,
-   "vertex1_id": 114,
-   "vertex2_id": 115,
-   "length": 35,
-   "way": "vertical"
+   "vertex1_id": 28,
+   "vertex2_id": 29,
+   "way": "horizon"
  },
  {
    "edge_id": 128,
-   "vertex1_id": 115,
-   "vertex2_id": 116,
-   "length": 35,
-   "way": "vertical"
+   "vertex1_id": 27,
+   "vertex2_id": 28,
+   "way": "horizon"
  },
  {
    "edge_id": 129,
-   "vertex1_id": 116,
-   "vertex2_id": 117,
-   "length": 35,
-   "way": "vertical"
+   "vertex1_id": 26,
+   "vertex2_id": 27,
+   "way": "horizon"
  },
  {
    "edge_id": 130,
-   "vertex1_id": 117,
-   "vertex2_id": 118,
-   "length": 35,
-   "way": "vertical"
- },
- {
-   "edge_id": 131,
-   "vertex1_id": 118,
-   "vertex2_id": 119,
-   "length": 40,
-   "way": "vertical"
- },
- {
-   "edge_id": 132,
-   "vertex1_id": 120,
-   "vertex2_id": 121,
-   "length": 47,
-   "way": "horizon"
- },
- {
-   "edge_id": 133,
-   "vertex1_id": 121,
-   "vertex2_id": 122,
-   "length": 47,
-   "way": "horizon"
- },
- {
-   "edge_id": 134,
-   "vertex1_id": 122,
-   "vertex2_id": 123,
-   "length": 47,
-   "way": "horizon"
- },
- {
-   "edge_id": 135,
-   "vertex1_id": 123,
-   "vertex2_id": 124,
-   "length": 47,
-   "way": "horizon"
- },
- {
-   "edge_id": 136,
-   "vertex1_id": 124,
-   "vertex2_id": 125,
-   "length": 47,
+   "vertex1_id": 25,
+   "vertex2_id": 26,
    "way": "horizon"
  },
  {
    "edge_id": 137,
-   "vertex1_id": 125,
-   "vertex2_id": 126,
-   "length": 47,
+   "vertex1_id": 24,
+   "vertex2_id": 25,
    "way": "horizon"
  },
  {
    "edge_id": 138,
-   "vertex1_id": 126,
-   "vertex2_id": 127,
-   "length": 47,
-   "way": "horizon"
- },
- {
-   "edge_id": 139,
-   "vertex1_id": 127,
-   "vertex2_id": 128,
-   "length": 47,
+   "vertex1_id": 23,
+   "vertex2_id": 24,
    "way": "horizon"
  },
  {
    "edge_id": 140,
-   "vertex1_id": 128,
-   "vertex2_id": 129,
-   "length": null,
-   "way": "up"
- },
- {
-   "edge_id": 141,
-   "vertex1_id": 128,
-   "vertex2_id": 19,
-   "length": null,
-   "way": "down"
- },
- {
-   "edge_id": 142,
-   "vertex1_id": 129,
-   "vertex2_id": 130,
-   "length": 68,
+   "vertex1_id": 22,
+   "vertex2_id": 23,
    "way": "horizon"
  },
  {
    "edge_id": 144,
-   "vertex1_id": 131,
-   "vertex2_id": 130,
-   "length": null,
-   "way": "up"
+   "vertex1_id": 21,
+   "vertex2_id": 22,
+   "way": "horizon"
  },
  {
    "edge_id": 145,
-   "vertex1_id": 131,
-   "vertex2_id": 132,
-   "length": 39,
+   "vertex1_id": 20,
+   "vertex2_id": 21,
    "way": "horizon"
- },
- {
-   "edge_id": 146,
-   "vertex1_id": 132,
-   "vertex2_id": 133,
-   "length": 24,
-   "way": "vertical"
  },
  {
    "edge_id": 147,
-   "vertex1_id": 132,
-   "vertex2_id": 141,
-   "length": 32,
-   "way": "vertical"
+   "vertex1_id": 17,
+   "vertex2_id": 20,
+   "way": "horizon"
  },
  {
    "edge_id": 148,
-   "vertex1_id": 133,
-   "vertex2_id": 134,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 15,
+   "vertex2_id": 19,
+   "way": "vertical"
  },
  {
    "edge_id": 149,
-   "vertex1_id": 134,
-   "vertex2_id": 135,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 14,
+   "vertex2_id": 18,
+   "way": "vertical"
  },
  {
    "edge_id": 150,
-   "vertex1_id": 135,
-   "vertex2_id": 136,
-   "length": 39,
+   "vertex1_id": 16,
+   "vertex2_id": 17,
    "way": "horizon"
  },
  {
    "edge_id": 151,
-   "vertex1_id": 136,
-   "vertex2_id": 137,
-   "length": 39,
+   "vertex1_id": 15,
+   "vertex2_id": 16,
    "way": "horizon"
  },
  {
    "edge_id": 152,
-   "vertex1_id": 137,
-   "vertex2_id": 138,
-   "length": 39,
-   "way": "horizon"
- },
- {
-   "edge_id": 153,
-   "vertex1_id": 138,
-   "vertex2_id": 139,
-   "length": 39,
+   "vertex1_id": 14,
+   "vertex2_id": 15,
    "way": "horizon"
  },
  {
    "edge_id": 154,
-   "vertex1_id": 139,
-   "vertex2_id": 140,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 10,
+   "vertex2_id": 14,
+   "way": "vertical"
  },
  {
    "edge_id": 155,
-   "vertex1_id": 140,
-   "vertex2_id": 152,
-   "length": 28,
+   "vertex1_id": 12,
+   "vertex2_id": 16,
    "way": "vertical"
  },
  {
    "edge_id": 156,
-   "vertex1_id": 141,
-   "vertex2_id": 142,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 13,
+   "vertex2_id": 17,
+   "way": "vertical"
  },
  {
    "edge_id": 157,
-   "vertex1_id": 141,
-   "vertex2_id": 149,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 9,
+   "vertex2_id": 13,
+   "way": "vertical"
  },
  {
    "edge_id": 158,
-   "vertex1_id": 142,
-   "vertex2_id": 143,
-   "length": 39,
+   "vertex1_id": 12,
+   "vertex2_id": 13,
    "way": "horizon"
  },
  {
    "edge_id": 159,
-   "vertex1_id": 143,
-   "vertex2_id": 144,
-   "length": 39,
+   "vertex1_id": 8,
+   "vertex2_id": 9,
    "way": "horizon"
  },
  {
    "edge_id": 160,
-   "vertex1_id": 144,
-   "vertex2_id": 145,
-   "length": 39,
+   "vertex1_id": 6,
+   "vertex2_id": 7,
    "way": "horizon"
  },
  {
    "edge_id": 161,
-   "vertex1_id": 145,
-   "vertex2_id": 146,
-   "length": 39,
+   "vertex1_id": 2,
+   "vertex2_id": 3,
    "way": "horizon"
  },
  {
    "edge_id": 162,
-   "vertex1_id": 146,
-   "vertex2_id": 147,
-   "length": 39,
+   "vertex1_id": 3,
+   "vertex2_id": 4,
    "way": "horizon"
  },
  {
    "edge_id": 163,
-   "vertex1_id": 147,
-   "vertex2_id": 148,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 6,
+   "vertex2_id": 10,
+   "way": "vertical"
  },
  {
    "edge_id": 164,
-   "vertex1_id": 148,
-   "vertex2_id": 152,
-   "length": 28,
+   "vertex1_id": 8,
+   "vertex2_id": 12,
    "way": "vertical"
  },
  {
    "edge_id": 165,
-   "vertex1_id": 149,
-   "vertex2_id": 150,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 2,
+   "vertex2_id": 6,
+   "way": "vertical"
  },
  {
    "edge_id": 166,
-   "vertex1_id": 150,
-   "vertex2_id": 151,
-   "length": 39,
-   "way": "horizon"
+   "vertex1_id": 3,
+   "vertex2_id": 7,
+   "way": "vertical"
  },
  {
    "edge_id": 167,
-   "vertex1_id": 152,
-   "vertex2_id": 153,
-   "length": 36,
-   "way": "horizon"
+   "vertex1_id": 4,
+   "vertex2_id": 8,
+   "way": "vertical"
  },
  {
    "edge_id": 168,
-   "vertex1_id": 153,
-   "vertex2_id": 154,
-   "length": 36,
+   "vertex1_id": 7,
+   "vertex2_id": 8,
    "way": "horizon"
  },
  {
    "edge_id": 169,
-   "vertex1_id": 154,
-   "vertex2_id": 155,
-   "length": 53,
+   "vertex1_id": 10,
+   "vertex2_id": 11,
    "way": "horizon"
  },
  {
    "edge_id": 170,
-   "vertex1_id": 154,
-   "vertex2_id": 157,
-   "length": 21,
-   "way": "vertical"
- },
- {
-   "edge_id": 171,
-   "vertex1_id": 155,
-   "vertex2_id": 156,
-   "length": 53,
+   "vertex1_id": 11,
+   "vertex2_id": 12,
    "way": "horizon"
  },
  {
+   "edge_id": 171,
+   "vertex1_id": 7,
+   "vertex2_id": 11,
+   "way": "vertical"
+ },
+ {
    "edge_id": 172,
-   "vertex1_id": 155,
-   "vertex2_id": 158,
-   "length": 21,
+   "vertex1_id": 11,
+   "vertex2_id": 15,
    "way": "vertical"
  },
  {
    "edge_id": 173,
-   "vertex1_id": 156,
-   "vertex2_id": 159,
-   "length": 21,
+   "vertex1_id": 1,
+   "vertex2_id": 4,
    "way": "vertical"
  },
  {
    "edge_id": 174,
-   "vertex1_id": 156,
-   "vertex2_id": 166,
-   "length": 27,
+   "vertex1_id": 5,
+   "vertex2_id": 9,
    "way": "vertical"
  },
  {
    "edge_id": 175,
-   "vertex1_id": 156,
-   "vertex2_id": 167,
-   "length": 71,
+   "vertex1_id": 4,
+   "vertex2_id": 5,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 176,
+   "vertex1_id": 46,
+   "vertex2_id": 47,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 178,
+   "vertex1_id": 47,
+   "vertex2_id": 49,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 179,
+   "vertex1_id": 47,
+   "vertex2_id": 48,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 180,
+   "vertex1_id": 49,
+   "vertex2_id": 50,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 181,
+   "vertex1_id": 95,
+   "vertex2_id": 96,
    "way": "horizon"
  },
  {
    "edge_id": 182,
-   "vertex1_id": 160,
-   "vertex2_id": 163,
-   "length": 16,
+   "vertex1_id": 131,
+   "vertex2_id": 130,
    "way": "vertical"
  },
  {
    "edge_id": 183,
-   "vertex1_id": 161,
-   "vertex2_id": 164,
-   "length": 16,
-   "way": "vertical"
+   "vertex1_id": 137,
+   "vertex2_id": 139,
+   "way": "horizon"
  },
  {
    "edge_id": 184,
-   "vertex1_id": 162,
-   "vertex2_id": 165,
-   "length": 16,
-   "way": "vertical"
+   "vertex1_id": 138,
+   "vertex2_id": 140,
+   "way": "horizon"
  },
  {
    "edge_id": 185,
-   "vertex1_id": 163,
-   "vertex2_id": 164,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 1,
+   "vertex2_id": 516,
+   "way": "up"
  },
  {
    "edge_id": 186,
-   "vertex1_id": 164,
-   "vertex2_id": 165,
-   "length": 53,
-   "way": "horizon"
+   "vertex1_id": 35,
+   "vertex2_id": 46,
+   "way": "up"
  },
  {
    "edge_id": 187,
-   "vertex1_id": 166,
-   "vertex2_id": 168,
-   "length": 71,
-   "way": "horizon"
+   "vertex1_id": 48,
+   "vertex2_id": 537,
+   "way": "up"
  },
  {
    "edge_id": 188,
-   "vertex1_id": 167,
-   "vertex2_id": 168,
-   "length": 27,
-   "way": "vertical"
+   "vertex1_id": 50,
+   "vertex2_id": 64,
+   "way": "down"
  },
  {
    "edge_id": 189,
-   "vertex1_id": 167,
-   "vertex2_id": 187,
-   "length": 29,
-   "way": "vertical"
+   "vertex1_id": 39,
+   "vertex2_id": 41,
+   "way": "down"
  },
  {
    "edge_id": 190,
-   "vertex1_id": 168,
-   "vertex2_id": 169,
-   "length": 40,
-   "way": "horizon"
+   "vertex1_id": 78,
+   "vertex2_id": 567,
+   "way": "up"
  },
  {
    "edge_id": 191,
-   "vertex1_id": 169,
-   "vertex2_id": 170,
-   "length": 40,
-   "way": "horizon"
+   "vertex1_id": 130,
+   "vertex2_id": 583,
+   "way": "up"
  },
  {
    "edge_id": 192,
-   "vertex1_id": 170,
-   "vertex2_id": 171,
-   "length": 40,
-   "way": "horizon"
+   "vertex1_id": 141,
+   "vertex2_id": 133,
+   "way": "vertical"
  },
  {
    "edge_id": 193,
-   "vertex1_id": 171,
-   "vertex2_id": 172,
-   "length": 40,
+   "vertex1_id": 78,
+   "vertex2_id": 79,
    "way": "horizon"
  },
  {
    "edge_id": 194,
-   "vertex1_id": 172,
-   "vertex2_id": 173,
-   "length": 40,
+   "vertex1_id": 79,
+   "vertex2_id": 80,
    "way": "horizon"
  },
  {
-   "edge_id": 195,
-   "vertex1_id": 173,
-   "vertex2_id": 174,
-   "length": 40,
+   "edge_id": 500,
+   "vertex1_id": 501,
+   "vertex2_id": 502,
    "way": "horizon"
  },
  {
-   "edge_id": 196,
-   "vertex1_id": 174,
-   "vertex2_id": 175,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 197,
-   "vertex1_id": 175,
-   "vertex2_id": 176,
-   "length": 28,
+   "edge_id": 501,
+   "vertex1_id": 502,
+   "vertex2_id": 503,
    "way": "vertical"
  },
  {
-   "edge_id": 198,
-   "vertex1_id": 176,
-   "vertex2_id": 177,
-   "length": 28,
-   "way": "horizon"
- },
- {
-   "edge_id": 199,
-   "vertex1_id": 176,
-   "vertex2_id": 178,
-   "length": 28,
+   "edge_id": 502,
+   "vertex1_id": 503,
+   "vertex2_id": 504,
    "way": "vertical"
  },
  {
-   "edge_id": 202,
-   "vertex1_id": 178,
-   "vertex2_id": 179,
-   "length": 24,
-   "way": "horizon"
- },
- {
-   "edge_id": 203,
-   "vertex1_id": 179,
-   "vertex2_id": 180,
-   "length": 27,
+   "edge_id": 503,
+   "vertex1_id": 504,
+   "vertex2_id": 505,
    "way": "vertical"
  },
  {
-   "edge_id": 204,
-   "vertex1_id": 179,
-   "vertex2_id": 182,
-   "length": 56,
-   "way": "horizon"
- },
- {
-   "edge_id": 205,
-   "vertex1_id": 180,
-   "vertex2_id": 181,
-   "length": 27,
-   "way": "horizon"
- },
- {
-   "edge_id": 206,
-   "vertex1_id": 182,
-   "vertex2_id": 183,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 207,
-   "vertex1_id": 183,
-   "vertex2_id": 184,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 208,
-   "vertex1_id": 184,
-   "vertex2_id": 185,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 209,
-   "vertex1_id": 185,
-   "vertex2_id": 186,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 210,
-   "vertex1_id": 186,
-   "vertex2_id": 187,
-   "length": 40,
-   "way": "horizon"
- },
- {
-   "edge_id": 211,
-   "vertex1_id": 188,
-   "vertex2_id": 191,
-   "length": 30,
-   "way": "horizon"
- },
- {
-   "edge_id": 212,
-   "vertex1_id": 189,
-   "vertex2_id": 190,
-   "length": 37,
-   "way": "horizon"
- },
- {
-   "edge_id": 213,
-   "vertex1_id": 189,
-   "vertex2_id": 191,
-   "length": 41,
+   "edge_id": 504,
+   "vertex1_id": 505,
+   "vertex2_id": 506,
    "way": "vertical"
  },
  {
-   "edge_id": 214,
-   "vertex1_id": 190,
-   "vertex2_id": 192,
-   "length": 41,
+   "edge_id": 505,
+   "vertex1_id": 506,
+   "vertex2_id": 507,
    "way": "vertical"
  },
  {
-   "edge_id": 215,
-   "vertex1_id": 191,
-   "vertex2_id": 192,
-   "length": 37,
+   "edge_id": 506,
+   "vertex1_id": 507,
+   "vertex2_id": 508,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 507,
+   "vertex1_id": 508,
+   "vertex2_id": 509,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 508,
+   "vertex1_id": 509,
+   "vertex2_id": 510,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 509,
+   "vertex1_id": 510,
+   "vertex2_id": 511,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 510,
+   "vertex1_id": 511,
+   "vertex2_id": 512,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 511,
+   "vertex1_id": 512,
+   "vertex2_id": 513,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 512,
+   "vertex1_id": 513,
+   "vertex2_id": 514,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 513,
+   "vertex1_id": 513,
+   "vertex2_id": 520,
    "way": "horizon"
  },
  {
-   "edge_id": 216,
-   "vertex1_id": 191,
-   "vertex2_id": 193,
-   "length": 41,
+   "edge_id": 515,
+   "vertex1_id": 515,
+   "vertex2_id": 514,
+   "way": "up"
+ },
+ {
+   "edge_id": 516,
+   "vertex1_id": 515,
+   "vertex2_id": 516,
    "way": "vertical"
  },
  {
-   "edge_id": 217,
-   "vertex1_id": 192,
-   "vertex2_id": 194,
-   "length": 41,
+   "edge_id": 517,
+   "vertex1_id": 516,
+   "vertex2_id": 517,
+   "way": "up"
+ },
+ {
+   "edge_id": 519,
+   "vertex1_id": 517,
+   "vertex2_id": 518,
    "way": "vertical"
  },
  {
-   "edge_id": 218,
-   "vertex1_id": 193,
-   "vertex2_id": 194,
-   "length": 37,
+   "edge_id": 520,
+   "vertex1_id": 518,
+   "vertex2_id": 519,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 521,
+   "vertex1_id": 518,
+   "vertex2_id": 524,
    "way": "horizon"
  },
  {
-   "edge_id": 219,
-   "vertex1_id": 80,
-   "vertex2_id": 188,
-   "length": 0,
+   "edge_id": 522,
+   "vertex1_id": 519,
+   "vertex2_id": 525,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 523,
+   "vertex1_id": 519,
+   "vertex2_id": 526,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 524,
+   "vertex1_id": 520,
+   "vertex2_id": 521,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 525,
+   "vertex1_id": 521,
+   "vertex2_id": 522,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 526,
+   "vertex1_id": 522,
+   "vertex2_id": 523,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 527,
+   "vertex1_id": 523,
+   "vertex2_id": 524,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 528,
+   "vertex1_id": 524,
+   "vertex2_id": 525,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 529,
+   "vertex1_id": 526,
+   "vertex2_id": 527,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 530,
+   "vertex1_id": 527,
+   "vertex2_id": 528,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 531,
+   "vertex1_id": 528,
+   "vertex2_id": 529,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 532,
+   "vertex1_id": 529,
+   "vertex2_id": 530,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 533,
+   "vertex1_id": 530,
+   "vertex2_id": 531,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 534,
+   "vertex1_id": 531,
+   "vertex2_id": 532,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 535,
+   "vertex1_id": 532,
+   "vertex2_id": 533,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 536,
+   "vertex1_id": 533,
+   "vertex2_id": 534,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 537,
+   "vertex1_id": 534,
+   "vertex2_id": 535,
+   "way": "up"
+ },
+ {
+   "edge_id": 538,
+   "vertex1_id": 535,
+   "vertex2_id": 534,
+   "way": "down"
+ },
+ {
+   "edge_id": 539,
+   "vertex1_id": 535,
+   "vertex2_id": 536,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 541,
+   "vertex1_id": 537,
+   "vertex2_id": 536,
+   "way": "up"
+ },
+ {
+   "edge_id": 542,
+   "vertex1_id": 537,
+   "vertex2_id": 594,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 543,
+   "vertex1_id": 538,
+   "vertex2_id": 539,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 544,
+   "vertex1_id": 538,
+   "vertex2_id": 547,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 545,
+   "vertex1_id": 539,
+   "vertex2_id": 540,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 546,
+   "vertex1_id": 540,
+   "vertex2_id": 541,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 547,
+   "vertex1_id": 541,
+   "vertex2_id": 542,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 548,
+   "vertex1_id": 542,
+   "vertex2_id": 543,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 549,
+   "vertex1_id": 543,
+   "vertex2_id": 544,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 550,
+   "vertex1_id": 544,
+   "vertex2_id": 545,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 551,
+   "vertex1_id": 545,
+   "vertex2_id": 546,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 552,
+   "vertex1_id": 546,
+   "vertex2_id": 558,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 553,
+   "vertex1_id": 547,
+   "vertex2_id": 548,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 554,
+   "vertex1_id": 547,
+   "vertex2_id": 555,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 555,
+   "vertex1_id": 548,
+   "vertex2_id": 549,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 556,
+   "vertex1_id": 549,
+   "vertex2_id": 550,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 557,
+   "vertex1_id": 550,
+   "vertex2_id": 551,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 558,
+   "vertex1_id": 551,
+   "vertex2_id": 552,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 559,
+   "vertex1_id": 552,
+   "vertex2_id": 553,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 560,
+   "vertex1_id": 553,
+   "vertex2_id": 554,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 561,
+   "vertex1_id": 554,
+   "vertex2_id": 558,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 562,
+   "vertex1_id": 555,
+   "vertex2_id": 556,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 563,
+   "vertex1_id": 556,
+   "vertex2_id": 557,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 564,
+   "vertex1_id": 558,
+   "vertex2_id": 559,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 565,
+   "vertex1_id": 559,
+   "vertex2_id": 560,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 566,
+   "vertex1_id": 560,
+   "vertex2_id": 561,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 567,
+   "vertex1_id": 560,
+   "vertex2_id": 563,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 568,
+   "vertex1_id": 561,
+   "vertex2_id": 562,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 569,
+   "vertex1_id": 561,
+   "vertex2_id": 564,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 570,
+   "vertex1_id": 562,
+   "vertex2_id": 565,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 571,
+   "vertex1_id": 562,
+   "vertex2_id": 572,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 572,
+   "vertex1_id": 562,
+   "vertex2_id": 573,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 579,
+   "vertex1_id": 566,
+   "vertex2_id": 569,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 580,
+   "vertex1_id": 567,
+   "vertex2_id": 570,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 581,
+   "vertex1_id": 568,
+   "vertex2_id": 571,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 582,
+   "vertex1_id": 569,
+   "vertex2_id": 570,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 583,
+   "vertex1_id": 570,
+   "vertex2_id": 571,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 584,
+   "vertex1_id": 572,
+   "vertex2_id": 574,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 585,
+   "vertex1_id": 573,
+   "vertex2_id": 574,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 586,
+   "vertex1_id": 573,
+   "vertex2_id": 593,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 587,
+   "vertex1_id": 574,
+   "vertex2_id": 575,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 588,
+   "vertex1_id": 575,
+   "vertex2_id": 576,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 589,
+   "vertex1_id": 576,
+   "vertex2_id": 577,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 590,
+   "vertex1_id": 577,
+   "vertex2_id": 578,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 591,
+   "vertex1_id": 578,
+   "vertex2_id": 579,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 592,
+   "vertex1_id": 579,
+   "vertex2_id": 580,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 593,
+   "vertex1_id": 580,
+   "vertex2_id": 581,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 594,
+   "vertex1_id": 581,
+   "vertex2_id": 582,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 595,
+   "vertex1_id": 582,
+   "vertex2_id": 583,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 596,
+   "vertex1_id": 582,
+   "vertex2_id": 584,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 599,
+   "vertex1_id": 584,
+   "vertex2_id": 585,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 600,
+   "vertex1_id": 585,
+   "vertex2_id": 586,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 601,
+   "vertex1_id": 585,
+   "vertex2_id": 588,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 602,
+   "vertex1_id": 586,
+   "vertex2_id": 587,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 603,
+   "vertex1_id": 588,
+   "vertex2_id": 589,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 604,
+   "vertex1_id": 589,
+   "vertex2_id": 590,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 605,
+   "vertex1_id": 590,
+   "vertex2_id": 591,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 606,
+   "vertex1_id": 591,
+   "vertex2_id": 592,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 607,
+   "vertex1_id": 592,
+   "vertex2_id": 593,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 610,
+   "vertex1_id": 594,
+   "vertex2_id": 597,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 611,
+   "vertex1_id": 597,
+   "vertex2_id": 538,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 612,
+   "vertex1_id": 595,
+   "vertex2_id": 539,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 613,
+   "vertex1_id": 596,
+   "vertex2_id": 597,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 614,
+   "vertex1_id": 594,
+   "vertex2_id": 595,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 615,
+   "vertex1_id": 598,
+   "vertex2_id": 582,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 616,
+   "vertex1_id": 546,
+   "vertex2_id": 599,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 617,
+   "vertex1_id": 599,
+   "vertex2_id": 559,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1000,
+   "vertex1_id": 1000,
+   "vertex2_id": 1035,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1001,
+   "vertex1_id": 1002,
+   "vertex2_id": 1000,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1002,
+   "vertex1_id": 1003,
+   "vertex2_id": 1002,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1003,
+   "vertex1_id": 1006,
+   "vertex2_id": 1003,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1004,
+   "vertex1_id": 1034,
+   "vertex2_id": 1033,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1005,
+   "vertex1_id": 1009,
+   "vertex2_id": 1012,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1006,
+   "vertex1_id": 1007,
+   "vertex2_id": 1034,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1007,
+   "vertex1_id": 1001,
+   "vertex2_id": 1002,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1008,
+   "vertex1_id": 1004,
+   "vertex2_id": 1003,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1009,
+   "vertex1_id": 1005,
+   "vertex2_id": 1006,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1010,
+   "vertex1_id": 1011,
+   "vertex2_id": 1031,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1011,
+   "vertex1_id": 1032,
+   "vertex2_id": 1007,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1012,
+   "vertex1_id": 1007,
+   "vertex2_id": 1009,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1013,
+   "vertex1_id": 1009,
+   "vertex2_id": 1008,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1014,
+   "vertex1_id": 1008,
+   "vertex2_id": 1021,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1015,
+   "vertex1_id": 1021,
+   "vertex2_id": 1026,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1016,
+   "vertex1_id": 1026,
+   "vertex2_id": 1025,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1017,
+   "vertex1_id": 1022,
+   "vertex2_id": 1027,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1018,
+   "vertex1_id": 1023,
+   "vertex2_id": 1028,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1019,
+   "vertex1_id": 1025,
+   "vertex2_id": 1022,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1020,
+   "vertex1_id": 1018,
+   "vertex2_id": 1020,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1021,
+   "vertex1_id": 1019,
+   "vertex2_id": 1018,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1022,
+   "vertex1_id": 1020,
+   "vertex2_id": 1021,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1023,
+   "vertex1_id": 1036,
+   "vertex2_id": 1029,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1024,
+   "vertex1_id": 1029,
+   "vertex2_id": 1030,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1025,
+   "vertex1_id": 1014,
+   "vertex2_id": 1036,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1026,
+   "vertex1_id": 1016,
+   "vertex2_id": 1017,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1027,
+   "vertex1_id": 1013,
+   "vertex2_id": 1014,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1028,
+   "vertex1_id": 1015,
+   "vertex2_id": 1016,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1029,
+   "vertex1_id": 1021,
+   "vertex2_id": 1013,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1030,
+   "vertex1_id": 1025,
+   "vertex2_id": 1015,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1031,
+   "vertex1_id": 1027,
+   "vertex2_id": 1023,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1032,
+   "vertex1_id": 1010,
+   "vertex2_id": 1011,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1033,
+   "vertex1_id": 1012,
+   "vertex2_id": 1010,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1034,
+   "vertex1_id": 1035,
+   "vertex2_id": 1033,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1035,
+   "vertex1_id": 1033,
+   "vertex2_id": 1010,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1036,
+   "vertex1_id": 1034,
+   "vertex2_id": 1012,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1037,
+   "vertex1_id": 1011,
+   "vertex2_id": 1036,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1038,
+   "vertex1_id": 1010,
+   "vertex2_id": 1014,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1039,
+   "vertex1_id": 1012,
+   "vertex2_id": 1013,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1040,
+   "vertex1_id": 1013,
+   "vertex2_id": 1015,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1041,
+   "vertex1_id": 1015,
+   "vertex2_id": 1023,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1042,
+   "vertex1_id": 1014,
+   "vertex2_id": 1016,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1043,
+   "vertex1_id": 1036,
+   "vertex2_id": 1017,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 1044,
+   "vertex1_id": 1035,
+   "vertex2_id": 1037,
+   "way": "vertical"
+ },
+ {
+   "edge_id": 1045,
+   "vertex1_id": 1027,
+   "vertex2_id": 1038,
+   "way": "horizon"
+ },
+ {
+   "edge_id": 5000,
+   "vertex1_id": 1030,
+   "vertex2_id": 140,
    "way": "connect"
  },
  {
-   "edge_id": 220,
-   "vertex1_id": 61,
-   "vertex2_id": 188,
-   "length": 0,
-   "way": "connect"
- },
- {
-   "edge_id": 223,
-   "vertex1_id": 1,
-   "vertex2_id": 5,
-   "length": 0,
+   "edge_id": 5001,
+   "vertex1_id": 1030,
+   "vertex2_id": 139,
    "way": "connect"
  }
 ]
