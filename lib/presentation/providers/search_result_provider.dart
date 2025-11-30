@@ -62,6 +62,8 @@ class SearchResultNotifier extends StateNotifier<SearchResultState> {
       buildingPrefix = '5';
     } else if (state.selectedBuilding == '하이테크관') {
       buildingPrefix = '8';
+    } else if (state.selectedBuilding == '60주년기념관') {
+      buildingPrefix = '3';
     } else {
       buildingPrefix = '5';
     }

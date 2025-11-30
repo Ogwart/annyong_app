@@ -260,7 +260,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                 onTap: () {
                                   final newBuilding =
                                       state.selectedBuilding == '5호관'
-                                      ? '하이테크관'
+                                      ? '60주년기념관'
                                       : '5호관';
                                   notifier.setSelectedBuilding(newBuilding);
                                   notifier.setSelectedFloor('1F');
@@ -360,7 +360,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           itemCount: results.length,
                           itemBuilder: (context, index) {
                             final poi = results[index];
-                            final buildingList = ["5서", "5남", "하"];
+                            final buildingList = ["5호관", "60주년", "하이테크"];
                             return SearchResultItem(
                               title: poi.name,
                               categoryId: poi.categoryId,

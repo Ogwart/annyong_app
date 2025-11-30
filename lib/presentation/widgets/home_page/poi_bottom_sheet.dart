@@ -5,26 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:annyong/presentation/util/map_util_funtions.dart';
+
 class PoiBottomSheet extends ConsumerWidget {
   final Poi poi;
 
   const PoiBottomSheet({super.key, required this.poi});
 
-  String _getBuildingName(int buildingId) {
-    switch (buildingId) {
-      case 1:
-      case 2:
-        return '5호관';
-      case 3:
-        return '하이테크관';
-      default:
-        return '5호관';
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final buildingName = _getBuildingName(poi.buildingId);
+    final buildingName = MapUtilFunctions.getBuildingName(poi.buildingId);
 
     return Container(
       padding: const EdgeInsets.all(30),
