@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -75,85 +76,59 @@ class _MeasurePageState extends State<MeasurePage> {
 
   // 지도 초기 위치 설정 (출발지와 목적지 중점이 화면 중앙에 오도록)
   void _initializeMapPosition(Size containerSize) {
-    if (_isMapInitialized || _route == null) return;
+    if (_isMapInitialized ||
+        _route == null ||
+        containerSize.width <= 0 ||
+        containerSize.height <= 0)
+      return;
 
-    // 1. 출발지와 목적지 좌표 (원본 이미지 기준)
-    // 2x 이미지 기준 좌표라고 가정 (POI 좌표계와 일치하는지 확인 필요)
-    // MapUtilFunctions.getImagePath에서 '2x'를 호출하므로 2x 이미지 사용
-    // HomePage 로직에 따르면 1x 이미지 기준으로 POI 좌표가 설정되어 있을 수 있음
-    // 하지만 path_result_page에서는 0.19 곱해서 쓰고 있음.
-    // 여기서는 InteractiveViewer 내부의 Image가 BoxFit.contain으로 들어감.
+    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final floorString = '${_route!.startPoi.floor}F';
 
-    // 2x 이미지 원본 크기
+    // 기존에 '2x'로 되어 있어서 좌표 계산 배율이 틀어졌던 것이기 때문에
+    // 마커 로직과 동일하게 '1x' 기준으로 원본 크기를 가져오도록 변경
     final originalSize = MapUtilFunctions.getImageOriginalSize(
-      _getBuildingName(_route!.startPoi.buildingId),
-      '${_route!.startPoi.floor}F',
-      '2x',
+      buildingName,
+      floorString,
+      '1x',
     );
 
-    // 2x 이미지 기준으로 POI 좌표 변환 (필요하다면)
-    // 여기서는 POI 좌표(xCoord, yCoord)가 어떤 해상도 기준인지 불명확하지만
-    // HomePage에서는 1x 기준으로 계산하여 사용.
-    // path_result_page에서는 xCoord * 0.19로 사용.
+    if (originalSize.width == 0 || originalSize.height == 0) return;
 
-    // 안전하게 가기 위해:
-    // InteractiveViewer의 child인 Image가 BoxFit.contain으로 렌더링될 때의 실제 크기 구하기
     final displayedSize = MapUtilFunctions.getDisplayedImageSize(
       containerSize,
       originalSize,
     );
 
-    // 축소 비율 (원본 대비 화면 표시 비율)
-    final scaleX = displayedSize.width / originalSize.width;
-    final scaleY = displayedSize.height / originalSize.height;
+    // 2. 스케일 계산 (BoxFit.contain이므로 가로/세로 비율 중 맞는 것 하나만 쓰면 됨)
+    // displayedSize는 이미 비율이 맞춰진 크기이므로 width 기준으로 계산
+    final scale = displayedSize.width / originalSize.width;
 
-    // 화면상에서의 출발/도착 좌표 (Zoom 1.0일 때)
-    final p1 = Offset(
-      _route!.startPoi.xCoord * scaleX,
-      _route!.startPoi.yCoord * scaleY,
+    // 3. 여백(Offset) 계산
+    final offsetX = (containerSize.width - displayedSize.width) / 2;
+    final offsetY = (containerSize.height - displayedSize.height) / 2;
+
+    // 4. 출발지 좌표를 화면상 절대 좌표로 변환
+    final startX = _route!.startPoi.xCoord * scale + offsetX;
+    final startY = _route!.startPoi.yCoord * scale + offsetY;
+
+    // 5. 목적지 좌표 계산 (줌 레벨 결정을 위해)
+    final endX = _route!.destinationPoi.xCoord * scale + offsetX;
+    final endY = _route!.destinationPoi.yCoord * scale + offsetY;
+
+    // 6. 줌 레벨 계산 (화면 너비의 40% 정도가 되도록)
+    final dist = math.sqrt(
+      math.pow(startX - endX, 2) + math.pow(startY - endY, 2),
     );
-    final p2 = Offset(
-      _route!.destinationPoi.xCoord * scaleX,
-      _route!.destinationPoi.yCoord * scaleY,
-    );
+    double targetScale = (dist > 0) ? (containerSize.width * 0.4 / dist) : 3.0;
+    targetScale = targetScale.clamp(2.5, 6.0);
 
-    // 중점 (여기서는 시작 지점을 중심으로 설정)
-    // 기존: final center = Offset((p1.dx + p2.dx) / 2, (p1.dy + p2.dy) / 2);
-    final center = p1; // 시작 지점을 중심으로 설정
+    // 7. 중앙 정렬을 위한 이동량(Translation) 계산
+    // 화면 중앙 - (출발지 * 줌배율)
+    final tx = (containerSize.width / 2) - (startX * targetScale);
+    final ty = (containerSize.height / 2) - (startY * targetScale);
 
-    // 두 점 사이 거리
-    double dist = (p1 - p2).distance;
-
-    // 목표 스케일: 두 점 사이 거리가 화면 너비의 약 60% 정도 되도록
-    // (너무 꽉 차면 마커가 잘릴 수 있으므로 여유 있게)
-    // 만약 거리가 너무 가깝다면 최대 스케일 제한
-    double targetScale = containerSize.width * 0.6 / dist;
-
-    // 최소/최대 스케일 보정
-    if (targetScale < 2.0) targetScale = 2.0;
-    if (targetScale > 5.0) targetScale = 5.0;
-
-    // 중앙 정렬을 위한 이동(Translation)
-    // 화면 중앙 - (중점 * 스케일)
-    // 오프셋 보정값 추가 (사용자가 직접 조정 가능)
-    const double offsetXCorrection = -50.0; // x축 보정 (왼쪽으로 이동)
-    const double offsetYCorrection = -50.0; // y축 보정 (위로 이동)
-
-    // tx, ty 계산 시 스케일을 고려하여 center에 곱하는 것이 맞음.
-    // (containerWidth/2) - (centerX * scale) => 중심점을 화면 중앙으로.
-    // 여기에 보정값을 더함.
-    // 하지만 InteractiveViewer에 alignment: Alignment.topLeft를 주었으므로,
-    // (0,0) 기준으로 이동해야 함.
-
-    final tx =
-        containerSize.width / 2 - center.dx * targetScale + offsetXCorrection;
-    final ty =
-        containerSize.height / 2 - center.dy * targetScale + offsetYCorrection;
-
-    // 만약 tx, ty가 양수라면(화면 중앙보다 왼쪽/위쪽 여백이 생김), 0으로 제한하여 빈 공간 최소화 (선택 사항)
-    // 하지만 여기서는 특정 지점을 중앙에 놓는 것이 목표이므로 제한하지 않음.
-
-    // 매트릭스 설정 (scale -> translate 순서 주의)
+    // 8. 매트릭스 적용
     final matrix = Matrix4.identity()
       ..translate(tx, ty)
       ..scale(targetScale);
@@ -161,10 +136,7 @@ class _MeasurePageState extends State<MeasurePage> {
     _transformationController.value = matrix;
     _isMapInitialized = true;
 
-    // 상태 업데이트하여 마커 위치 재계산 유도
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
-    });
+    if (mounted) setState(() {});
   }
 
   Future<void> _requestPermissionAndInit() async {
