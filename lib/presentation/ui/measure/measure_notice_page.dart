@@ -1,7 +1,6 @@
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
-import 'package:annyong/presentation/static.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +13,6 @@ class MeasureNoticePage extends StatefulWidget {
 }
 
 class _MeasureNoticePageState extends State<MeasureNoticePage> {
-  final StaticExample example = StaticExample();
   final PoiRepository _poiRepository = PoiRepository();
   final BeaconScanService _beaconScanService = BeaconScanService();
 
@@ -48,6 +46,22 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 24), // 아이콘과 타이틀 사이 간격
+              // --------------------메인 타이틀 (추가됨)--------------------
+              const Text(
+                "보폭 측정 가이드",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
+                ),
+              ),
+              const Text(
+                "정확한 길 안내를 위해 3가지만 기억해주세요!",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+
               // -----------------------보폭 측정 안내사항 텍스트-----------------------
               Flexible(
                 flex: 4,
@@ -59,20 +73,25 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start, // 왼쪽 정렬
                       children: [
-                        Text(
-                          example.exampleText,
-                          style: TextStyle(fontSize: 16, color: AppColors.text),
+                        _buildNoticeItem(
+                          number: "1",
+                          title: "현재 위치 선택",
+                          content:
+                              "다음 화면에서 '현재 위치'를 선택해주세요. 선택한 출발지와 직선 방향에 위치한 적절한 목적지를 탐색합니다.",
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          example.exampleText,
-                          style: TextStyle(fontSize: 16, color: AppColors.text),
+                        _buildNoticeItem(
+                          number: "2",
+                          title: "평소 걸음걸이 유지",
+                          content: "일부러 크게 걷지 말고, 평소처럼 편안하게 걸어주세요.",
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          example.exampleText,
-                          style: TextStyle(fontSize: 16, color: AppColors.text),
+                        _buildNoticeItem(
+                          number: "3",
+                          title: "휴대폰 파지 방법",
+                          content: "정확한 센서 인식을 위해 휴대폰을 손에 들고 이동해주세요.",
                         ),
                       ],
                     ),
@@ -212,4 +231,49 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
       ),
     );
   }
+}
+
+Widget _buildNoticeItem({
+  required String number,
+  required String title,
+  required String content,
+}) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "$number.",
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              content,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[700], // AppColors.grey400 보다 조금 진한 색 추천
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 }
