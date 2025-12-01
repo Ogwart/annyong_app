@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 
 class GpsService {
   StreamSubscription<Position>? _positionStreamSubscription;
-  
+
   // 현재 GPS 위치 및 정확도 캐싱
   Position? _lastPosition;
   Position? get lastPosition => _lastPosition;
 
   // GPS 정확도가 이 값(미터)보다 낮아야(좋아야) 실외로 인정
-  static const double _requiredAccuracyMeters = 20.0;
+  static const double _requiredAccuracyMeters = 50.0;
 
   /// GPS 스트림 시작 (핸드오버 '준비' 단계에서 호출)
   Future<void> startLocationStream() async {
@@ -32,19 +32,22 @@ class GpsService {
     if (_positionStreamSubscription != null) return;
 
     debugPrint('[GPS] Warm-up Started (Handover Detected)');
-    
+
     // 배터리 절약을 위해 평소엔 끄고, 필요할 때만 High Accuracy로 켭니다.
     final locationSettings = const LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 5, // 5m 이동 시 갱신
     );
 
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: locationSettings
-    ).listen((Position position) {
-      _lastPosition = position;
-      debugPrint('[GPS] Updated: ${position.latitude}, ${position.longitude} (Acc: ${position.accuracy})');
-    });
+    _positionStreamSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: locationSettings,
+        ).listen((Position position) {
+          _lastPosition = position;
+          debugPrint(
+            '[GPS] Updated: ${position.latitude}, ${position.longitude} (Acc: ${position.accuracy})',
+          );
+        });
   }
 
   /// GPS 스트림 종료

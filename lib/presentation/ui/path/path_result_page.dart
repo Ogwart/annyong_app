@@ -13,6 +13,7 @@ import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/path/outdoor_page.dart';
 import 'package:annyong/domain/usecases/path_finder.dart';
+import 'package:go_router/go_router.dart';
 
 class PathResultPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -207,12 +208,12 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
               return Stack(
                 children: [
                   _buildIndoorMapView(context, state, totalCost, mapImagePath),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    right: 12,
-                    child: CountSteps(state: state), // [Fix] state 이름 수정
-                  ),
+                  // Positioned(
+                  //   top: 12,
+                  //   left: 12,
+                  //   right: 12,
+                  //   child: CountSteps(state: state), // [Fix] state 이름 수정
+                  // ),
                 ],
               );
             },
@@ -233,103 +234,131 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
   ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CostCard(
-            departure: widget.start.name,
-            destination: widget.end.name,
-            totalCost: totalCost,
-            waypoints: widget.waypoints,
-          ),
-          const SizedBox(height: 20),
-          Container(
-            height: 300,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: AppColors.grey200,
-              borderRadius: BorderRadius.circular(20),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CostCard(
+              departure: widget.start.name,
+              destination: widget.end.name,
+              totalCost: totalCost,
+              waypoints: widget.waypoints,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.asset(mapImagePath, fit: BoxFit.contain),
-                  ),
-
-                  if (state.floor == widget.start.floor)
-                    Builder(
-                      builder: (context) {
-                        final scaledX = state.x * 0.19;
-                        final scaledY = state.y * 0.19;
-                        final adjustedX = scaledX - 10;
-                        final adjustedY = scaledY + 50;
-
-                        return Positioned(
-                          left: adjustedX - 12,
-                          top: adjustedY - 24,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.person_pin_circle,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
-                          ),
-                        );
-                      },
+            const SizedBox(height: 20),
+            Container(
+              height: 300,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: AppColors.grey200,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(mapImagePath, fit: BoxFit.contain),
                     ),
 
-                  if (widget.end.floor == widget.start.floor)
-                    Builder(
-                      builder: (context) {
-                        final scaledX = widget.end.xCoord * 0.19;
-                        final scaledY = widget.end.yCoord * 0.19;
-                        final adjustedX = scaledX - 10;
-                        final adjustedY = scaledY + 50;
+                    if (state.floor == widget.start.floor)
+                      Builder(
+                        builder: (context) {
+                          final scaledX = state.x * 0.19;
+                          final scaledY = state.y * 0.19;
+                          final adjustedX = scaledX - 10;
+                          final adjustedY = scaledY + 50;
 
-                        return Positioned(
-                          left: adjustedX - 12,
-                          top: adjustedY - 24,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                          return Positioned(
+                            left: adjustedX - 12,
+                            top: adjustedY - 24,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.person_pin_circle,
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.location_on,
-                              color: Colors.red,
-                              size: 24,
+                          );
+                        },
+                      ),
+
+                    if (widget.end.floor == widget.start.floor)
+                      Builder(
+                        builder: (context) {
+                          final scaledX = widget.end.xCoord * 0.19;
+                          final scaledY = widget.end.yCoord * 0.19;
+                          final adjustedX = scaledX - 10;
+                          final adjustedY = scaledY + 50;
+
+                          return Positioned(
+                            left: adjustedX - 12,
+                            top: adjustedY - 24,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 24,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                if (context.mounted) {
+                  context.go('/home');
+                }
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                width: 200,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: AppColors.primary,
+                ),
+                child: Text(
+                  '길안내 종료하기',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

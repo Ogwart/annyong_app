@@ -49,19 +49,27 @@ class _SplashPageState extends State<SplashPage> {
   Future<void> _checkPermissionAndStartScan() async {
     // 필요한 권한 목록 정의
     List<Permission> permissions = [];
+
+    // [수정] 플랫폼별 필수 권한 추가 (활동 감지 포함)
     if (Platform.isAndroid) {
       // Android 12 이상 (API 31+)
       permissions.add(Permission.bluetoothScan);
       permissions.add(Permission.bluetoothConnect);
-      permissions.add(Permission.location); // BLE 스캔에 위치 권한 필요할 수 있음
+      permissions.add(Permission.location);
+      permissions.add(Permission.activityRecognition); // [추가] 걸음 수 측정 권한
     } else if (Platform.isIOS) {
       permissions.add(Permission.bluetooth);
       permissions.add(Permission.location);
+      permissions.add(
+        Permission.activityRecognition,
+      ); // [추가] iOS Motion Usage 권한
+      // 참고: iOS의 경우 Info.plist에 NSMotionUsageDescription이 있어야 함
     }
 
     // 권한 상태 확인
     bool allGranted = true;
     for (var permission in permissions) {
+      // 활동 감지 권한 등은 OS 버전에 따라 status가 다를 수 있으므로 체크
       if (await permission.status.isDenied) {
         allGranted = false;
         break;
@@ -83,6 +91,7 @@ class _SplashPageState extends State<SplashPage> {
 
     bool isAllGranted = true;
     statuses.forEach((key, value) {
+      // activityRecognition은 일부 기기에서 제한적일 수 있으나 필수 권한으로 처리
       if (!value.isGranted) {
         isAllGranted = false;
       }
@@ -106,7 +115,7 @@ class _SplashPageState extends State<SplashPage> {
       builder: (context) => AlertDialog(
         title: const Text("권한 필요"),
         content: const Text(
-          "비콘 스캔을 위해 블루투스 및 위치 권한이 필수입니다.\n권한을 허용하지 않으면 앱을 사용할 수 없습니다.",
+          "비콘 스캔 및 걸음 수 측정을 위해\n블루투스, 위치, 신체 활동 감지 권한이 필수입니다.\n권한을 허용하지 않으면 앱을 사용할 수 없습니다.",
         ),
         actions: [
           TextButton(
