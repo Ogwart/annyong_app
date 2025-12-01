@@ -137,7 +137,7 @@ class PoiRepository {
     }
   }
 
-  //비콘 데이터 로드 및 캐싱 
+  //비콘 데이터 로드 및 캐싱
   Future<List<Beacon>> fetchBeacons() async {
     if (_cachedBeacons != null) return _cachedBeacons!;
     try {
@@ -216,7 +216,9 @@ class PoiRepository {
   Future<Beacon?> findBeaconByMac(String macId) async {
     final beacons = await fetchBeacons();
     try {
-      return beacons.firstWhere((b) => b.macId.toLowerCase() == macId.toLowerCase());
+      return beacons.firstWhere(
+        (b) => b.macId.toLowerCase() == macId.toLowerCase(),
+      );
     } catch (e) {
       return null;
     }
@@ -293,7 +295,4 @@ class PoiRepository {
 
     return sqrt(pow(px - closestX, 2) + pow(py - closestY, 2));
   }
-}
-
-
 }

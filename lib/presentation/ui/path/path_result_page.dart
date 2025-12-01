@@ -1,14 +1,18 @@
 //import 'dart:convert';
 import 'dart:math' as math;
+import 'package:annyong/domain/entity/graph_models.dart';
+import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/path_finder_provider.dart';
 import 'package:annyong/domain/usecases/path_description_builder.dart';
-import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
+import 'package:annyong/presentation/viewmodels/navigation_state.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
+import 'package:annyong/presentation/ui/path/outdoor_page.dart';
+import 'package:annyong/domain/usecases/path_finder.dart';
 
 class PathResultPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -27,22 +31,21 @@ class PathResultPage extends ConsumerStatefulWidget {
 }
 
 class _PathResultPageState extends ConsumerState<PathResultPage> {
-  // [현위치 추정용] 중복 실행 방지 플래그
-  bool _isNavigationStarted = false;
-  
+  bool _isNavigationStarted = false; // [현위치 추정용] 중복 실행 방지 플래그
+  PathResult? _cachedPathResult; // 계산된 경로 결과를 저장할 변수
+
   @override
   void initState() {
     super.initState();
     // 페이지 진입 시 길 안내 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final navigationNotifier = ref.read(navigationViewModelProvider.notifier);
+      ref.read(navigationViewModelProvider.notifier);
     });
   }
 
   @override
   void dispose() {
     // 페이지 종료 시 길 안내 종료 및 초기화
-    // 위젯 빌드 중 상태 변경을 방지하기 위해 다음 프레임에 실행
     Future.microtask(() {
       try {
         final navigationNotifier = ref.read(
@@ -80,7 +83,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
         _showIndoorConfirmationDialog(context);
       }
     });
-    
+
     final pathfinderAsync = ref.watch(pathFinderProvider);
 
     return Scaffold(
@@ -107,23 +110,25 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           ),
         ),
         data: (pathFinder) {
-          // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
-          // 유효하지 않은 것은 -1로 대체
           final List<int> visitOrder = [
             widget.start.vertexId ?? -1,
             ...widget.waypoints.map((e) => e.vertexId ?? -1),
             widget.end.vertexId ?? -1,
           ];
 
-          // 유효하지 않은 정점이 있을 때 예외 처리
           if (visitOrder.contains(-1)) {
             return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
           }
 
-          // 경유지 포함하여 경로 탐색
-          final result = pathFinder.findPathWithWaypoints(visitOrder);
+          if (_cachedPathResult == null) {
+            // 처음 한 번만 실행됨
+            _cachedPathResult = pathFinder.findPathWithWaypoints(visitOrder);
+            debugPrint("✅ [PathResultPage] 경로 계산 완료 (1회)");
+          }
 
-          // 경로 못 찾았을 때 UI 처리
+          // 저장된 결과 사용
+          final result = _cachedPathResult;
+
           if (result == null || result.path.isEmpty) {
             return Center(
               child: Padding(
@@ -158,9 +163,18 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           if (!_isNavigationStarted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                ref.read(navigationViewModelProvider.notifier)
-                   .startNavigation(result.path);
-                
+                // [Fix] result.path(List<int>)를 List<Vertex>로 변환하여 전달
+                final List<Vertex> pathVertices = [];
+                for (var id in result.path) {
+                  if (pathFinder.vertices.containsKey(id)) {
+                    pathVertices.add(pathFinder.vertices[id]!);
+                  }
+                }
+
+                ref
+                    .read(navigationViewModelProvider.notifier)
+                    .startNavigation(pathVertices);
+
                 setState(() {
                   _isNavigationStarted = true;
                 });
@@ -168,80 +182,52 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             });
           }
 
-          // JSON 결과 생성 및 출력
           final jsonResult = PathDescriptionBuilder().build(
             pathFinder,
             result.path,
             result.totalCost,
           );
 
-          //const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-          //final String prettyJson = encoder.convert(jsonResult);
-          //debugPrint('----------- [Path Result JSON Start] -----------');
-          //debugPrint(prettyJson);
-          //debugPrint('----------- [Path Result JSON End] -----------');
-
-          // 유효한 경로 찾았을 때 UI 렌더링
           final double totalCost = jsonResult['total_cost'] ?? 0.0;
-
-          // 사용자의 현재 건물과 층 정보 가져오기
-          final navigationState = ref.watch(navigationViewModelProvider);
           final buildingName = _getBuildingName(widget.start.buildingId);
           final floorString = '${widget.start.floor}F';
 
-          // 지도 이미지 경로 (2x 해상도 사용)
           final mapImagePath = MapUtilFunctions.getImagePath(
             buildingName,
             floorString,
             '2x',
           );
 
-          // 네비게이션 상태에 따라 화면 분기 (실외 vs 실내)
           return navigationState.when(
             data: (state) {
-              // A. 실외 상태면 OutdoorPage 반환
               if (state.handoverStatus == HandoverStatus.outdoor) {
                 return const OutdoorPage();
               }
-              
-              // B. 실내 상태 (지도 + 걸음수 패널)
+
               return Stack(
                 children: [
-                  // 1. 스크롤 가능한 지도 영역
-                  _buildIndoorMapView(
-                    context, 
-                    state, 
-                    totalCost, 
-                    mapImagePath
-                  ),
-
-                  // 2. 상단 고정 걸음수 패널 (여기 추가!)
-                  // 주의: CountSteps는 AsyncValue를 받도록 설계되어 있으니, 
-                  // 그냥 AsyncValue.data(state)로 다시 감싸서 넘기거나,
-                  // CountSteps를 수정해서 state만 받게 하는 게 깔끔함.
-        
-                  // 여기서는 간단하게 CountSteps를 수정하는 걸 추천합니다.
+                  _buildIndoorMapView(context, state, totalCost, mapImagePath),
                   Positioned(
                     top: 12,
                     left: 12,
                     right: 12,
-                    child: CountSteps(state: state), // AsyncValue가 아닌 state 직접 전달
-                  ),              
-                ]
+                    child: CountSteps(state: state), // [Fix] state 이름 수정
+                  ),
+                ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text("Navigation State Error")),
+            error: (_, __) =>
+                const Center(child: Text("Navigation State Error")),
           );
         },
       ),
     );
   }
 
-  // [이동 & 수정] 기존 build 메서드 내의 거대한 위젯 트리를 여기로 옮김
   Widget _buildIndoorMapView(
     BuildContext context,
-    NavigationState state, // AsyncValue가 아닌 실제 데이터 받음
+    NavigationState state,
     double totalCost,
     String mapImagePath,
   ) {
@@ -250,7 +236,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ------------------출발, 경유, 도착, 총 비용------------------
           CostCard(
             departure: widget.start.name,
             destination: widget.end.name,
@@ -258,7 +243,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             waypoints: widget.waypoints,
           ),
           const SizedBox(height: 20),
-          // ------------------지도 및 사용자 위치------------------
           Container(
             height: 300,
             margin: const EdgeInsets.only(bottom: 16),
@@ -270,14 +254,13 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
               borderRadius: BorderRadius.circular(20),
               child: Stack(
                 children: [
-                  // 지도 이미지
                   Positioned.fill(
                     child: Image.asset(mapImagePath, fit: BoxFit.contain),
                   ),
-                  
-                  // [수정] 사용자 위치 마커 (state를 바로 사용)
+
                   if (state.floor == widget.start.floor)
-                    Builder(builder: (context) {
+                    Builder(
+                      builder: (context) {
                         final scaledX = state.x * 0.19;
                         final scaledY = state.y * 0.19;
                         final adjustedX = scaledX - 10;
@@ -306,10 +289,9 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                             ),
                           ),
                         );
-                    }),
-                  
-                  
-                  // 도착지 마커
+                      },
+                    ),
+
                   if (widget.end.floor == widget.start.floor)
                     Builder(
                       builder: (context) {
@@ -350,13 +332,12 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
         ],
       ),
     );
-  } 
+  }
 
-  // 실내 진입 확인 다이얼로그
   void _showIndoorConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // 바깥 터치로 닫기 금지
+      barrierDismissible: false,
       builder: (ctx) {
         return AlertDialog(
           title: const Text("실내 진입 확인"),
@@ -364,15 +345,19 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(ctx); // 다이얼로그 닫기
-                ref.read(navigationViewModelProvider.notifier).rejectIndoorEntry();
+                Navigator.pop(ctx);
+                ref
+                    .read(navigationViewModelProvider.notifier)
+                    .rejectIndoorEntry();
               },
               child: const Text("아니요"),
             ),
             FilledButton(
               onPressed: () {
-                Navigator.pop(ctx); // 다이얼로그 닫기
-                ref.read(navigationViewModelProvider.notifier).confirmIndoorEntry();
+                Navigator.pop(ctx);
+                ref
+                    .read(navigationViewModelProvider.notifier)
+                    .confirmIndoorEntry();
               },
               child: const Text("네, 들어왔습니다"),
             ),
@@ -383,97 +368,84 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
   }
 }
 
-
-
 class CountSteps extends StatelessWidget {
-  const CountSteps({super.key, required this.navigationState});
+  // [Fix] 파라미터 이름을 state로 변경하고 타입 수정 (AsyncValue 제거)
+  const CountSteps({super.key, required this.state});
 
-  final AsyncValue<NavigationState> navigationState;
+  final NavigationState state;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: 12,
-      left: 12,
-      right: 12,
-      child: navigationState.when(
-        data: (state) {
-          final headingDegrees = (state.heading * 180 / math.pi) % 360;
-          String directionText;
-          if (headingDegrees >= 337.5 || headingDegrees < 22.5) {
-            directionText = '북';
-          } else if (headingDegrees >= 22.5 && headingDegrees < 67.5) {
-            directionText = '북동';
-          } else if (headingDegrees >= 67.5 && headingDegrees < 112.5) {
-            directionText = '동';
-          } else if (headingDegrees >= 112.5 && headingDegrees < 157.5) {
-            directionText = '남동';
-          } else if (headingDegrees >= 157.5 && headingDegrees < 202.5) {
-            directionText = '남';
-          } else if (headingDegrees >= 202.5 && headingDegrees < 247.5) {
-            directionText = '남서';
-          } else if (headingDegrees >= 247.5 && headingDegrees < 292.5) {
-            directionText = '서';
-          } else {
-            directionText = '북서';
-          }
+    // state는 이미 데이터이므로 when 등을 쓸 필요 없이 바로 사용
+    final headingDegrees = (state.heading * 180 / math.pi) % 360;
+    String directionText;
+    if (headingDegrees >= 337.5 || headingDegrees < 22.5) {
+      directionText = '북';
+    } else if (headingDegrees >= 22.5 && headingDegrees < 67.5) {
+      directionText = '북동';
+    } else if (headingDegrees >= 67.5 && headingDegrees < 112.5) {
+      directionText = '동';
+    } else if (headingDegrees >= 112.5 && headingDegrees < 157.5) {
+      directionText = '남동';
+    } else if (headingDegrees >= 157.5 && headingDegrees < 202.5) {
+      directionText = '남';
+    } else if (headingDegrees >= 202.5 && headingDegrees < 247.5) {
+      directionText = '남서';
+    } else if (headingDegrees >= 247.5 && headingDegrees < 292.5) {
+      directionText = '서';
+    } else {
+      directionText = '북서';
+    }
 
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.directions_walk,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${state.stepCount}걸음',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 걸음수
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.directions_walk,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${state.stepCount}걸음',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                  ],
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Icon(Icons.navigation, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '$directionText (${headingDegrees.toStringAsFixed(0)}°)',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
                 ),
-                // 방향
-                Row(
-                  children: [
-                    Icon(Icons.navigation, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$directionText (${headingDegrees.toStringAsFixed(0)}°)',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
