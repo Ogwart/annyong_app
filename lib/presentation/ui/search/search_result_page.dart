@@ -384,6 +384,32 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                 state.selectedFloor,
                               );
 
+                          // 만약 선택된 건물+층에 있는 POI가 하나도 없다면 대체 문구를 리스트 공간에 표시
+                          if (displayList.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 48,
+                                    color: AppColors.grey400,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    "해당 층에는 시설물이 없습니다.",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.grey400,
+                                      fontFamily: 'Pretendard',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
                           // 현재 포커싱된 마커가 있는지 확인
                           final bool isAnyFocused = state.focusedPoiId != null;
 
