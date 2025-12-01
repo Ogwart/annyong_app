@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:annyong/presentation/util/search_result_page_util.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:annyong/presentation/widgets/search_page/map_marker_widget.dart';
 
 class SearchResultPage extends ConsumerStatefulWidget {
   final String? searchKeyword;
@@ -136,6 +138,19 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                             state.selectedFloor,
                           );
 
+                      // 선택된 POI는 가장 앞에 위치하도록 리스트 맨 뒤로 옮김
+                      if (state.focusedPoiId != null) {
+                        final focusedIndex = filteredPois.indexWhere(
+                          (p) => p.id == state.focusedPoiId,
+                        );
+                        if (focusedIndex != -1) {
+                          final focusedPoi = filteredPois.removeAt(
+                            focusedIndex,
+                          );
+                          filteredPois.add(focusedPoi);
+                        }
+                      }
+
                       return LayoutBuilder(
                         builder: (context, constraints) {
                           final containerSize = Size(
@@ -176,32 +191,34 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                             children: [
                               // 지도 (InteractiveViewer)
                               Positioned.fill(
-                                child: InteractiveViewer(
-                                  transformationController:
-                                      _transformationController,
-                                  boundaryMargin: EdgeInsets.all(20),
-                                  panEnabled: true,
-                                  scaleEnabled: false,
-                                  minScale: 3.0,
-                                  maxScale: 3.0,
-                                  child: Image.asset(
-                                    imagePath,
-                                    fit: BoxFit.contain,
+                                child: GestureDetector(
+                                  // 빈 곳 터치 시 포커스 해제
+                                  onTap: () => notifier.setFocusedPoi(null),
+                                  child: InteractiveViewer(
+                                    transformationController:
+                                        _transformationController,
+                                    boundaryMargin: EdgeInsets.all(20),
+                                    panEnabled: true,
+                                    scaleEnabled: false,
+                                    minScale: 3.0,
+                                    maxScale: 3.0,
+                                    child: Image.asset(
+                                      imagePath,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 ),
                               ),
-                              // POI 위치 마커
+
+                              // POI 마커 렌더링
                               ...filteredPois.map((poi) {
                                 final transformation =
                                     _transformationController.value;
-
-                                // POI 좌표 -> 1배 줌 상태의 화면 좌표
                                 final initialScreenX =
                                     poi.xCoord * scaleX + imageOffsetX;
                                 final initialScreenY =
                                     poi.yCoord * scaleY + imageOffsetY;
 
-                                // InteractiveViewer 변환 적용
                                 final transformedX =
                                     transformation.storage[0] * initialScreenX +
                                     transformation.storage[4] * initialScreenY +
@@ -211,31 +228,33 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                     transformation.storage[5] * initialScreenY +
                                     transformation.storage[13];
 
-                                // 마커 위치 오프셋 적용
-                                final markerOffset =
-                                    MapUtilFunctions.markerOffset;
+                                final isSelected =
+                                    (poi.id == state.focusedPoiId);
+
+                                // 마커 크기에 따른 위치 보정 (마커의 하단 중앙이 좌표에 오도록)
+                                // MapMarkerWidget의 아이콘 크기는 35.0, 선택시 1.1배
+                                // 텍스트가 아래에 붙으므로, 아이콘 부분의 중앙을 맞춰야 함
+                                const double iconSize = 35.0;
 
                                 return Positioned(
-                                  left: transformedX - 12 + markerOffset.dx,
-                                  top: transformedY - 24 + markerOffset.dy,
-                                  child: IgnorePointer(
-                                    child: Container(
-                                      color: AppColors.secondary,
-                                      child: Row(
-                                        children: [
-                                          // TODO: 마커 UI 변경
-                                          Icon(
-                                            Icons.location_on,
-                                            color: AppColors.primary,
-                                            size: 24,
-                                          ),
-                                          Text("${poi.id}"),
-                                        ],
-                                      ),
+                                  // 아이콘의 정중앙이 좌표에 오게 하려면: - iconSize/2
+                                  // 아이콘의 하단 끝이 좌표에 오게 하려면: iconSize (높이) 고려
+                                  // 기존 코드 보정치(-12, -24)를 고려하여 미세 조정 필요
+                                  left: transformedX - (iconSize / 2),
+                                  top: transformedY - (iconSize / 2),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // 마커 클릭 시에도 포커스 및 리스트 스크롤 연동 가능
+                                      notifier.setFocusedPoi(poi.id);
+                                    },
+                                    child: MapMarkerWidget(
+                                      isSelected: isSelected,
+                                      poiName: poi.name,
                                     ),
                                   ),
                                 );
                               }),
+
                               // 뒤로가기 버튼
                               SafeArea(
                                 child: Padding(
@@ -343,6 +362,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+
                     // 검색 결과 리스트
                     Expanded(
                       child: FutureBuilder<List<Poi>>(
@@ -355,22 +375,56 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                             );
                           }
                           final results = snapshot.data ?? [];
+
+                          // 현재 선택된 건물/층에 맞는 POI만 보여주도록 필터링
+                          final displayList =
+                              SearchResultPageUtil.getFilteredPoisForCurrentBuildingAndFloor(
+                                results,
+                                state.selectedBuilding,
+                                state.selectedFloor,
+                              );
+
+                          // 현재 포커싱된 마커가 있는지 확인
+                          final bool isAnyFocused = state.focusedPoiId != null;
+
                           return ListView.builder(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 16,
                             ),
-                            itemCount: results.length,
+
+                            itemCount: displayList.length,
                             itemBuilder: (context, index) {
-                              final poi = results[index];
-                              return SearchResultItem(
-                                title: poi.name,
-                                categoryId: poi.categoryId,
-                                description: poi.description ?? '설명 없음',
-                                // 디버깅용
-                                // description:
-                                //     "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description}",
-                                onSelect: () => _handlePoiSelect(poi),
+                              final poi = displayList[index];
+
+                              // 현재 포커스된 마커가 있다면 포커싱된 마커만 그대로, 나머지는 흐리게 처리하기 위한 변수 정의
+                              final bool isMeFocused =
+                                  poi.id == state.focusedPoiId;
+                              final double opacity =
+                                  (isAnyFocused && !isMeFocused) ? 0.5 : 1.0;
+
+                              return AnimatedOpacity(
+                                duration: const Duration(milliseconds: 50),
+                                opacity: opacity,
+
+                                child: InkWell(
+                                  onTap: () {
+                                    // 리스트 아이템 클릭 시 포커스 적용
+                                    // 이미 선택된 것을 다시 누르면 해제할 수도 있음
+                                    if (isMeFocused) {
+                                      notifier.setFocusedPoi(null); // 선택 해제
+                                    } else {
+                                      notifier.setFocusedPoi(poi.id); // 선택
+                                    }
+                                  },
+                                  child: SearchResultItem(
+                                    title: poi.name,
+                                    categoryId: poi.categoryId,
+                                    description: poi.description ?? '설명 없음',
+                                    // '선택' 버튼 클릭 시 작업
+                                    onSelect: () => _handlePoiSelect(poi),
+                                  ),
+                                ),
                               );
                             },
                           );
