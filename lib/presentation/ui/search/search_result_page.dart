@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:annyong/presentation/util/search_result_page_util.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:annyong/presentation/widgets/search_page/map_marker_widget.dart';
 
 class SearchResultPage extends ConsumerStatefulWidget {
@@ -32,12 +31,20 @@ class SearchResultPage extends ConsumerStatefulWidget {
   ConsumerState<SearchResultPage> createState() => _SearchResultPageState();
 }
 
-class _SearchResultPageState extends ConsumerState<SearchResultPage> {
+class _SearchResultPageState extends ConsumerState<SearchResultPage>
+    with SingleTickerProviderStateMixin {
   final PoiRepository _repository = PoiRepository();
   final TransformationController _transformationController =
       TransformationController();
+  final ScrollController _scrollController = ScrollController(); // 리스트 스크롤 제어기
+  Size? _mapContainerSize; // 지도 배율
+
   late final Future<List<Poi>> _poiFuture;
   late final String _displayKeyword;
+
+  // 부드러운 지도 이동을 위한 애니메이션 컨트롤러
+  late AnimationController _mapAnimationController;
+  Animation<Matrix4>? _mapAnimation;
 
   @override
   void dispose() {
@@ -48,12 +55,25 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
   @override
   void initState() {
     super.initState();
-    // 초기 줌 레벨 3.0 설정
-    _transformationController.value = Matrix4.identity()
-      ..scaleByDouble(1, 1, 1, 1);
+    // 초기 줌 레벨 1.0 설정
+    _transformationController.value = Matrix4.identity();
+
+    // 마커가 지도에 붙어 따라가도록 함
     _transformationController.addListener(() {
       setState(() {});
     });
+
+    // 지도 애니메이션 컨트롤러 초기화
+    _mapAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _mapAnimationController.addListener(() {
+      if (_mapAnimation != null) {
+        _transformationController.value = _mapAnimation!.value;
+      }
+    });
+
     _displayKeyword = widget.searchKeyword ?? '';
     debugPrint('선택된 키워드: $_displayKeyword');
     _poiFuture = SearchResultPageUtil.loadPois(
@@ -62,15 +82,93 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     );
     debugPrint('카테고리 ID: ${widget.categoryId}');
 
-    // 페이지 진입 시 searchKeyword 설정 및 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final notifier = ref.read(searchResultProvider.notifier);
-      notifier.setSearchKeyword(_displayKeyword);
-      // 초기값 설정 (5호관 1층) - 다음 프레임에 실행
+      ref.read(searchResultProvider.notifier).setSearchKeyword(_displayKeyword);
       Future.microtask(() {
-        notifier.reset();
+        ref.read(searchResultProvider.notifier).reset();
       });
     });
+  }
+
+  // [지도를 특정 POI 위치로 이동시키는 함수
+  void _animateMapToPoi(Poi poi) {
+    if (_mapContainerSize == null) return;
+
+    // 1. 현재 선택된 건물/층의 이미지 원본 크기 가져오기
+    final state = ref.read(searchResultProvider);
+    final baseOriginalSize = MapUtilFunctions.getImageOriginalSize(
+      state.selectedBuilding,
+      state.selectedFloor,
+      '1x',
+    );
+
+    // 2. 현재 화면에 표시된 이미지 크기 및 비율 계산
+    final displayedImageSize = MapUtilFunctions.getDisplayedImageSize(
+      _mapContainerSize!,
+      baseOriginalSize,
+    );
+
+    final scaleX = displayedImageSize.width / baseOriginalSize.width;
+    final scaleY = displayedImageSize.height / baseOriginalSize.height;
+
+    // 3. 목표 줌 레벨 설정 (기본 3.0배로 확대)
+    // 이미 확대되어 있다면 현재 배율 유지, 너무 작으면 4.0으로 확대
+    final currentScale = _transformationController.value.getMaxScaleOnAxis();
+    final targetZoom = currentScale < 2.0 ? 4.0 : currentScale;
+
+    // 4. 화면 중앙으로 오게 하기 위한 이동 거리(Translation) 계산
+    // 공식: 화면중앙 - (POI좌표 * 기본배율 * 줌배율)
+    // POI 좌표에는 이미지가 화면 중앙에 정렬되면서 생긴 오프셋(imageOffsetX/Y)도 고려해야 함
+    final imageOffsetX =
+        (_mapContainerSize!.width - displayedImageSize.width) / 2;
+    final imageOffsetY =
+        (_mapContainerSize!.height - displayedImageSize.height) / 2;
+
+    final targetX =
+        -((poi.xCoord * scaleX + imageOffsetX) * targetZoom -
+            _mapContainerSize!.width / 2);
+    final targetY =
+        -((poi.yCoord * scaleY + imageOffsetY) * targetZoom -
+            _mapContainerSize!.height / 2);
+
+    // 5. 이동 행렬 생성
+    final targetMatrix = Matrix4.identity()
+      ..translate(targetX, targetY)
+      ..scale(targetZoom);
+
+    // 6. 애니메이션 실행
+    _mapAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: targetMatrix,
+        ).animate(
+          CurvedAnimation(
+            parent: _mapAnimationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+
+    _mapAnimationController.forward(from: 0);
+  }
+
+  // 리스트를 특정 인덱스로 스크롤하는 함수
+  void _scrollToIndex(int index) {
+    if (!_scrollController.hasClients) return;
+
+    // 리스트 아이템 높이 추정 (약 80px + 여백)
+    // 정확도가 필요하면 itemScrollController 패키지 사용 권장한다고는 하는데, 추정치 계산으로도 잘 돌아가서 냅둠
+    const double estimatedItemHeight = 100.0;
+    final double targetOffset = index * estimatedItemHeight;
+
+    // 스크롤 가능한 최대 범위 안에서만 이동
+    final double maxScroll = _scrollController.position.maxScrollExtent;
+    final double offset = targetOffset > maxScroll ? maxScroll : targetOffset;
+
+    _scrollController.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   // POI 선택 처리 핸들러
@@ -106,6 +204,32 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
     // 화면을 벗어날 때 초기화
     ref.listen(searchResultProvider, (previous, next) {});
     final imagePath = notifier.getImagePath();
+
+    // 포커스된 POI가 변경되면 지도와 리스트를 이동시킴
+    ref.listen<SearchResultState>(searchResultProvider, (previous, next) async {
+      if (next.focusedPoiId != null &&
+          next.focusedPoiId != previous?.focusedPoiId) {
+        final allPois = await _poiFuture;
+        final filteredList =
+            SearchResultPageUtil.getFilteredPoisForCurrentBuildingAndFloor(
+              allPois,
+              next.selectedBuilding,
+              next.selectedFloor,
+            );
+
+        // 해당 POI 찾기
+        final index = filteredList.indexWhere((p) => p.id == next.focusedPoiId);
+        if (index != -1) {
+          final targetPoi = filteredList[index];
+
+          // 지도 이동 (중심 맞추기)
+          _animateMapToPoi(targetPoi);
+
+          // 리스트 스크롤 이동
+          _scrollToIndex(index);
+        }
+      }
+    });
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) async {
@@ -153,7 +277,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
 
                       return LayoutBuilder(
                         builder: (context, constraints) {
-                          final containerSize = Size(
+                          _mapContainerSize = Size(
                             constraints.maxWidth,
                             constraints.maxHeight,
                           );
@@ -169,16 +293,17 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           // 표시 크기 계산
                           final displayedImageSize =
                               MapUtilFunctions.getDisplayedImageSize(
-                                containerSize,
+                                _mapContainerSize!,
                                 baseOriginalSize,
                               );
 
                           // 오프셋 및 스케일
                           final imageOffsetX =
-                              (containerSize.width - displayedImageSize.width) /
+                              (_mapContainerSize!.width -
+                                  displayedImageSize.width) /
                               2;
                           final imageOffsetY =
-                              (containerSize.height -
+                              (_mapContainerSize!.height -
                                   displayedImageSize.height) /
                               2;
                           final scaleX =
@@ -414,6 +539,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                           final bool isAnyFocused = state.focusedPoiId != null;
 
                           return ListView.builder(
+                            controller: _scrollController,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 16,
