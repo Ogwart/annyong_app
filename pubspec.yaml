@@ -80,9 +80,23 @@ flutter:
     - assets/poi/poi.json
     - assets/poi/beacon.json
 
-      # - assets/graph/
+    # - assets/graph/
     - assets/graph/edge.json
     - assets/graph/vertex.json
+
+    # - assets/icons/search_tile
+    - assets/icons/search_tile/poi_1_icon.png
+    - assets/icons/search_tile/poi_2_icon.png
+    - assets/icons/search_tile/poi_3_icon.png
+    - assets/icons/search_tile/poi_4_icon.png
+    - assets/icons/search_tile/poi_5_icon.png
+    - assets/icons/search_tile/poi_6_icon.png
+    - assets/icons/search_tile/poi_7_icon.png
+    - assets/icons/search_tile/poi_8_icon.png
+    - assets/icons/search_tile/poi_9_icon.png
+    - assets/icons/search_tile/poi_10_icon.png
+    - assets/icons/search_tile/poi_11_icon.png
+    - assets/icons/search_tile/poi_12_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
