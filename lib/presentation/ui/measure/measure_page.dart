@@ -218,7 +218,7 @@ class _MeasurePageState extends State<MeasurePage> {
     try {
       debugPrint("----------- [_findRoute Start] ----------- ");
       debugPrint(
-        "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
+        "경로 탐색 시작: Start POI = ${_targetPoi?.name} (ID: ${_targetPoi?.id})",
       );
 
       // widget.startPoi 대신 _targetPoi 사용
@@ -370,7 +370,7 @@ class _MeasurePageState extends State<MeasurePage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
+                            "선택하신 '${_targetPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
