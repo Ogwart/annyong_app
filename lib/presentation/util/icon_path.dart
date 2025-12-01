@@ -7,7 +7,7 @@ String iconPath(Poi poi) {
     case 2:
       return "rounge";
     case 3:
-      return "study_room";
+      return "help";
     case 4:
       {
         if (poi.name == "엘리베이터") {
@@ -35,7 +35,13 @@ String iconPath(Poi poi) {
     case 10:
       return "outlet";
     case 11:
-      return "fire_extinguisher";
+      {
+        if (poi.name == "소화전") {
+          return "fire_hydrant";
+        } else {
+          return "fire_extinguisher";
+        }
+      }
     case 12:
       return "trash_can";
     default:
