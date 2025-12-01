@@ -96,23 +96,52 @@ class _SearchPageState extends State<SearchPage> {
               // 위치 기반 인접 POI 추천 섹션
               if (widget.nearPois != null && widget.nearPois!.isNotEmpty) ...[
                 const Text('위치 기반 인접 POI 추천', style: _sectionTitleStyle),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 ...widget.nearPois!.asMap().entries.map((entry) {
                   final poi = entry.value;
-                  final buildingList = ["5서", "5남", "하"];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey200, // 연회색 배경색으로 리스트끼리 명확히 분리
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description ?? ""}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppColors.text,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                poi.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              // 설명부분은 단어 단위로 줄바꿈
+                              Wrap(
+                                spacing: 3.0, // 단어 사이의 간격
+                                runSpacing: 2.0, // 줄 사이의 간격
+                                children: (poi.description ?? '설명 없음')
+                                    .split(' ') // 공백을 기준으로 단어 쪼개기
+                                    .map((word) {
+                                      return Text(
+                                        word,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.text,
+                                        ),
+                                      );
+                                    })
+                                    .toList(),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -121,17 +150,28 @@ class _SearchPageState extends State<SearchPage> {
                             if (widget.returnResult) {
                               context.pop(poi);
                             } else {
-                              context.pop(); // 일반 검색 모드에서는 다른 동작 수행
+                              context.pop();
                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10, // 터치 영역 확보를 위해 세로 패딩 약간 증가
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Text('선택'),
+                          child: const Text(
+                            '선택',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -146,7 +186,7 @@ class _SearchPageState extends State<SearchPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  childAspectRatio: 1,
+                  childAspectRatio: 0.95,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),
@@ -172,7 +212,7 @@ class _SearchPageState extends State<SearchPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  childAspectRatio: 1,
+                  childAspectRatio: 0.95,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                 ),

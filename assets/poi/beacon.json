@@ -2,151 +2,151 @@
  {
    "beacon_id": 1,
    "mac_id": "45c66af23862",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1624,
    "y_coord": 673,
-   "type": "door",
-   "near_poi_ids": [1]
+   "near_poi_ids": [36,53,31],
+   "type": "door"
  },
  {
    "beacon_id": 2,
    "mac_id": "45c66af24360",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1627,
    "y_coord": 747,
-   "type": "stairs",
-   "near_poi_ids": [2]
+   "near_poi_ids": [38,31,53],
+   "type": "stairs"
  },
  {
    "beacon_id": 3,
    "mac_id": "45c66af20127",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1196,
    "y_coord": 725,
-   "type": "stairs",
-   "near_poi_ids": [3]
+   "near_poi_ids": [42,47,25],
+   "type": "stairs"
  },
  {
    "beacon_id": 4,
    "mac_id": "45c66af24382",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1232,
    "y_coord": 787,
-   "type": "door",
-   "near_poi_ids": [4]
+   "near_poi_ids": [44,42,43],
+   "type": "door"
  },
  {
    "beacon_id": 5,
    "mac_id": "45c66af19912",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1160,
    "y_coord": 787,
-   "type": "door",
-   "near_poi_ids": [5]
+   "near_poi_ids": [45,47,46],
+   "type": "door"
  },
  {
    "beacon_id": 6,
    "mac_id": "45c66af24365",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 761,
    "y_coord": 748,
-   "type": "stairs",
-   "near_poi_ids": [6]
+   "near_poi_ids": [16,14,52],
+   "type": "stairs"
  },
  {
    "beacon_id": 7,
    "mac_id": "45c66af24354",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 631,
    "y_coord": 737,
-   "type": "stairs",
-   "near_poi_ids": [7]
+   "near_poi_ids": [14,16,12],
+   "type": "stairs"
  },
  {
    "beacon_id": 8,
    "mac_id": "45c66af23864",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 603,
    "y_coord": 791,
-   "type": "door",
-   "near_poi_ids": [8]
+   "near_poi_ids": [14,12,60],
+   "type": "door"
  },
  {
    "beacon_id": 9,
    "mac_id": "45c66af23878",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 208,
    "y_coord": 675,
-   "type": "stairs",
-   "near_poi_ids": [9]
+   "near_poi_ids": [7,8,9],
+   "type": "stairs"
  },
  {
    "beacon_id": 10,
    "mac_id": "45c66af24363",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 2,
    "x_coord": 754,
    "y_coord": 753,
-   "type": "stairs",
-   "near_poi_ids": [10]
+   "near_poi_ids": [126,127,128],
+   "type": "stairs"
  },
  {
    "beacon_id": 11,
    "mac_id": "45c66af24371",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 2,
    "x_coord": 1623,
    "y_coord": 753,
-   "type": "stairs",
-   "near_poi_ids": [11]
+   "near_poi_ids": [139,171,137],
+   "type": "stairs"
  },
  {
    "beacon_id": 12,
    "mac_id": "45c66af23913",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1624,
    "y_coord": 640,
-   "type": "stairs",
-   "near_poi_ids": [12]
+   "near_poi_ids": [36,53,31],
+   "type": "door"
  },
  {
    "beacon_id": 13,
    "mac_id": "45c66af24359",
-   "building_id": 2,
+   "building_id": 1,
    "floor": 1,
    "x_coord": 1572,
    "y_coord": 737,
-   "type": "walkway",
-   "near_poi_ids": [13]
+   "near_poi_ids": [31,53,38],
+   "type": "walkway"
  },
  {
    "beacon_id": 14,
    "mac_id": "45c66af24317",
-   "building_id": 3,
+   "building_id": 2,
    "floor": 1,
    "x_coord": 1065,
    "y_coord": 576,
-   "type": "stairs",
-   "near_poi_ids": [14]
+   "near_poi_ids": [253,263,252],
+   "type": "stairs"
  },
  {
    "beacon_id": 15,
    "mac_id": "45c66af24357",
-   "building_id": 3,
+   "building_id": 2,
    "floor": 1,
    "x_coord": 1247,
    "y_coord": 599,
-   "type": "door",
-   "near_poi_ids": [15]
+   "near_poi_ids": [242,243,251],
+   "type": "door"
  }
 ]
