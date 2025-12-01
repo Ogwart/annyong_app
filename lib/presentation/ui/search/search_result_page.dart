@@ -199,9 +199,9 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
                                         _transformationController,
                                     boundaryMargin: EdgeInsets.all(20),
                                     panEnabled: true,
-                                    scaleEnabled: false,
-                                    minScale: 3.0,
-                                    maxScale: 3.0,
+                                    scaleEnabled: true, // 지도 확대 축소 활성화
+                                    minScale: 1.0,
+                                    maxScale: 6.0,
                                     child: Image.asset(
                                       imagePath,
                                       fit: BoxFit.contain,
