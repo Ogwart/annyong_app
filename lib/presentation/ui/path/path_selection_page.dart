@@ -22,12 +22,32 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
   String? _destination;
   final List<String?> _waypoints = [];
 
+  // 지도 조작을 위한 컨트롤러
+  final TransformationController _transformationController =
+      TransformationController();
+
+  // 지도가 초기화되었는지 여부
+  bool _isMapInitialized = false;
+  // 현재 보고 있는 목적지 ID (변경 감지용)
+  int? _currentDestinationId;
+
   @override
   void initState() {
     super.initState();
+    // 마커 위치 동기화를 위해 리스너 등록
+    _transformationController.addListener(() {
+      setState(() {});
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFromState();
     });
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
   }
 
   void _updateFromState() {
@@ -42,6 +62,12 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
       if (pathState.waypoint2 != null) {
         _waypoints.add(pathState.waypoint2!.name);
       }
+
+      // 목적지가 변경되었다면 지도 초기화 플래그 리셋
+      if (pathState.destination?.id != _currentDestinationId) {
+        _currentDestinationId = pathState.destination?.id;
+        _isMapInitialized = false;
+      }
     });
   }
 
@@ -53,8 +79,6 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
 
     if (result == null) return;
 
-    // Provider의 Notifier만 호출하고, 실제 상태 변경은
-    // ref.listen이 감지하여 _updateFromState()를 실행하고 화면을 갱신하도록 함
     final notifier = ref.read(pathSelectionProvider.notifier);
 
     switch (searchMode) {
@@ -72,15 +96,13 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     }
   }
 
-  // 경유지 추가 로직
   void _addWaypoint() {
-    if (_waypoints.length >= 2) return; // 경유지는 최대 2개까지만 허용
+    if (_waypoints.length >= 2) return;
     setState(() {
       _waypoints.add(null);
     });
   }
 
-  // 경유지 삭제 로직
   void _removeWaypoint(int index) {
     setState(() {
       _waypoints.removeAt(index);
@@ -92,23 +114,12 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     });
   }
 
-  // 스왑 로직은 오류가 많아서 보류
-  // void _swapDepartureDestination() {
-  //   // final temp = _departureController.text;
-  //   // _departureController.text = _destinationController.text;
-  //   // _destinationController.text = temp;
-  //   // setState(() {});
-  //   ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
-  // }
-
-  // 길찾기 버튼 클릭 시 실행 로직
   void _handleFindPath() {
     debugPrint('----------- [_handleFindPath Start] -----------');
     final pathState = ref.read(pathSelectionProvider);
     final Poi? startPoi = pathState.departure;
     final Poi? endPoi = pathState.destination;
 
-    // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
     final List<Poi> activeWaypoints = [];
     if (pathState.waypoint1 != null) {
       activeWaypoints.add(pathState.waypoint1!);
@@ -133,13 +144,63 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
       _departure = null;
       _destination = null;
       _waypoints.clear();
+      _isMapInitialized = false; // 리셋 시 지도 위치도 초기화 가능하도록
     });
     ref.read(pathSelectionProvider.notifier).resetPath();
   }
 
   bool get _isFindPathEnabled {
-    // 목적지와 출발지가 모두 설정되어야 경로 검색 버튼이 활성화되도록
     return _departure != null && _destination != null;
+  }
+
+  // 지도를 목적지 중심으로 이동시키는 함수
+  void _centerMapOnPoi(Poi poi, Size containerSize) {
+    if (containerSize.width == 0 || containerSize.height == 0) return;
+
+    final buildingName = MapUtilFunctions.getBuildingName(poi.buildingId);
+    final floorString = "${poi.floor}F";
+
+    // 1. 원본 이미지 크기 (1x)
+    final baseOriginalSize = MapUtilFunctions.getImageOriginalSize(
+      buildingName,
+      floorString,
+      '1x',
+    );
+
+    // 2. 컨테이너에 맞춘 화면상 이미지 크기
+    final displayedImageSize = MapUtilFunctions.getDisplayedImageSize(
+      containerSize,
+      baseOriginalSize,
+    );
+
+    // 3. 스케일 비율 (원본 -> 화면 표시 크기)
+    final scaleX = displayedImageSize.width / baseOriginalSize.width;
+    final scaleY = displayedImageSize.height / baseOriginalSize.height;
+
+    // 4. 이미지가 화면 중앙에 정렬되면서 생긴 여백(Offset) 계산
+    final imageOffsetX = (containerSize.width - displayedImageSize.width) / 2;
+    final imageOffsetY = (containerSize.height - displayedImageSize.height) / 2;
+
+    // 5. 목표 줌 레벨 (기본 3배 확대)
+    const double targetZoom = 3.0;
+
+    // 6. 화면 중앙으로 오게 하기 위한 이동 거리(Translation) 계산
+    // POI의 화면상 좌표: (poi.x * scaleX) + imageOffsetX
+    // 중앙 정렬 공식: (ContainerCenter) - (TargetPoint * Zoom)
+    final targetX =
+        (containerSize.width / 2) -
+        ((poi.xCoord * scaleX + imageOffsetX) * targetZoom);
+    final targetY =
+        (containerSize.height / 2) -
+        ((poi.yCoord * scaleY + imageOffsetY) * targetZoom);
+
+    // 7. Matrix 적용
+    final targetMatrix = Matrix4.identity()
+      ..translate(targetX, targetY)
+      ..scale(targetZoom);
+
+    _transformationController.value = targetMatrix;
+    _isMapInitialized = true;
   }
 
   @override
@@ -204,24 +265,29 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                 child: ResetButton(onTap: _reset),
               ),
             ),
-            // 지도 미리보기
+            // 지도 미리보기 영역
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(24),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.grey200, // 배경색
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Builder(
                   builder: (context) {
                     final pathState = ref.watch(pathSelectionProvider);
-                    final startPoi = pathState.departure;
                     final endPoi = pathState.destination;
 
-                    if (startPoi == null || endPoi == null) {
+                    // 목적지가 없을 경우 안내 문구 표시
+                    if (endPoi == null) {
                       return const Center(
                         child: Text(
-                          '가고 싶은 장소를 선택해주세요',
+                          '목적지를 선택하면\n지도에서 위치를 확인할 수 있어요',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
                             color: AppColors.grey400,
@@ -231,119 +297,158 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                       );
                     }
 
-                    // 목적지 기준 지도 표시
+                    // 목적지 기준 지도 정보
                     final buildingName = MapUtilFunctions.getBuildingName(
                       endPoi.buildingId,
                     );
                     final floorString = "${endPoi.floor}F";
+                    // 미리보기라서 확대 많이 안할거라 1배율 이미지 사용
                     final imagePath = MapUtilFunctions.getImagePath(
                       buildingName,
                       floorString,
-                      '1x', // 미리보기이므로 1x 사용
+                      '1x',
                     );
 
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final containerSize = Size(
-                          constraints.maxWidth,
-                          constraints.maxHeight,
-                        );
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final containerSize = Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
 
-                        const double zoomLevel = 3.0; // 확대 배율
+                          // 초기화가 안 되었을 때만 위치 중앙 정렬 실행
+                          if (!_isMapInitialized) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _centerMapOnPoi(endPoi, containerSize);
+                            });
+                          }
 
-                        // 1. 원본 이미지 크기 (1x)
-                        final baseOriginalSize =
-                            MapUtilFunctions.getImageOriginalSize(
-                              buildingName,
-                              floorString,
-                              '1x',
-                            );
+                          // 1. 원본 이미지 크기
+                          final baseOriginalSize =
+                              MapUtilFunctions.getImageOriginalSize(
+                                buildingName,
+                                floorString,
+                                '1x',
+                              );
 
-                        // 2. 컨테이너에 맞춘 기본 스케일 (BoxFit.contain 기준)
-                        final fitSize = MapUtilFunctions.getDisplayedImageSize(
-                          containerSize,
-                          baseOriginalSize,
-                        );
-                        final baseScale =
-                            fitSize.width /
-                            baseOriginalSize.width; // Aspect ratio maintained
+                          // 2. 화면 표시 크기
+                          final displayedImageSize =
+                              MapUtilFunctions.getDisplayedImageSize(
+                                containerSize,
+                                baseOriginalSize,
+                              );
 
-                        // 3. 최종 스케일 (확대 적용)
-                        final currentScale = baseScale * zoomLevel;
+                          // 3. 스케일 및 오프셋 계산 (마커 위치 계산용)
+                          final scaleX =
+                              displayedImageSize.width / baseOriginalSize.width;
+                          final scaleY =
+                              displayedImageSize.height /
+                              baseOriginalSize.height;
+                          final imageOffsetX =
+                              (containerSize.width - displayedImageSize.width) /
+                              2;
+                          final imageOffsetY =
+                              (containerSize.height -
+                                  displayedImageSize.height) /
+                              2;
 
-                        // 4. 확대된 이미지의 실제 크기
-                        final scaledImageWidth =
-                            baseOriginalSize.width * currentScale;
-                        final scaledImageHeight =
-                            baseOriginalSize.height * currentScale;
-
-                        // 5. 이미지 내에서의 마커 위치 (Zoomed coordinates)
-                        final markerImageX = endPoi.xCoord * currentScale;
-                        final markerImageY = endPoi.yCoord * currentScale;
-
-                        // 6. 이미지를 이동시켜 마커를 중앙에 위치시키기 위한 오프셋
-                        final imageLeft =
-                            (containerSize.width / 2) - markerImageX;
-                        final imageTop =
-                            (containerSize.height / 2) - markerImageY;
-
-                        final markerOffset = MapUtilFunctions.markerOffset;
-
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Stack(
+                          return Stack(
                             children: [
-                              // 지도 이미지
-                              Positioned(
-                                left: imageLeft,
-                                top: imageTop,
-                                width: scaledImageWidth,
-                                height: scaledImageHeight,
-                                child: Image.asset(imagePath, fit: BoxFit.fill),
-                              ),
-                              // 목적지 마커 (컨테이너 중앙에 고정)
-                              Positioned(
-                                left:
-                                    containerSize.width / 2 -
-                                    12 +
-                                    markerOffset.dx,
-                                top:
-                                    containerSize.height / 2 -
-                                    24 +
-                                    markerOffset.dy,
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on,
-                                      color: AppColors.primary,
-                                      size: 24,
-                                    ),
-                                    // 선택사항: POI 이름 표시
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.8),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        endPoi.name,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.text,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                              // InteractiveViewer: 지도 확대/축소/이동
+                              Positioned.fill(
+                                child: InteractiveViewer(
+                                  transformationController:
+                                      _transformationController,
+                                  boundaryMargin: const EdgeInsets.all(500),
+                                  minScale: 1.0,
+                                  maxScale: 6.0,
+                                  panEnabled: true,
+                                  scaleEnabled: true,
+                                  child: Image.asset(
+                                    imagePath,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
                               ),
+                              // 마커 표시
+                              Builder(
+                                builder: (context) {
+                                  // 현재 변환 행렬
+                                  final transformation =
+                                      _transformationController.value;
+
+                                  // 초기 화면상 좌표 (줌 1배 기준)
+                                  final initialScreenX =
+                                      endPoi.xCoord * scaleX + imageOffsetX;
+                                  final initialScreenY =
+                                      endPoi.yCoord * scaleY + imageOffsetY;
+
+                                  // 변환 행렬 적용 (확대/이동 후 좌표)
+                                  final transformedX =
+                                      transformation.storage[0] *
+                                          initialScreenX +
+                                      transformation.storage[4] *
+                                          initialScreenY +
+                                      transformation.storage[12];
+                                  final transformedY =
+                                      transformation.storage[1] *
+                                          initialScreenX +
+                                      transformation.storage[5] *
+                                          initialScreenY +
+                                      transformation.storage[13];
+
+                                  // 마커 위치 보정
+                                  final markerOffset =
+                                      MapUtilFunctions.markerOffset;
+
+                                  return Positioned(
+                                    left: transformedX - 12 + markerOffset.dx,
+                                    top: transformedY - 24 + markerOffset.dy,
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          color: Colors.red,
+                                          size: 24,
+                                        ),
+                                        // POI 이름 라벨 (선택 사항)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.8,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.grey300,
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            endPoi.name,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.text,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
