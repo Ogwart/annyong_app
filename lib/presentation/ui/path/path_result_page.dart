@@ -74,182 +74,147 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('길찾기 결과')),
-      body: pathfinderAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('오류 발생', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(
-                  err.toString(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
+      body: SafeArea(
+        child: pathfinderAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('오류 발생', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  Text(
+                    err.toString(),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        data: (pathFinder) {
-          // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
-          // 유효하지 않은 것은 -1로 대체
-          final List<int> visitOrder = [
-            widget.start.vertexId ?? -1,
-            ...widget.waypoints.map((e) => e.vertexId ?? -1),
-            widget.end.vertexId ?? -1,
-          ];
+          data: (pathFinder) {
+            // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
+            // 유효하지 않은 것은 -1로 대체
+            final List<int> visitOrder = [
+              widget.start.vertexId ?? -1,
+              ...widget.waypoints.map((e) => e.vertexId ?? -1),
+              widget.end.vertexId ?? -1,
+            ];
 
-          // 유효하지 않은 정점이 있을 때 예외 처리
-          if (visitOrder.contains(-1)) {
-            return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
-          }
+            // 유효하지 않은 정점이 있을 때 예외 처리
+            if (visitOrder.contains(-1)) {
+              return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+            }
 
-          // 경유지 포함하여 경로 탐색
-          final result = pathFinder.findPathWithWaypoints(visitOrder);
+            // 경유지 포함하여 경로 탐색
+            final result = pathFinder.findPathWithWaypoints(visitOrder);
 
-          // 경로 못 찾았을 때 UI 처리
-          if (result == null || result.path.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.route_outlined,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '경로를 찾을 수 없습니다',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '출발지: ${widget.start.name}\n도착지: ${widget.end.name}',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // JSON 결과 생성 및 출력
-          final jsonResult = PathDescriptionBuilder().build(
-            pathFinder,
-            result.path,
-            result.totalCost,
-          );
-
-          //const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-          //final String prettyJson = encoder.convert(jsonResult);
-          //debugPrint('----------- [Path Result JSON Start] -----------');
-          //debugPrint(prettyJson);
-          //debugPrint('----------- [Path Result JSON End] -----------');
-
-          // 유효한 경로 찾았을 때 UI 렌더링
-          final double totalCost = jsonResult['total_cost'] ?? 0.0;
-
-          // 사용자의 현재 건물과 층 정보 가져오기
-          final navigationState = ref.watch(navigationViewModelProvider);
-          final buildingName = _getBuildingName(widget.start.buildingId);
-          final floorString = '${widget.start.floor}F';
-
-          // 지도 이미지 경로 (2x 해상도 사용)
-          final mapImagePath = MapUtilFunctions.getImagePath(
-            buildingName,
-            floorString,
-            '2x',
-          );
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ------------------출발, 경유, 도착, 총 비용------------------
-                CostCard(
-                  departure: widget.start.name,
-                  destination: widget.end.name,
-                  totalCost: totalCost,
-                  waypoints: widget.waypoints,
-                ),
-                const SizedBox(height: 20),
-                // ------------------지도 및 사용자 위치------------------
-                Container(
-                  height: 300,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey200,
-                    borderRadius: BorderRadius.circular(20),
+            // 경로 못 찾았을 때 UI 처리
+            if (result == null || result.path.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.route_outlined,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '경로를 찾을 수 없습니다',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '출발지: ${widget.start.name}\n도착지: ${widget.end.name}',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Stack(
-                      children: [
-                        // 지도 이미지
-                        Positioned.fill(
-                          child: Image.asset(mapImagePath, fit: BoxFit.contain),
-                        ),
-                        // 사용자 위치 마커 (현재 층일 때만 표시)
-                        navigationState.when(
-                          data: (state) {
-                            // 현재 지도 층과 사용자 층이 일치할 때만 마커 표시
-                            if (state.floor != widget.start.floor) {
-                              return const SizedBox.shrink();
-                            }
+                ),
+              );
+            }
 
-                            // 사용자 좌표를 화면 좌표로 변환
-                            // (search_result_page와 동일한 변환 로직 사용)
-                            final scaledX = state.x * 0.19;
-                            final scaledY = state.y * 0.19;
-                            final adjustedX = scaledX - 10;
-                            final adjustedY = scaledY + 50;
+            // JSON 결과 생성 및 출력
+            final jsonResult = PathDescriptionBuilder().build(
+              pathFinder,
+              result.path,
+              result.totalCost,
+            );
 
-                            return Positioned(
-                              left: adjustedX - 12,
-                              top: adjustedY - 24,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  Icons.person_pin_circle,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                              ),
-                            );
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                        // 도착지 마커 (현재 층일 때만 표시)
-                        if (widget.end.floor == widget.start.floor)
-                          Builder(
-                            builder: (context) {
-                              // 도착지 POI 좌표를 화면 좌표로 변환
-                              final scaledX = widget.end.xCoord * 0.19;
-                              final scaledY = widget.end.yCoord * 0.19;
+            //const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+            //final String prettyJson = encoder.convert(jsonResult);
+            //debugPrint('----------- [Path Result JSON Start] -----------');
+            //debugPrint(prettyJson);
+            //debugPrint('----------- [Path Result JSON End] -----------');
+
+            // 유효한 경로 찾았을 때 UI 렌더링
+            final double totalCost = jsonResult['total_cost'] ?? 0.0;
+
+            // 사용자의 현재 건물과 층 정보 가져오기
+            final navigationState = ref.watch(navigationViewModelProvider);
+            final buildingName = _getBuildingName(widget.start.buildingId);
+            final floorString = '${widget.start.floor}F';
+
+            // 지도 이미지 경로 (2x 해상도 사용)
+            final mapImagePath = MapUtilFunctions.getImagePath(
+              buildingName,
+              floorString,
+              '2x',
+            );
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ------------------출발, 경유, 도착, 총 비용------------------
+                  CostCard(
+                    departure: widget.start.name,
+                    destination: widget.end.name,
+                    totalCost: totalCost,
+                    waypoints: widget.waypoints,
+                  ),
+                  const SizedBox(height: 20),
+                  // ------------------지도 및 사용자 위치------------------
+                  Container(
+                    height: 300,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey200,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(
+                        children: [
+                          // 지도 이미지
+                          Positioned.fill(
+                            child: Image.asset(
+                              mapImagePath,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          // 사용자 위치 마커 (현재 층일 때만 표시)
+                          navigationState.when(
+                            data: (state) {
+                              // 현재 지도 층과 사용자 층이 일치할 때만 마커 표시
+                              if (state.floor != widget.start.floor) {
+                                return const SizedBox.shrink();
+                              }
+
+                              // 사용자 좌표를 화면 좌표로 변환
+                              // (search_result_page와 동일한 변환 로직 사용)
+                              final scaledX = state.x * 0.19;
+                              final scaledY = state.y * 0.19;
                               final adjustedX = scaledX - 10;
                               final adjustedY = scaledY + 50;
 
@@ -272,22 +237,62 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                     ],
                                   ),
                                   child: Icon(
-                                    Icons.location_on,
-                                    color: Colors.red,
+                                    Icons.person_pin_circle,
+                                    color: AppColors.primary,
                                     size: 24,
                                   ),
                                 ),
                               );
                             },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
                           ),
-                      ],
+                          // 도착지 마커 (현재 층일 때만 표시)
+                          if (widget.end.floor == widget.start.floor)
+                            Builder(
+                              builder: (context) {
+                                // 도착지 POI 좌표를 화면 좌표로 변환
+                                final scaledX = widget.end.xCoord * 0.19;
+                                final scaledY = widget.end.yCoord * 0.19;
+                                final adjustedX = scaledX - 10;
+                                final adjustedY = scaledY + 50;
+
+                                return Positioned(
+                                  left: adjustedX - 12,
+                                  top: adjustedY - 24,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: 24,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
