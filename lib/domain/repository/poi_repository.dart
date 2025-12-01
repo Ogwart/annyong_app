@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:math'; // [추가] 거리 계산을 위해 추가
+import 'dart:math';
 
 import 'package:annyong/domain/entity/beacon.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
@@ -70,13 +70,13 @@ class PoiRepository {
     }
   }
 
-  /// Edge 데이터 로드 및 캐싱 (수정됨: 좌표 기반 거리 계산 적용)
+  /// Edge 데이터 로드 및 캐싱
   Future<void> _loadEdges() async {
     if (_cachedAdjacencyList != null) {
       return;
     }
 
-    await _loadVertices(); // Vertex가 먼저 로드되어야 좌표를 참조할 수 있음
+    await _loadVertices(); // Vertex가 먼저 로드되어야 함
 
     final raw = await rootBundle.loadString('assets/graph/edge.json');
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
@@ -89,6 +89,7 @@ class PoiRepository {
 
       final v1Id = _tryParseInt(rawEdge['vertex1_id']);
       final v2Id = _tryParseInt(rawEdge['vertex2_id']);
+      final length = _sanitizeLength(rawEdge['length']);
       final rawWay = rawEdge['way'] as String?;
       final wayType = WayTypeParser.from(rawWay);
 
@@ -100,25 +101,12 @@ class PoiRepository {
         continue;
       }
 
-      // [수정] 정점 정보를 가져와서 거리 직접 계산
-      final v1 = _cachedVertices?[v1Id];
-      final v2 = _cachedVertices?[v2Id];
-
-      if (v1 == null || v2 == null) {
-        debugPrint('존재하지 않는 정점을 연결하는 엣지여서 무시했습니다: $v1Id <-> $v2Id');
-        continue;
-      }
-
-      final double dx = v1.x - v2.x;
-      final double dy = v1.y - v2.y;
-      final double length = sqrt(dx * dx + dy * dy);
-
       _cachedAdjacencyList!
           .putIfAbsent(v1Id, () => [])
           .add(
             Edge(
               toVertexId: v2Id,
-              length: length, // 계산된 거리 사용
+              length: length,
               way: wayType,
               isReversed: false,
             ),
@@ -129,7 +117,7 @@ class PoiRepository {
           .add(
             Edge(
               toVertexId: v1Id,
-              length: length, // 계산된 거리 사용
+              length: length,
               way: wayType,
               isReversed: true,
             ),
@@ -161,7 +149,6 @@ class PoiRepository {
     return null;
   }
 
-  // _sanitizeLength는 더 이상 사용되지 않지만, 다른 유틸리티 용도로 남겨두거나 삭제 가능합니다.
   double _sanitizeLength(dynamic value) {
     if (value is num) {
       final cleaned = value.toDouble();

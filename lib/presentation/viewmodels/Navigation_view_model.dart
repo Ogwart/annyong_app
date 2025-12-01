@@ -97,7 +97,8 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       }
 
       // 건물 기울기 보정값: 북동쪽 30도 방향을 기준 북쪽으로 설정
-      const double buildingOffsetDegrees = 30.0;
+      // 6호관 건물 기준
+      const double buildingOffsetDegrees = 20.0;
 
       _imuSubscription = compassEvents.listen(
         (CompassEvent event) {
