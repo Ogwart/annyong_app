@@ -116,269 +116,273 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            // 지도 영역 (상단 60%)
-            Expanded(
-              flex: 6,
-              child: Container(
-                width: double.infinity,
-                color: Colors.white,
-                child: FutureBuilder<List<Poi>>(
-                  future: _poiFuture,
-                  builder: (context, snapshot) {
-                    final allPois = snapshot.data ?? [];
-                    final filteredPois =
-                        SearchResultPageUtil.getFilteredPoisForCurrentBuildingAndFloor(
-                          allPois,
-                          state.selectedBuilding,
-                          state.selectedFloor,
-                        );
-
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final containerSize = Size(
-                          constraints.maxWidth,
-                          constraints.maxHeight,
-                        );
-
-                        // 1x 기준 원본 크기
-                        final baseOriginalSize =
-                            MapUtilFunctions.getImageOriginalSize(
-                              state.selectedBuilding,
-                              state.selectedFloor,
-                              '1x',
-                            );
-
-                        // 표시 크기 계산
-                        final displayedImageSize =
-                            MapUtilFunctions.getDisplayedImageSize(
-                              containerSize,
-                              baseOriginalSize,
-                            );
-
-                        // 오프셋 및 스케일
-                        final imageOffsetX =
-                            (containerSize.width - displayedImageSize.width) /
-                            2;
-                        final imageOffsetY =
-                            (containerSize.height - displayedImageSize.height) /
-                            2;
-                        final scaleX =
-                            displayedImageSize.width / baseOriginalSize.width;
-                        final scaleY =
-                            displayedImageSize.height / baseOriginalSize.height;
-
-                        return Stack(
-                          children: [
-                            // 지도 (InteractiveViewer)
-                            Positioned.fill(
-                              child: InteractiveViewer(
-                                transformationController:
-                                    _transformationController,
-                                boundaryMargin: EdgeInsets.all(20),
-                                panEnabled: true,
-                                scaleEnabled: false,
-                                minScale: 3.0,
-                                maxScale: 3.0,
-                                child: Image.asset(
-                                  imagePath,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            // POI 위치 마커
-                            ...filteredPois.map((poi) {
-                              final transformation =
-                                  _transformationController.value;
-
-                              // POI 좌표 -> 1배 줌 상태의 화면 좌표
-                              final initialScreenX =
-                                  poi.xCoord * scaleX + imageOffsetX;
-                              final initialScreenY =
-                                  poi.yCoord * scaleY + imageOffsetY;
-
-                              // InteractiveViewer 변환 적용
-                              final transformedX =
-                                  transformation.storage[0] * initialScreenX +
-                                  transformation.storage[4] * initialScreenY +
-                                  transformation.storage[12];
-                              final transformedY =
-                                  transformation.storage[1] * initialScreenX +
-                                  transformation.storage[5] * initialScreenY +
-                                  transformation.storage[13];
-
-                              // 마커 위치 오프셋 적용
-                              final markerOffset =
-                                  MapUtilFunctions.markerOffset;
-
-                              return Positioned(
-                                left: transformedX - 12 + markerOffset.dx,
-                                top: transformedY - 24 + markerOffset.dy,
-                                child: IgnorePointer(
-                                  child: Container(
-                                    color: AppColors.secondary,
-                                    child: Row(
-                                      children: [
-                                        // TODO: 마커 UI 변경
-                                        Icon(
-                                          Icons.location_on,
-                                          color: AppColors.primary,
-                                          size: 24,
-                                        ),
-                                        Text("${poi.id}"),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                            // 뒤로가기 버튼
-                            SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: IconButton(
-                                  onPressed: () {
-                                    Future.microtask(() {
-                                      notifier.reset();
-                                    });
-                                    context.pop();
-                                  },
-                                  icon: const Icon(
-                                    Icons.arrow_back_ios,
-                                    color: AppColors.text,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // 건물 선택 버튼
-                            Positioned(
-                              bottom: 20,
-                              left: 20,
-                              child: GestureDetector(
-                                onTap: () {
-                                  final newBuilding =
-                                      state.selectedBuilding == '5호관'
-                                      ? '하이테크관'
-                                      : '5호관';
-                                  notifier.setSelectedBuilding(newBuilding);
-                                  notifier.setSelectedFloor('1F');
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.grey200,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    state.selectedBuilding,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 15,
-                                      color: AppColors.text,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // 층 선택 버튼
-                            Positioned(
-                              bottom: 20,
-                              right: 20,
-                              child: Column(
-                                children:
-                                    MapUtilFunctions.getAvailableFloors(
-                                      state.selectedBuilding,
-                                    ).map((floor) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 8,
-                                        ),
-                                        child: FloorButton(
-                                          floor: floor,
-                                          isSelected:
-                                              state.selectedFloor == floor,
-                                          onTap: () {
-                                            notifier.setSelectedFloor(floor);
-                                          },
-                                        ),
-                                      );
-                                    }).toList(),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-            // 검색 결과 패널 (하단 40%)
-            Container(
-              height: MediaQuery.of(context).size.height * 0.4,
-              decoration: BoxDecoration(
-                color: AppColors.grey200,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // 패널 드래그 핸들
-                  Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.grey400,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  // 검색 결과 리스트
-                  Expanded(
-                    child: FutureBuilder<List<Poi>>(
-                      future: _poiFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 지도 영역 (상단 60%)
+              Expanded(
+                flex: 6,
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.white,
+                  child: FutureBuilder<List<Poi>>(
+                    future: _poiFuture,
+                    builder: (context, snapshot) {
+                      final allPois = snapshot.data ?? [];
+                      final filteredPois =
+                          SearchResultPageUtil.getFilteredPoisForCurrentBuildingAndFloor(
+                            allPois,
+                            state.selectedBuilding,
+                            state.selectedFloor,
                           );
-                        }
-                        final results = snapshot.data ?? [];
-                        return ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                          itemCount: results.length,
-                          itemBuilder: (context, index) {
-                            final poi = results[index];
-                            final buildingList = ["5서", "5남", "하"];
-                            return SearchResultItem(
-                              title: poi.name,
-                              categoryId: poi.categoryId,
-                              // 디버깅을 위해 시연 전까진 POI 속성을 덧붙여 설명
-                              // description: poi.description ?? '설명 없음',
-                              description:
-                                  "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description}",
-                              onSelect: () => _handlePoiSelect(poi),
-                            );
-                          },
-                        );
-                      },
-                    ),
+
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final containerSize = Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
+
+                          // 1x 기준 원본 크기
+                          final baseOriginalSize =
+                              MapUtilFunctions.getImageOriginalSize(
+                                state.selectedBuilding,
+                                state.selectedFloor,
+                                '1x',
+                              );
+
+                          // 표시 크기 계산
+                          final displayedImageSize =
+                              MapUtilFunctions.getDisplayedImageSize(
+                                containerSize,
+                                baseOriginalSize,
+                              );
+
+                          // 오프셋 및 스케일
+                          final imageOffsetX =
+                              (containerSize.width - displayedImageSize.width) /
+                              2;
+                          final imageOffsetY =
+                              (containerSize.height -
+                                  displayedImageSize.height) /
+                              2;
+                          final scaleX =
+                              displayedImageSize.width / baseOriginalSize.width;
+                          final scaleY =
+                              displayedImageSize.height /
+                              baseOriginalSize.height;
+
+                          return Stack(
+                            children: [
+                              // 지도 (InteractiveViewer)
+                              Positioned.fill(
+                                child: InteractiveViewer(
+                                  transformationController:
+                                      _transformationController,
+                                  boundaryMargin: EdgeInsets.all(20),
+                                  panEnabled: true,
+                                  scaleEnabled: false,
+                                  minScale: 3.0,
+                                  maxScale: 3.0,
+                                  child: Image.asset(
+                                    imagePath,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              // POI 위치 마커
+                              ...filteredPois.map((poi) {
+                                final transformation =
+                                    _transformationController.value;
+
+                                // POI 좌표 -> 1배 줌 상태의 화면 좌표
+                                final initialScreenX =
+                                    poi.xCoord * scaleX + imageOffsetX;
+                                final initialScreenY =
+                                    poi.yCoord * scaleY + imageOffsetY;
+
+                                // InteractiveViewer 변환 적용
+                                final transformedX =
+                                    transformation.storage[0] * initialScreenX +
+                                    transformation.storage[4] * initialScreenY +
+                                    transformation.storage[12];
+                                final transformedY =
+                                    transformation.storage[1] * initialScreenX +
+                                    transformation.storage[5] * initialScreenY +
+                                    transformation.storage[13];
+
+                                // 마커 위치 오프셋 적용
+                                final markerOffset =
+                                    MapUtilFunctions.markerOffset;
+
+                                return Positioned(
+                                  left: transformedX - 12 + markerOffset.dx,
+                                  top: transformedY - 24 + markerOffset.dy,
+                                  child: IgnorePointer(
+                                    child: Container(
+                                      color: AppColors.secondary,
+                                      child: Row(
+                                        children: [
+                                          // TODO: 마커 UI 변경
+                                          Icon(
+                                            Icons.location_on,
+                                            color: AppColors.primary,
+                                            size: 24,
+                                          ),
+                                          Text("${poi.id}"),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                              // 뒤로가기 버튼
+                              SafeArea(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: IconButton(
+                                    onPressed: () {
+                                      Future.microtask(() {
+                                        notifier.reset();
+                                      });
+                                      context.pop();
+                                    },
+                                    icon: const Icon(
+                                      Icons.arrow_back_ios,
+                                      color: AppColors.text,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // 건물 선택 버튼
+                              Positioned(
+                                bottom: 20,
+                                left: 20,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    final newBuilding =
+                                        state.selectedBuilding == '5호관'
+                                        ? '60주년기념관'
+                                        : '5호관';
+                                    notifier.setSelectedBuilding(newBuilding);
+                                    notifier.setSelectedFloor('1F');
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.grey200,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      state.selectedBuilding,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                        color: AppColors.text,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // 층 선택 버튼
+                              Positioned(
+                                bottom: 20,
+                                right: 20,
+                                child: Column(
+                                  children:
+                                      MapUtilFunctions.getAvailableFloors(
+                                        state.selectedBuilding,
+                                      ).map((floor) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 8,
+                                          ),
+                                          child: FloorButton(
+                                            floor: floor,
+                                            isSelected:
+                                                state.selectedFloor == floor,
+                                            onTap: () {
+                                              notifier.setSelectedFloor(floor);
+                                            },
+                                          ),
+                                        );
+                                      }).toList(),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+              // 검색 결과 패널 (하단 40%)
+              Container(
+                height: MediaQuery.of(context).size.height * 0.4,
+                decoration: BoxDecoration(
+                  color: AppColors.grey200,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // 패널 드래그 핸들
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.grey400,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // 검색 결과 리스트
+                    Expanded(
+                      child: FutureBuilder<List<Poi>>(
+                        future: _poiFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          final results = snapshot.data ?? [];
+                          return ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
+                            itemCount: results.length,
+                            itemBuilder: (context, index) {
+                              final poi = results[index];
+                              final buildingList = ["5호관", "60주년", "하이테크"];
+                              return SearchResultItem(
+                                title: poi.name,
+                                categoryId: poi.categoryId,
+                                // 디버깅을 위해 시연 전까진 POI 속성을 덧붙여 설명
+                                // description: poi.description ?? '설명 없음',
+                                description:
+                                    "POI ${poi.id}: ${buildingList[poi.buildingId - 1]}에 위치, ${poi.description}",
+                                onSelect: () => _handlePoiSelect(poi),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

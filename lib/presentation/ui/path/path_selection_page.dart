@@ -8,7 +8,7 @@ import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/widgets/path_page/location_input_tile.dart';
 import 'package:annyong/presentation/widgets/path_page/add_waypoint_button.dart';
 import 'package:annyong/presentation/widgets/path_page/reset_button.dart';
-import 'package:annyong/presentation/widgets/path_page/map_preview.dart';
+import 'package:annyong/presentation/util/map_util_funtions.dart';
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -18,7 +18,6 @@ class PathSelectionPage extends ConsumerStatefulWidget {
 }
 
 class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
-  String? _selectedFloor = '1F';
   String? _departure;
   String? _destination;
   final List<String?> _waypoints = [];
@@ -207,27 +206,147 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
             ),
             // 지도 미리보기
             Expanded(
-              child: MapPreview(
-                floorButtons: [
-                  FloorButtonData(
-                    floor: '1F',
-                    isSelected: _selectedFloor == '1F',
-                    onTap: () {
-                      setState(() {
-                        _selectedFloor = '1F';
-                      });
-                    },
-                  ),
-                  FloorButtonData(
-                    floor: '2F',
-                    isSelected: _selectedFloor == '2F',
-                    onTap: () {
-                      setState(() {
-                        _selectedFloor = '2F';
-                      });
-                    },
-                  ),
-                ],
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    final pathState = ref.watch(pathSelectionProvider);
+                    final startPoi = pathState.departure;
+                    final endPoi = pathState.destination;
+
+                    if (startPoi == null || endPoi == null) {
+                      return const Center(
+                        child: Text(
+                          '가고 싶은 장소를 선택해주세요',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: AppColors.grey400,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }
+
+                    // 목적지 기준 지도 표시
+                    final buildingName = MapUtilFunctions.getBuildingName(
+                      endPoi.buildingId,
+                    );
+                    final floorString = "${endPoi.floor}F";
+                    final imagePath = MapUtilFunctions.getImagePath(
+                      buildingName,
+                      floorString,
+                      '1x', // 미리보기이므로 1x 사용
+                    );
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final containerSize = Size(
+                          constraints.maxWidth,
+                          constraints.maxHeight,
+                        );
+
+                        const double zoomLevel = 3.0; // 확대 배율
+
+                        // 1. 원본 이미지 크기 (1x)
+                        final baseOriginalSize =
+                            MapUtilFunctions.getImageOriginalSize(
+                              buildingName,
+                              floorString,
+                              '1x',
+                            );
+
+                        // 2. 컨테이너에 맞춘 기본 스케일 (BoxFit.contain 기준)
+                        final fitSize = MapUtilFunctions.getDisplayedImageSize(
+                          containerSize,
+                          baseOriginalSize,
+                        );
+                        final baseScale =
+                            fitSize.width /
+                            baseOriginalSize.width; // Aspect ratio maintained
+
+                        // 3. 최종 스케일 (확대 적용)
+                        final currentScale = baseScale * zoomLevel;
+
+                        // 4. 확대된 이미지의 실제 크기
+                        final scaledImageWidth =
+                            baseOriginalSize.width * currentScale;
+                        final scaledImageHeight =
+                            baseOriginalSize.height * currentScale;
+
+                        // 5. 이미지 내에서의 마커 위치 (Zoomed coordinates)
+                        final markerImageX = endPoi.xCoord * currentScale;
+                        final markerImageY = endPoi.yCoord * currentScale;
+
+                        // 6. 이미지를 이동시켜 마커를 중앙에 위치시키기 위한 오프셋
+                        final imageLeft =
+                            (containerSize.width / 2) - markerImageX;
+                        final imageTop =
+                            (containerSize.height / 2) - markerImageY;
+
+                        final markerOffset = MapUtilFunctions.markerOffset;
+
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              // 지도 이미지
+                              Positioned(
+                                left: imageLeft,
+                                top: imageTop,
+                                width: scaledImageWidth,
+                                height: scaledImageHeight,
+                                child: Image.asset(imagePath, fit: BoxFit.fill),
+                              ),
+                              // 목적지 마커 (컨테이너 중앙에 고정)
+                              Positioned(
+                                left:
+                                    containerSize.width / 2 -
+                                    12 +
+                                    markerOffset.dx,
+                                top:
+                                    containerSize.height / 2 -
+                                    24 +
+                                    markerOffset.dy,
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      color: AppColors.primary,
+                                      size: 24,
+                                    ),
+                                    // 선택사항: POI 이름 표시
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        endPoi.name,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.text,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
             // 길찾기 실행 버튼

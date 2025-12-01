@@ -23,7 +23,7 @@ class HomePageMapProvider extends ChangeNotifier {
 
   void toggleBuilding() {
     if (_selectedBuilding == '5호관') {
-      _selectedBuilding = '하이테크관';
+      _selectedBuilding = '60주년기념관';
     } else {
       _selectedBuilding = '5호관';
     }

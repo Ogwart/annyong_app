@@ -10,6 +10,8 @@ class MapUtilFunctions {
     String buildingPrefix;
     if (building == '5호관') {
       buildingPrefix = '5';
+    } else if (building == '60주년기념관') {
+      buildingPrefix = '3';
     } else if (building == '하이테크관') {
       buildingPrefix = '8';
     } else {
@@ -27,6 +29,8 @@ class MapUtilFunctions {
     switch (building) {
       case '5호관':
         return ['2F', '1F'];
+      case '60주년기념관':
+        return ['1F'];
       case '하이테크관':
         return ['1F'];
       default:
@@ -38,7 +42,9 @@ class MapUtilFunctions {
   static List<int> getBuildingIds(String building) {
     switch (building) {
       case '5호관':
-        return [1, 2];
+        return [1];
+      case '60주년기념관':
+        return [2];
       case '하이테크관':
         return [3];
       default:
@@ -47,9 +53,23 @@ class MapUtilFunctions {
   }
 
   /// 건물 이름을 건물 ID로 변환
-  /// 5호관은 1을 반환, 하이테크관은 3을 반환
+  /// 5호관은 1을 반환, 60주년기념관은 2를 반환
   static int getBuildingId(String building) {
     return getBuildingIds(building).first;
+  }
+
+  /// 건물 ID를 건물 이름으로 변환
+  static String getBuildingName(int buildingId) {
+    switch (buildingId) {
+      case 1:
+        return '5호관';
+      case 2:
+        return '60주년기념관';
+      case 3:
+        return '하이테크관';
+      default:
+        return '5호관';
+    }
   }
 
   /// 층 문자열을 층 번호로 변환
