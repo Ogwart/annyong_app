@@ -10,6 +10,39 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+// 경로를 그리기 위한 페인터 클래스
+class PathPainter extends CustomPainter {
+  final List<Offset> points;
+  final Color color;
+
+  PathPainter({required this.points, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    // 선이 끊기지 않고 이어지도록 하기 위해 path.lineTo 사용
+    // points 구조: [시작점1, 끝점1, 시작점2, 끝점2, ...]
+    // TODO: 층이 바뀌는 등 불연속적인 구간은 points 리스트 구성 시 처리 필요
+    for (int i = 0; i < points.length - 1; i += 2) {
+      canvas.drawLine(points[i], points[i + 1], paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant PathPainter oldDelegate) {
+    return oldDelegate.points != points || oldDelegate.color != color;
+  }
+}
+
 class PathResultPage extends ConsumerStatefulWidget {
   final Poi start;
   final Poi end;
@@ -81,6 +114,22 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
     setState(() {
       _currentFloor = floor;
     });
+  }
+
+  // 정점 ID가 현재 맵(건물/층)에 포함되는지 확인하는 헬퍼 함수
+  bool _isVertexOnCurrentMap(int vertexId) {
+    // vertex.json 및 poi.json 분석 결과에 따른 ID 대역 하드코딩
+    // 5호관 1층은 0~499, 2층은 500~999, 60주년 1층은 1000~1499로 할당해두었음
+    if (_currentBuilding == '5호관') {
+      if (_currentFloor == '1F') {
+        return vertexId < 500; // 1층 대역
+      } else if (_currentFloor == '2F') {
+        return vertexId >= 500 && vertexId < 1000; // 2층 대역
+      }
+    } else if (_currentBuilding == '60주년' || _currentBuilding == '60주년기념관') {
+      return vertexId >= 1000; // 60주년 대역
+    }
+    return false;
   }
 
   @override
@@ -161,7 +210,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                       Container(
                         width: double.infinity,
                         height: double.infinity,
-                        color: Colors.white, // 지도 배경색
+                        color: Colors.white,
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             final containerSize = constraints.biggest;
@@ -193,9 +242,36 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                     displayedImageSize.height) /
                                 2;
 
+                            // 경로 좌표 계산 로직
+                            final List<Offset> pathPoints = [];
+
+                            if (result.path.length > 1) {
+                              for (int i = 0; i < result.path.length - 1; i++) {
+                                final int fromId = result.path[i];
+                                final int toId = result.path[i + 1];
+                                final v1 = pathFinder.vertices[fromId];
+                                final v2 = pathFinder.vertices[toId];
+
+                                // 두 정점이 모두 유효하고, 현재 보고 있는 층 지도 위에 있을 때만 선분 추가
+                                if (v1 != null &&
+                                    v2 != null &&
+                                    _isVertexOnCurrentMap(fromId) &&
+                                    _isVertexOnCurrentMap(toId)) {
+                                  final p1x = v1.x * scaleX;
+                                  final p1y = v1.y * scaleY;
+                                  final p2x = v2.x * scaleX;
+                                  final p2y = v2.y * scaleY;
+
+                                  // 선분 (시작점, 끝점) 추가
+                                  pathPoints.add(Offset(p1x, p1y));
+                                  pathPoints.add(Offset(p2x, p2y));
+                                }
+                              }
+                            }
+
                             return Stack(
                               children: [
-                                // 지도 이미지
+                                // 지도 이미지 및 경로 그리기
                                 Positioned.fill(
                                   child: InteractiveViewer(
                                     transformationController:
@@ -206,9 +282,29 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                       child: SizedBox(
                                         width: displayedImageSize.width,
                                         height: displayedImageSize.height,
-                                        child: Image.asset(
-                                          mapImagePath,
-                                          fit: BoxFit.contain,
+                                        child: Stack(
+                                          children: [
+                                            // 1. 지도 이미지
+                                            Image.asset(
+                                              mapImagePath,
+                                              fit: BoxFit.contain,
+                                              width: displayedImageSize.width,
+                                              height: displayedImageSize.height,
+                                            ),
+                                            // 2. 경로 선 그리기
+                                            IgnorePointer(
+                                              child: CustomPaint(
+                                                size: Size(
+                                                  displayedImageSize.width,
+                                                  displayedImageSize.height,
+                                                ),
+                                                painter: PathPainter(
+                                                  points: pathPoints,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -313,7 +409,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                   );
                                 }),
 
-                                // 건물 전환 버튼
+                                // 건물 전환 버튼 (기존 코드 유지)
                                 if (involvedBuildings.length > 1)
                                   Positioned(
                                     bottom: 16,
@@ -364,7 +460,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                     ),
                                   ),
 
-                                // 층 이동 버튼
+                                // 층 이동 버튼 (기존 코드 유지)
                                 Positioned(
                                   bottom: 16,
                                   right: 16,
@@ -422,11 +518,11 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                         ),
                       ),
 
-                      // --------------- CostCard 오버레이 ---------------
+                      // CostCard 오버레이 (기존 코드 유지)
                       Positioned(
-                        top: 24, // 상단 여백
-                        left: 20, // 좌측 여백
-                        right: 20, // 우측 여백
+                        top: 24,
+                        left: 20,
+                        right: 20,
                         child: CostCard(
                           departure: widget.start.name,
                           destination: widget.end.name,
@@ -438,7 +534,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                   ),
                 ),
 
-                // 2. 하단 버튼 영역
+                // 하단 버튼 영역 (기존 코드 유지)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
