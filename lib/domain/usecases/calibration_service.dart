@@ -2,6 +2,7 @@ import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
+import 'package:annyong/presentation/util/pixels_to_meters.dart';
 import 'package:flutter/foundation.dart';
 
 /// 보폭 측정 서비스
@@ -194,7 +195,7 @@ class CalibrationService {
       lastStraightVertex = currentVertex;
 
       // [탐색 종료 조건 1: 목표 거리 도달]
-      if (accDist >= idealDistance) {
+      if (pixelsToMeters(accDist) >= idealDistance) {
         break; // 7m를 넘었으므로 탐색 성공
       }
 
@@ -235,6 +236,6 @@ class CalibrationService {
     }
 
     // 마지막 직선 경로의 Vertex와, 거기까지의 총 누적 거리 반환
-    return (lastStraightVertex, accDist);
+    return (lastStraightVertex, pixelsToMeters(accDist));
   }
 }
