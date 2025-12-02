@@ -107,7 +107,9 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
               // --------------------확인 버튼--------------------
               GestureDetector(
                 onTap: () {
-                  context.pop();
+                  if (context.mounted) {
+                    context.go('/home');
+                  }
                 },
                 child: Container(
                   alignment: Alignment.center,

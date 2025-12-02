@@ -172,43 +172,59 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     }
 
     return Scaffold(
+      // 검색바 기능은 쓰지 않으므로 주석처리. 대신 이전 페이지와 동일한 title 삽입
+      // appBar: AppBar(
+      //   leading: Padding(
+      //     padding: const EdgeInsets.symmetric(horizontal: 12),
+      //     child: IconButton(
+      //       onPressed: () => context.pop(),
+      //       icon: Icon(Icons.arrow_back_ios, color: AppColors.text),
+      //     ),
+      //   ),
+      //   title: Row(
+      //     children: [
+      //       Expanded(
+      //         child: Container(
+      //           height: 48,
+      //           decoration: BoxDecoration(
+      //             color: AppColors.grey200,
+      //             borderRadius: BorderRadius.circular(20),
+      //           ),
+      //           padding: const EdgeInsets.symmetric(horizontal: 16),
+      //           alignment: Alignment.centerLeft,
+      //           child: Row(
+      //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //             children: [
+      //               Text(
+      //                 '강의실 번호를 입력하세요!',
+      //                 style: TextStyle(
+      //                   fontSize: 15,
+      //                   color: AppColors.grey400,
+      //                   fontFamily: 'Pretendard',
+      //                 ),
+      //               ),
+      //               Icon(Icons.search_rounded, color: AppColors.text, size: 24),
+      //             ],
+      //           ),
+      //         ),
+      //       ),
+      //       const SizedBox(width: 20),
+      //     ],
+      //   ),
+      // ),
       appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          "${widget.searchType.replaceAll('\n', '/')} 검색",
+          style: TextStyle(fontSize: 24),
+        ),
         leading: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: IconButton(
             onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_ios, color: AppColors.text),
+            icon: const Icon(Icons.arrow_back_ios),
+            color: AppColors.text,
           ),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.grey200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '강의실 번호를 입력하세요!',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.grey400,
-                        fontFamily: 'Pretendard',
-                      ),
-                    ),
-                    Icon(Icons.search_rounded, color: AppColors.text, size: 24),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-          ],
         ),
       ),
       body: Column(
@@ -245,7 +261,10 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                 Expanded(
                   child: Stack(
                     children: [
-                      CategoryBox(categoryName: '강의실 번호'),
+                      CategoryBox(
+                        categoryName:
+                            "${widget.searchType.replaceAll('\n', '/')}",
+                      ),
                       if (selectedClassroom != null) SelectedCategoryFlag(),
                     ],
                   ),
