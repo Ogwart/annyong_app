@@ -263,7 +263,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     debugPrint('----------- [_handleFindPath End] -----------');
 
     context.go(
-      '/home/pathSelection/pathPreview',
+      '/home/pathSelection/pathResult',
       extra: {'start': startPoi, 'end': endPoi, 'waypoints': activeWaypoints},
     );
   }
