@@ -84,11 +84,13 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     SearchMode searchMode, {
     int? waypointIndex,
   }) async {
-    final result = await context.push<Poi>('/home/search', extra: searchMode);
+    final result = await context.push<Poi>(
+      '/home/search',
+      extra: {'searchMode': searchMode, 'returnResult': true},
+    );
     if (result == null) return;
 
     final notifier = ref.read(pathSelectionProvider.notifier);
-
     switch (searchMode) {
       case SearchMode.departure:
         notifier.setDeparture(result);
