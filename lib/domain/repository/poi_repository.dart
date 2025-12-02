@@ -89,7 +89,13 @@ class PoiRepository {
 
       final v1Id = _tryParseInt(rawEdge['vertex1_id']);
       final v2Id = _tryParseInt(rawEdge['vertex2_id']);
-      final length = _sanitizeLength(rawEdge['length']);
+      // length가 없으면 아래에서 직접 계산하므로 여기선 초기값 0.0으로 둠
+      double length = 0.0;
+      final rawLength = rawEdge['length'];
+      if (rawLength is num && rawLength > 0) {
+        length = rawLength.toDouble();
+      }
+
       final rawWay = rawEdge['way'] as String?;
       final wayType = WayTypeParser.from(rawWay);
 
@@ -99,6 +105,17 @@ class PoiRepository {
           v2Id < 0 ||
           v1Id == v2Id) {
         continue;
+      }
+
+      // JSON에 length가 없거나 유효하지 않으면, Vertex 좌표를 기반으로 직접 계산
+      if (length <= 0) {
+        final v1 = _cachedVertices![v1Id];
+        final v2 = _cachedVertices![v2Id];
+        if (v1 != null && v2 != null) {
+          length = getStraightLineDistanceBetweenVertices(v1, v2);
+        } else {
+          length = 0.1; // 정점 정보도 없으면 기본값
+        }
       }
 
       _cachedAdjacencyList!
@@ -147,14 +164,6 @@ class PoiRepository {
     if (value is num) return value.round();
     if (value is String) return int.tryParse(value);
     return null;
-  }
-
-  double _sanitizeLength(dynamic value) {
-    if (value is num) {
-      final cleaned = value.toDouble();
-      return cleaned <= 0 ? 0.1 : cleaned;
-    }
-    return 0.1;
   }
 
   /// Vertex ID로 Vertex 조회
