@@ -501,20 +501,28 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          poi.name,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.text,
-                                            shadows: [
-                                              Shadow(
-                                                offset: Offset(0, 0),
-                                                blurRadius: 3,
-                                                color: Colors.white,
+                                        child: Stack(
+                                          children: [
+                                            Text(
+                                              poi.name,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                foreground: Paint()
+                                                  ..style = PaintingStyle.stroke
+                                                  ..strokeWidth = 3
+                                                  ..color = Colors.white,
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                            Text(
+                                              poi.name,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.text,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
