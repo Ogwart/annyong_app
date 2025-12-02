@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class MapMarkerWidget extends StatelessWidget {
   final bool isSelected;
   final String poiName;
-  final String markerSvgPath = 'assets/icons/svg/marker.svg';
+  final String markerSvgPath = 'assets/icons/svg/general_marker.svg';
 
   const MapMarkerWidget({
     super.key,
