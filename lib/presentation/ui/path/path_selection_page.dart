@@ -9,6 +9,8 @@ import 'package:annyong/presentation/widgets/path_page/location_input_tile.dart'
 import 'package:annyong/presentation/widgets/path_page/add_waypoint_button.dart';
 import 'package:annyong/presentation/widgets/path_page/reset_button.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -17,17 +19,54 @@ class PathSelectionPage extends ConsumerStatefulWidget {
   ConsumerState<PathSelectionPage> createState() => _PathSelectionPageState();
 }
 
-class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
+class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
+    with SingleTickerProviderStateMixin {
   String? _departure;
   String? _destination;
   final List<String?> _waypoints = [];
 
+  // [상태 추가] 현재 사용자가 보고 있는 건물 및 층 (수동 조작용)
+  String _currentBuilding = '5호관';
+  String _currentFloor = '1F';
+
+  final TransformationController _transformationController =
+      TransformationController();
+  late AnimationController _mapAnimationController;
+  Animation<Matrix4>? _mapAnimation;
+
+  Size? _mapContainerSize;
+  Poi? _focusedPoi;
+  int? _lastCenteredPoiId;
+  int? _currentBuildingId;
+
   @override
   void initState() {
     super.initState();
+    // 마커 위치 동기화를 위해 리스너 등록
+    _transformationController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
+    _mapAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _mapAnimationController.addListener(() {
+      if (_mapAnimation != null) {
+        _transformationController.value = _mapAnimation!.value;
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFromState();
     });
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    _mapAnimationController.dispose();
+    super.dispose();
   }
 
   void _updateFromState() {
@@ -49,66 +88,167 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
     SearchMode searchMode, {
     int? waypointIndex,
   }) async {
-    final result = await context.push<Poi>('/home/search', extra: searchMode);
-
+    final result = await context.push<Poi>(
+      '/home/search',
+      extra: {'searchMode': searchMode, 'returnResult': true},
+    );
     if (result == null) return;
 
-    // Provider의 Notifier만 호출하고, 실제 상태 변경은
-    // ref.listen이 감지하여 _updateFromState()를 실행하고 화면을 갱신하도록 함
     final notifier = ref.read(pathSelectionProvider.notifier);
-
     switch (searchMode) {
       case SearchMode.departure:
         notifier.setDeparture(result);
+        break;
       case SearchMode.destination:
         notifier.setDestination(result);
+        break;
       case SearchMode.waypoint1:
         notifier.setWaypoint1(result);
+        break;
       case SearchMode.waypoint2:
         notifier.setWaypoint2(result);
+        break;
       case SearchMode.normal:
-        debugPrint('Normal mode selected, no action taken.');
         break;
     }
+
+    // 가장 최근에 선택되었던 POI의 종류에 맞는 마커가 지도 중앙에 올 수 있게 _focusedPoi 업데이트
+    // 지도 수동 조작 시 엉뚱한 건물로 튀는 것을 막기 위해 _currentBuilding, _currentFloor도 함께 동기화
+    // 실제 이동은 build() 메서드의 LayoutBuilder가 감지하여 수행
+    setState(() {
+      _focusedPoi = result;
+      _currentBuilding = MapUtilFunctions.getBuildingName(result.buildingId);
+      _currentFloor = '${result.floor}F';
+    });
   }
 
-  // 경유지 추가 로직
+  // 경로에 포함된 건물들 사이만 순환할 수 있도록 리스트화하는 함수
+  void _cycleBuildings(Set<String> involvedBuildings) {
+    if (involvedBuildings.isEmpty) return;
+
+    setState(() {
+      _focusedPoi = null; // 수동 조작 시 포커스 해제
+
+      // 현재 건물 목록 리스트화
+      final buildingList = involvedBuildings.toList();
+      // 현재 건물의 인덱스 찾기 (없으면 0)
+      final currentIndex = buildingList.indexOf(_currentBuilding);
+
+      // 다음 건물 인덱스 (순환)
+      final nextIndex = (currentIndex + 1) % buildingList.length;
+      _currentBuilding = buildingList[nextIndex];
+
+      // 건물 변경 시 기본 1층으로 초기화
+      _currentFloor = '1F';
+    });
+  }
+
+  // 층 수동 조작 시 호출되는 함수들
+  // 수동조작이 들어오면 _focusedPoi 기반으로 보여주던 것을 해제하고, 바로 전환
+  void _changeFloor(String floor) {
+    setState(() {
+      // 수동 조작 시 현재 보고 있는 건물을 저장
+      if (_focusedPoi != null) {
+        _currentBuilding = MapUtilFunctions.getBuildingName(
+          _focusedPoi!.buildingId,
+        );
+      }
+
+      // 포커스 해제 및 층 변경
+      _focusedPoi = null;
+      _currentFloor = floor;
+    });
+  }
+
+  void _moveMapToPoi(Poi poi) {
+    if (_mapContainerSize == null) return;
+
+    // 애니메이션 충돌 방지
+    _mapAnimationController.stop();
+
+    final buildingName = MapUtilFunctions.getBuildingName(poi.buildingId);
+    final floorString = "${poi.floor}F";
+    final baseOriginalSize = MapUtilFunctions.getImageOriginalSize(
+      buildingName,
+      floorString,
+      '1x',
+    );
+
+    final displayedImageSize = MapUtilFunctions.getDisplayedImageSize(
+      _mapContainerSize!,
+      baseOriginalSize,
+    );
+
+    final scaleX = displayedImageSize.width / baseOriginalSize.width;
+    final scaleY = displayedImageSize.height / baseOriginalSize.height;
+
+    const double targetZoom = 3.0;
+
+    final imageOffsetX =
+        (_mapContainerSize!.width - displayedImageSize.width) / 2;
+    final imageOffsetY =
+        (_mapContainerSize!.height - displayedImageSize.height) / 2;
+
+    final targetX =
+        -((poi.xCoord * scaleX + imageOffsetX) * targetZoom -
+            _mapContainerSize!.width / 2);
+    final targetY =
+        -((poi.yCoord * scaleY + imageOffsetY) * targetZoom -
+            _mapContainerSize!.height / 2);
+
+    final targetMatrix = Matrix4.identity()
+      ..translate(targetX, targetY)
+      ..scale(targetZoom);
+
+    _mapAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: targetMatrix,
+        ).animate(
+          CurvedAnimation(
+            parent: _mapAnimationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+
+    _mapAnimationController.forward(from: 0);
+  }
+
   void _addWaypoint() {
-    if (_waypoints.length >= 2) return; // 경유지는 최대 2개까지만 허용
+    if (_waypoints.length >= 2) return;
     setState(() {
       _waypoints.add(null);
     });
   }
 
-  // 경유지 삭제 로직
   void _removeWaypoint(int index) {
+    // 1. 현재 Provider에 저장된 실제 POI 데이터들을 가져와 순서대로 추가
+    final pathState = ref.read(pathSelectionProvider);
+    final List<Poi?> currentPois = [];
+
+    if (pathState.waypoint1 != null) currentPois.add(pathState.waypoint1);
+    if (pathState.waypoint2 != null) currentPois.add(pathState.waypoint2);
+
+    // 이미 무언가 입력된 경유지를 삭제하는 경우 해당 경유지 삭제 후 남은 경유지 데이터 재정렬
+    if (index < currentPois.length) {
+      currentPois.removeAt(index);
+      final notifier = ref.read(pathSelectionProvider.notifier);
+      notifier.setWaypoint1(currentPois.isNotEmpty ? currentPois[0] : null);
+      notifier.setWaypoint2(currentPois.length > 1 ? currentPois[1] : null);
+    }
+
+    // UI 업데이트 (바로 업데이트가 안돼서 강제로 하라고 집어넣음)
     setState(() {
       _waypoints.removeAt(index);
-      if (index == 0) {
-        ref.read(pathSelectionProvider.notifier).setWaypoint1(null);
-      } else if (index == 1) {
-        ref.read(pathSelectionProvider.notifier).setWaypoint2(null);
-      }
     });
   }
 
-  // 스왑 로직은 오류가 많아서 보류
-  // void _swapDepartureDestination() {
-  //   // final temp = _departureController.text;
-  //   // _departureController.text = _destinationController.text;
-  //   // _destinationController.text = temp;
-  //   // setState(() {});
-  //   ref.read(pathSelectionProvider.notifier).swapDepartureDestination();
-  // }
-
-  // 길찾기 버튼 클릭 시 실행 로직
   void _handleFindPath() {
     debugPrint('----------- [_handleFindPath Start] -----------');
     final pathState = ref.read(pathSelectionProvider);
     final Poi? startPoi = pathState.departure;
     final Poi? endPoi = pathState.destination;
 
-    // null이 아닌 경유지만 필터링하여 경유지 리스트 생성
     final List<Poi> activeWaypoints = [];
     if (pathState.waypoint1 != null) {
       activeWaypoints.add(pathState.waypoint1!);
@@ -130,15 +270,34 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
 
   void _reset() {
     setState(() {
+      // 상태 초기화
       _departure = null;
       _destination = null;
       _waypoints.clear();
+      _focusedPoi = null;
+      _lastCenteredPoiId = null;
+      _currentBuildingId = null;
+
+      // 초기화 시 기본 뷰로 복귀
+      _currentBuilding = '5호관';
+      _currentFloor = '1F';
+
+      _mapAnimation =
+          Matrix4Tween(
+            begin: _transformationController.value,
+            end: Matrix4.identity(),
+          ).animate(
+            CurvedAnimation(
+              parent: _mapAnimationController,
+              curve: Curves.easeInOut,
+            ),
+          );
+      _mapAnimationController.forward(from: 0);
     });
     ref.read(pathSelectionProvider.notifier).resetPath();
   }
 
   bool get _isFindPathEnabled {
-    // 목적지와 출발지가 모두 설정되어야 경로 검색 버튼이 활성화되도록
     return _departure != null && _destination != null;
   }
 
@@ -204,152 +363,374 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                 child: ResetButton(onTap: _reset),
               ),
             ),
-            // 지도 미리보기
+            // 지도 미리보기 영역
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(24),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.grey200, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(2, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Builder(
                   builder: (context) {
                     final pathState = ref.watch(pathSelectionProvider);
-                    final startPoi = pathState.departure;
-                    final endPoi = pathState.destination;
 
-                    if (startPoi == null || endPoi == null) {
-                      return const Center(
-                        child: Text(
-                          '가고 싶은 장소를 선택해주세요',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.grey400,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                    // 1. 현재 선택된 모든 POI를 수집하여 건물 분석
+                    final allSelectedPois = [
+                      pathState.departure,
+                      pathState.waypoint1,
+                      pathState.waypoint2,
+                      pathState.destination,
+                    ].whereType<Poi>().toList();
+
+                    // 경로에 포함된 건물들의 이름 목록 (중복 제거)
+                    final includeBuildingNames = allSelectedPois
+                        .map(
+                          (p) => MapUtilFunctions.getBuildingName(p.buildingId),
+                        )
+                        .toSet();
+
+                    // 2. 지도에 표시할 건물/층 결정
+                    String buildingToShow = _currentBuilding;
+                    String floorToShow = _currentFloor;
+
+                    if (_focusedPoi != null) {
+                      buildingToShow = MapUtilFunctions.getBuildingName(
+                        _focusedPoi!.buildingId,
                       );
+                      floorToShow = '${_focusedPoi!.floor}F';
                     }
 
-                    // 목적지 기준 지도 표시
-                    final buildingName = MapUtilFunctions.getBuildingName(
-                      endPoi.buildingId,
+                    // 건물이 바뀌면 Matrix 초기화
+                    final targetBuildingId = MapUtilFunctions.getBuildingId(
+                      buildingToShow,
                     );
-                    final floorString = "${endPoi.floor}F";
+                    if (_currentBuildingId != targetBuildingId) {
+                      _currentBuildingId = targetBuildingId;
+                      _lastCenteredPoiId = null;
+                      _transformationController.value = Matrix4.identity();
+                    }
+
+                    // 이미지 경로
                     final imagePath = MapUtilFunctions.getImagePath(
-                      buildingName,
-                      floorString,
-                      '1x', // 미리보기이므로 1x 사용
+                      buildingToShow,
+                      floorToShow,
+                      '1x',
                     );
 
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final containerSize = Size(
-                          constraints.maxWidth,
-                          constraints.maxHeight,
-                        );
+                    // 현재 보여지는 건물/층에 있는 마커만 필터링
+                    final currentFloorNum = MapUtilFunctions.getFloorNumber(
+                      floorToShow,
+                    );
+                    final poisToShow = allSelectedPois
+                        .where(
+                          (p) =>
+                              p.buildingId == targetBuildingId &&
+                              p.floor == currentFloorNum,
+                        )
+                        .toList();
 
-                        const double zoomLevel = 3.0; // 확대 배율
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Stack(
+                        children: [
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              if (_mapContainerSize != constraints.biggest) {
+                                _mapContainerSize = constraints.biggest;
+                              }
 
-                        // 1. 원본 이미지 크기 (1x)
-                        final baseOriginalSize =
-                            MapUtilFunctions.getImageOriginalSize(
-                              buildingName,
-                              floorString,
-                              '1x',
-                            );
+                              // _focusedPoi가 존재하고, 아직 센터링하지 않았다면 이동
+                              if (_focusedPoi != null &&
+                                  _mapContainerSize != null &&
+                                  _focusedPoi!.id != _lastCenteredPoiId) {
+                                _lastCenteredPoiId = _focusedPoi!.id;
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _moveMapToPoi(_focusedPoi!);
+                                });
+                              }
 
-                        // 2. 컨테이너에 맞춘 기본 스케일 (BoxFit.contain 기준)
-                        final fitSize = MapUtilFunctions.getDisplayedImageSize(
-                          containerSize,
-                          baseOriginalSize,
-                        );
-                        final baseScale =
-                            fitSize.width /
-                            baseOriginalSize.width; // Aspect ratio maintained
+                              final containerSize = constraints.biggest;
+                              final baseOriginalSize =
+                                  MapUtilFunctions.getImageOriginalSize(
+                                    buildingToShow,
+                                    floorToShow,
+                                    '1x',
+                                  );
 
-                        // 3. 최종 스케일 (확대 적용)
-                        final currentScale = baseScale * zoomLevel;
+                              final displayedImageSize =
+                                  MapUtilFunctions.getDisplayedImageSize(
+                                    containerSize,
+                                    baseOriginalSize,
+                                  );
 
-                        // 4. 확대된 이미지의 실제 크기
-                        final scaledImageWidth =
-                            baseOriginalSize.width * currentScale;
-                        final scaledImageHeight =
-                            baseOriginalSize.height * currentScale;
+                              final scaleX =
+                                  displayedImageSize.width /
+                                  baseOriginalSize.width;
+                              final scaleY =
+                                  displayedImageSize.height /
+                                  baseOriginalSize.height;
+                              final imageOffsetX =
+                                  (containerSize.width -
+                                      displayedImageSize.width) /
+                                  2;
+                              final imageOffsetY =
+                                  (containerSize.height -
+                                      displayedImageSize.height) /
+                                  2;
 
-                        // 5. 이미지 내에서의 마커 위치 (Zoomed coordinates)
-                        final markerImageX = endPoi.xCoord * currentScale;
-                        final markerImageY = endPoi.yCoord * currentScale;
-
-                        // 6. 이미지를 이동시켜 마커를 중앙에 위치시키기 위한 오프셋
-                        final imageLeft =
-                            (containerSize.width / 2) - markerImageX;
-                        final imageTop =
-                            (containerSize.height / 2) - markerImageY;
-
-                        final markerOffset = MapUtilFunctions.markerOffset;
-
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Stack(
-                            children: [
-                              // 지도 이미지
-                              Positioned(
-                                left: imageLeft,
-                                top: imageTop,
-                                width: scaledImageWidth,
-                                height: scaledImageHeight,
-                                child: Image.asset(imagePath, fit: BoxFit.fill),
-                              ),
-                              // 목적지 마커 (컨테이너 중앙에 고정)
-                              Positioned(
-                                left:
-                                    containerSize.width / 2 -
-                                    12 +
-                                    markerOffset.dx,
-                                top:
-                                    containerSize.height / 2 -
-                                    24 +
-                                    markerOffset.dy,
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on,
-                                      color: AppColors.primary,
-                                      size: 24,
-                                    ),
-                                    // 선택사항: POI 이름 표시
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.8),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        endPoi.name,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.text,
-                                        ),
+                              return Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: InteractiveViewer(
+                                      key: ValueKey(
+                                        targetBuildingId,
+                                      ), // 건물 변경 시 리셋
+                                      transformationController:
+                                          _transformationController,
+                                      boundaryMargin: const EdgeInsets.all(500),
+                                      minScale: 1.0,
+                                      maxScale: 6.0,
+                                      panEnabled: true,
+                                      scaleEnabled: true,
+                                      child: Image.asset(
+                                        imagePath,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                                  ),
+                                  ...poisToShow.map((poi) {
+                                    final transformation =
+                                        _transformationController.value;
+                                    final initialScreenX =
+                                        poi!.xCoord * scaleX + imageOffsetX;
+                                    final initialScreenY =
+                                        poi.yCoord * scaleY + imageOffsetY;
+                                    final transformedX =
+                                        transformation.storage[0] *
+                                            initialScreenX +
+                                        transformation.storage[4] *
+                                            initialScreenY +
+                                        transformation.storage[12];
+                                    final transformedY =
+                                        transformation.storage[1] *
+                                            initialScreenX +
+                                        transformation.storage[5] *
+                                            initialScreenY +
+                                        transformation.storage[13];
+
+                                    String iconPath =
+                                        'assets/icons/svg/stopover_marker.svg';
+                                    if (poi.id == pathState.departure?.id) {
+                                      iconPath =
+                                          'assets/icons/svg/destination_marker.svg';
+                                    } else if (poi.id ==
+                                        pathState.destination?.id) {
+                                      iconPath =
+                                          'assets/icons/svg/arrival_marker.svg';
+                                    }
+                                    const double iconSize = 35.0;
+
+                                    return Positioned(
+                                      left: transformedX - (iconSize / 2),
+                                      top: transformedY - (iconSize / 2),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            width: iconSize,
+                                            height: iconSize,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: SvgPicture.asset(iconPath),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
+                                            child: Stack(
+                                              children: [
+                                                Text(
+                                                  poi.name,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    foreground: Paint()
+                                                      ..style =
+                                                          PaintingStyle.stroke
+                                                      ..strokeWidth = 3
+                                                      ..color = Colors.white,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  poi.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.text,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              );
+                            },
                           ),
-                        );
-                      },
+
+                          // 건물 전환 버튼: 건물간 이동일 때에만 랜더링(스위칭 아이콘 추가)
+                          Positioned(
+                            bottom: 16,
+                            left: 16,
+                            child: Builder(
+                              builder: (context) {
+                                // 경로 상 건물이 2개 이상일 때만 버튼 활성화
+                                final isMultiBuilding =
+                                    includeBuildingNames.length > 1;
+
+                                // 건물이 1개 이하라면 버튼을 아예 숨김
+                                if (!isMultiBuilding) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                return GestureDetector(
+                                  onTap: () =>
+                                      _cycleBuildings(includeBuildingNames),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.grey200,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          buildingToShow,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: AppColors.text,
+                                          ),
+                                        ),
+                                        // 여러 건물일 경우 전환 아이콘 표시
+                                        if (isMultiBuilding) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.swap_horiz_rounded,
+                                            size: 16,
+                                            color: AppColors.text,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                          // 층 이동 버튼: 출발지/목적지/경유지가 포함된 층에는 빨간 뱃지 달기
+                          Positioned(
+                            bottom: 16,
+                            right: 16,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children:
+                                  MapUtilFunctions.getAvailableFloors(
+                                    buildingToShow,
+                                  ).map((floor) {
+                                    final bool hasPointOnThisFloor =
+                                        [
+                                          pathState.departure,
+                                          pathState.waypoint1,
+                                          pathState.waypoint2,
+                                          pathState.destination,
+                                        ].any((poi) {
+                                          // POI가 존재하고, 현재 보고 있는 건물이며, 버튼의 층과 일치하는지 확인
+                                          return poi != null &&
+                                              poi.buildingId ==
+                                                  targetBuildingId &&
+                                              '${poi.floor}F' == floor;
+                                        });
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Stack(
+                                        clipBehavior: Clip.none,
+                                        alignment: Alignment.topRight,
+                                        children: [
+                                          FloorButton(
+                                            floor: floor,
+                                            isSelected: floorToShow == floor,
+                                            onTap: () => _changeFloor(floor),
+                                          ),
+
+                                          // 빨간 뱃지
+                                          if (hasPointOnThisFloor)
+                                            Positioned(
+                                              top: 6,
+                                              right: 6,
+                                              child: Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.warning,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
               ),
             ),
-            // 길찾기 실행 버튼
+
             Padding(
               padding: const EdgeInsets.all(20),
               child: SizedBox(
@@ -360,11 +741,11 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFindPathEnabled
                         ? AppColors.primary
-                        : AppColors.grey300,
+                        : AppColors.grey200,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    disabledBackgroundColor: AppColors.grey300,
+                    disabledBackgroundColor: AppColors.grey200,
                   ),
                   child: Text(
                     '길찾기',

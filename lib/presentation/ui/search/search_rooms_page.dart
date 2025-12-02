@@ -158,6 +158,8 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
       pathProvider.setWaypoint2(classroom);
     } else {
       // 기본 모드: 목적지로 설정하고 pathSelection으로 이동
+      // 이건 새로운 경로 탐색이므로 기존에 남아있던 출발지/목적지 정보는 초기화
+      pathProvider.reset();
       pathProvider.setDestination(classroom);
     }
     context.go("/home/pathSelection");
