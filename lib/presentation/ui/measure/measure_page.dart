@@ -270,7 +270,7 @@ class _MeasurePageState extends State<MeasurePage> {
     }
 
     // 보폭 계산: 총 거리 / 걸음수
-    final double strideLength = _route!.totalDistance / _stepCount;
+    final double strideLength = _route!.totalDistance * 10 / _stepCount;
 
     // 결과 페이지로 이동
     context.push("/measure/measureResult", extra: strideLength);

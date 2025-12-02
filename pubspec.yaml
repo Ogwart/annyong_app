@@ -45,6 +45,8 @@ dependencies:
   shared_preferences: ^2.3.3
   flutter_compass: ^0.8.1
   flutter_blue_plus: ^1.32.9
+  geolocator: ^13.0.0
+  
   flutter_svg: ^2.2.3
 
 dev_dependencies:

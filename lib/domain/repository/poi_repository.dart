@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:annyong/domain/entity/beacon.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/poi_category.dart';
@@ -18,6 +19,7 @@ class PoiRepository {
   List<Poi>? _cachedPois;
   Map<int, Vertex>? _cachedVertices;
   Map<int, List<Edge>>? _cachedAdjacencyList;
+  List<Beacon>? _cachedBeacons;
 
   Future<List<PoiCategory>> fetchCategories() async {
     if (_cachedCategories != null) {
@@ -123,6 +125,22 @@ class PoiRepository {
     }
   }
 
+  //비콘 데이터 로드 및 캐싱
+  Future<List<Beacon>> fetchBeacons() async {
+    if (_cachedBeacons != null) return _cachedBeacons!;
+    try {
+      final raw = await rootBundle.loadString('assets/poi/beacon.json');
+      final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
+      _cachedBeacons = decoded
+          .map((item) => Beacon.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('비콘 데이터 로드 실패: $e');
+      _cachedBeacons = [];
+    }
+    return _cachedBeacons!;
+  }
+
   int? _tryParseInt(dynamic value) {
     if (value == null) return null;
     if (value is int) return value;
@@ -180,5 +198,88 @@ class PoiRepository {
     final dx = v1.x - v2.x;
     final dy = v1.y - v2.y;
     return sqrt(dx * dx + dy * dy);
+  }
+
+  Future<Beacon?> findBeaconByMac(String macId) async {
+    final beacons = await fetchBeacons();
+    try {
+      return beacons.firstWhere(
+        (b) => b.macId.toLowerCase() == macId.toLowerCase(),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ===========================================================================
+  // [NEW] 맵 매칭 & 위치 보정용 헬퍼 함수들
+  // ===========================================================================
+
+  /// 특정 좌표(x, y)에서 가장 가까운 Edge N개를 찾아서 반환
+  Future<List<(Edge, Vertex, Vertex, double)>> findNearestEdges(
+    double x,
+    double y, {
+    int count = 3,
+  }) async {
+    await _loadVertices();
+    await _loadEdges();
+
+    final List<(Edge, Vertex, Vertex, double)> candidates = [];
+    final visitedEdgeKeys = <String>{};
+
+    _cachedAdjacencyList?.forEach((startVId, edges) {
+      final startV = _cachedVertices![startVId];
+      if (startV == null) return;
+
+      for (var edge in edges) {
+        final endV = _cachedVertices![edge.toVertexId];
+        if (endV == null) return;
+
+        // 중복 방지 (양방향 엣지 하나로 취급)
+        final key = startVId < edge.toVertexId
+            ? '$startVId-${edge.toVertexId}'
+            : '${edge.toVertexId}-$startVId';
+
+        if (visitedEdgeKeys.contains(key)) continue;
+        visitedEdgeKeys.add(key);
+
+        final dist = _getDistanceToSegment(x, y, startV, endV);
+        candidates.add((edge, startV, endV, dist));
+      }
+    });
+
+    candidates.sort((a, b) => a.$4.compareTo(b.$4));
+    return candidates.take(count).toList();
+  }
+
+  /// 점(px, py)와 선분(v1-v2) 사이의 최단 거리 계산
+  double _getDistanceToSegment(double px, double py, Vertex v1, Vertex v2) {
+    final double x1 = v1.x;
+    final double y1 = v1.y;
+    final double x2 = v2.x;
+    final double y2 = v2.y;
+
+    final double dx = x2 - x1;
+    final double dy = y2 - y1;
+
+    if (dx == 0 && dy == 0) {
+      return sqrt(pow(px - x1, 2) + pow(py - y1, 2));
+    }
+
+    final double t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+
+    double closestX, closestY;
+    if (t < 0) {
+      closestX = x1;
+      closestY = y1;
+    } else if (t > 1) {
+      closestX = x2;
+      closestY = y2;
+    } else {
+      closestX = x1 + t * dx;
+      closestY = y1 + t * dy;
+    }
+
+    return sqrt(pow(px - closestX, 2) + pow(py - closestY, 2));
   }
 }
