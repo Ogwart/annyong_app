@@ -741,11 +741,11 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFindPathEnabled
                         ? AppColors.primary
-                        : AppColors.grey300,
+                        : AppColors.grey200,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    disabledBackgroundColor: AppColors.grey300,
+                    disabledBackgroundColor: AppColors.grey200,
                   ),
                   child: Text(
                     '길찾기',
