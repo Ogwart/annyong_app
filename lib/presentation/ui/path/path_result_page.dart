@@ -56,7 +56,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
   void _onStartNavigation() {
     context.push(
-      '/home/pathSelection/pathResult',
+      '/home/pathSelection/pathNavi',
       extra: {
         'start': widget.start,
         'end': widget.end,
@@ -180,8 +180,17 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.grey200,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.grey200, width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: const Offset(2, 4),
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
                     clipBehavior: Clip.hardEdge,
                     child: LayoutBuilder(
