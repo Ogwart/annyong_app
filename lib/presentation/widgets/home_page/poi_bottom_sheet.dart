@@ -160,9 +160,11 @@ class _PoiBottomSheetState extends ConsumerState<PoiBottomSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
-                    ref
-                        .read(pathSelectionProvider.notifier)
-                        .setDeparture(widget.poi);
+                    final pathProvider = ref.read(
+                      pathSelectionProvider.notifier,
+                    );
+                    pathProvider.reset(); // 기존에 남아있을지 모를 길찾기 정보 제거
+                    pathProvider.setDeparture(widget.poi);
                     context.pop(); // 바텀 시트 닫기
                     context.go('/home/pathSelection');
                   },
@@ -187,9 +189,11 @@ class _PoiBottomSheetState extends ConsumerState<PoiBottomSheet> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    ref
-                        .read(pathSelectionProvider.notifier)
-                        .setDestination(widget.poi);
+                    final pathProvider = ref.read(
+                      pathSelectionProvider.notifier,
+                    );
+                    pathProvider.reset(); // 기존에 남아있을지 모를 길찾기 정보 제거
+                    pathProvider.setDestination(widget.poi);
                     context.pop(); // 바텀 시트 닫기
                     context.go('/home/pathSelection');
                   },
