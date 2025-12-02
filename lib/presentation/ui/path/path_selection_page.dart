@@ -222,25 +222,19 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
   }
 
   void _removeWaypoint(int index) {
-    // 1. 현재 Provider에 저장된 실제 POI 데이터들을 가져와 순서대로 추가
+    final notifier = ref.read(pathSelectionProvider.notifier);
     final pathState = ref.read(pathSelectionProvider);
-    final List<Poi?> currentPois = [];
 
-    if (pathState.waypoint1 != null) currentPois.add(pathState.waypoint1);
-    if (pathState.waypoint2 != null) currentPois.add(pathState.waypoint2);
-
-    // 이미 무언가 입력된 경유지를 삭제하는 경우 해당 경유지 삭제 후 남은 경유지 데이터 재정렬
-    if (index < currentPois.length) {
-      currentPois.removeAt(index);
-      final notifier = ref.read(pathSelectionProvider.notifier);
-      notifier.setWaypoint1(currentPois.isNotEmpty ? currentPois[0] : null);
-      notifier.setWaypoint2(currentPois.length > 1 ? currentPois[1] : null);
+    if (index == 0) {
+      // 첫 번째 경유지를 삭제하는 경우:
+      // 두 번째 경유지(waypoint2)가 있다면 첫 번째 자리로 옮기고, 두 번째 자리는 명시적으로 비움
+      notifier.setWaypoint1(pathState.waypoint2);
+      notifier.setWaypoint2(null);
+    } else if (index == 1) {
+      // 두 번째 경유지를 삭제하는 경우:
+      // 첫 번째 경유지는 그대로 두고, 두 번째 자리만 비움
+      notifier.setWaypoint2(null);
     }
-
-    // UI 업데이트 (바로 업데이트가 안돼서 강제로 하라고 집어넣음)
-    setState(() {
-      _waypoints.removeAt(index);
-    });
   }
 
   void _handleFindPath() {
