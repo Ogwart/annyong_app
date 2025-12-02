@@ -1,3 +1,4 @@
+import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,9 +30,19 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
   final TransformationController _transformationController =
       TransformationController();
 
+  // 현재 보고 있는 건물과 층 상태
+  late String _currentBuilding;
+  late String _currentFloor;
+
   @override
   void initState() {
     super.initState();
+    // 초기화 기준: 출발지의 건물/층으로 설정
+    _currentBuilding = MapUtilFunctions.getBuildingName(
+      widget.start.buildingId,
+    );
+    _currentFloor = '${widget.start.floor}F';
+
     _transformationController.addListener(() {
       setState(() {});
     });
@@ -43,22 +54,9 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
     super.dispose();
   }
 
-  /// buildingId를 건물 이름으로 변환
-  String _getBuildingName(int buildingId) {
-    switch (buildingId) {
-      case 1:
-      case 2:
-        return '5호관';
-      case 3:
-        return '하이테크관';
-      default:
-        return '5호관';
-    }
-  }
-
   void _onStartNavigation() {
     context.push(
-      '/home/pathSelection/pathNavi',
+      '/home/pathSelection/pathResult',
       extra: {
         'start': widget.start,
         'end': widget.end,
@@ -67,33 +65,42 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
     );
   }
 
+  // 건물 변경 (순환)
+  void _cycleBuildings(Set<String> involvedBuildings) {
+    if (involvedBuildings.isEmpty) return;
+
+    setState(() {
+      final buildingList = involvedBuildings.toList();
+      final currentIndex = buildingList.indexOf(_currentBuilding);
+      final nextIndex = (currentIndex + 1) % buildingList.length;
+
+      _currentBuilding = buildingList[nextIndex];
+      _currentFloor = '1F'; // 건물 변경 시 1층으로 초기화
+
+      // 맵 배율/위치 초기화 (선택 사항)
+      _transformationController.value = Matrix4.identity();
+    });
+  }
+
+  // 층 변경
+  void _changeFloor(String floor) {
+    setState(() {
+      _currentFloor = floor;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pathfinderAsync = ref.watch(pathFinderProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('경로 미리보기')),
+      appBar: AppBar(title: const Text('경로 탐색 결과')),
       body: SafeArea(
         child: pathfinderAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('오류 발생', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(
-                  err.toString(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
+          error: (err, stack) => Center(child: Text('오류 발생: $err')),
           data: (pathFinder) {
-            // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
+            // 1. 경로 탐색 및 데이터 준비
             final List<int> visitOrder = [
               widget.start.vertexId ?? -1,
               ...widget.waypoints.map((e) => e.vertexId ?? -1),
@@ -119,56 +126,45 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             );
             final double totalCost = jsonResult['total_cost'] ?? 0.0;
 
-            // 현재 보여줄 건물/층 정보 (출발지 기준)
-            final buildingName = _getBuildingName(widget.start.buildingId);
-            final floorString = '${widget.start.floor}F';
-            final int currentBuildingId = widget.start.buildingId;
-            final int currentFloor = widget.start.floor;
+            // 2. 경로에 포함된 모든 POI 및 건물 분석
+            final allPois = [widget.start, ...widget.waypoints, widget.end];
+            final involvedBuildings = allPois
+                .map((p) => MapUtilFunctions.getBuildingName(p.buildingId))
+                .toSet();
 
-            // 지도 이미지 경로
+            // 3. 현재 뷰 설정 (상태 변수 사용)
+            final currentBuildingId = MapUtilFunctions.getBuildingId(
+              _currentBuilding,
+            );
+            final currentFloorNum = MapUtilFunctions.getFloorNumber(
+              _currentFloor,
+            );
+
             final mapImagePath = MapUtilFunctions.getImagePath(
-              buildingName,
-              floorString,
+              _currentBuilding,
+              _currentFloor,
               '2x',
             );
 
-            // 마커 데이터 구성
+            // 4. 현재 건물/층에 있는 마커 필터링
             final List<Map<String, dynamic>> markersToShow = [];
 
-            // 1. 출발지
-            if (widget.start.buildingId == currentBuildingId &&
-                widget.start.floor == currentFloor) {
-              markersToShow.add({
-                'poi': widget.start,
-                'type': 'start',
-                'label': '출발지',
-              });
-            }
-            // 2. 경유지
-            for (int i = 0; i < widget.waypoints.length; i++) {
-              final wp = widget.waypoints[i];
-              if (wp.buildingId == currentBuildingId &&
-                  wp.floor == currentFloor) {
-                markersToShow.add({
-                  'poi': wp,
-                  'type': 'waypoint',
-                  'label': '경유지${i + 1}',
-                });
+            void addMarkerIfMatch(Poi poi, String type, String label) {
+              if (poi.buildingId == currentBuildingId &&
+                  poi.floor == currentFloorNum) {
+                markersToShow.add({'poi': poi, 'type': type, 'label': label});
               }
             }
-            // 3. 도착지
-            if (widget.end.buildingId == currentBuildingId &&
-                widget.end.floor == currentFloor) {
-              markersToShow.add({
-                'poi': widget.end,
-                'type': 'end',
-                'label': '목적지',
-              });
+
+            addMarkerIfMatch(widget.start, 'start', '출발지');
+            for (int i = 0; i < widget.waypoints.length; i++) {
+              addMarkerIfMatch(widget.waypoints[i], 'waypoint', '경유지${i + 1}');
             }
+            addMarkerIfMatch(widget.end, 'end', '목적지');
 
             return Column(
               children: [
-                // ------------------ 요약 정보 카드 ------------------
+                // ------------------ 요약 정보 ------------------
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: CostCard(
@@ -179,7 +175,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                   ),
                 ),
 
-                // ------------------ 지도 미리보기 ------------------
+                // ------------------ 지도 미리보기 영역 ------------------
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -193,8 +189,8 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                         final containerSize = constraints.biggest;
                         final baseOriginalSize =
                             MapUtilFunctions.getImageOriginalSize(
-                              buildingName,
-                              floorString,
+                              _currentBuilding,
+                              _currentFloor,
                               '1x',
                             );
 
@@ -208,7 +204,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                             displayedImageSize.width / baseOriginalSize.width;
                         final scaleY =
                             displayedImageSize.height / baseOriginalSize.height;
-
                         final imageOffsetX =
                             (containerSize.width - displayedImageSize.width) /
                             2;
@@ -339,6 +334,104 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                 ),
                               );
                             }),
+
+                            // 건물 전환 버튼: 경로에 포함된 건물이 2개 이상일 때만 표시
+                            if (involvedBuildings.length > 1)
+                              Positioned(
+                                bottom: 16,
+                                left: 16,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _cycleBuildings(involvedBuildings),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.grey200,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _currentBuilding,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: AppColors.text,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.swap_horiz_rounded,
+                                          size: 16,
+                                          color: AppColors.text,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // 층 이동 버튼: 해당 층에 POI가 있으면 뱃지 표시
+                            Positioned(
+                              bottom: 16,
+                              right: 16,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children:
+                                    MapUtilFunctions.getAvailableFloors(
+                                      _currentBuilding,
+                                    ).map((floor) {
+                                      // 뱃지 조건 확인
+                                      final bool hasPointOnThisFloor = allPois
+                                          .any((poi) {
+                                            return poi.buildingId ==
+                                                    currentBuildingId &&
+                                                '${poi.floor}F' == floor;
+                                          });
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          alignment: Alignment.topRight,
+                                          children: [
+                                            FloorButton(
+                                              floor: floor,
+                                              isSelected:
+                                                  _currentFloor == floor,
+                                              onTap: () => _changeFloor(floor),
+                                            ),
+                                            // 빨간 뱃지
+                                            if (hasPointOnThisFloor)
+                                              Positioned(
+                                                top: 6,
+                                                right: 6,
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.warning,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
                           ],
                         );
                       },
