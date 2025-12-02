@@ -361,8 +361,17 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.grey200,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.grey200, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(2, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Builder(
                   builder: (context) {
