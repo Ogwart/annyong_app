@@ -263,7 +263,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     debugPrint('----------- [_handleFindPath End] -----------');
 
     context.go(
-      '/home/pathSelection/pathResult',
+      '/home/pathSelection/pathPreview',
       extra: {'start': startPoi, 'end': endPoi, 'waypoints': activeWaypoints},
     );
   }
@@ -538,11 +538,11 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                                         'assets/icons/svg/stopover_marker.svg';
                                     if (poi.id == pathState.departure?.id) {
                                       iconPath =
-                                          'assets/icons/svg/destination_marker.svg';
+                                          'assets/icons/svg/departure_marker.svg';
                                     } else if (poi.id ==
                                         pathState.destination?.id) {
                                       iconPath =
-                                          'assets/icons/svg/arrival_marker.svg';
+                                          'assets/icons/svg/destination_marker.svg';
                                     }
                                     const double iconSize = 35.0;
 
