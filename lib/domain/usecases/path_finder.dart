@@ -93,7 +93,6 @@ class PathFinder {
     for (int i = 0; i < orderedVertexIds.length - 1; i++) {
       final startId = orderedVertexIds[i];
       final endId = orderedVertexIds[i + 1];
-      debugPrint('-- 구간 탐색 $i: $startId -> $endId');
 
       // 구간 경로 탐색
       final result = findShortestPath(startId, endId);
@@ -113,9 +112,8 @@ class PathFinder {
       }
 
       totalCost += result.totalCost;
-      debugPrint('구간 $i 성공: 비용 ${result.totalCost}, 길이 ${result.path.length}');
     }
-    debugPrint('-- 경로 탐색 완료: 총비용 $totalCost, 총길이 ${fullPath.length}');
+    debugPrint('경로 탐색 완료: 총비용 $totalCost, 총길이 ${fullPath.length}');
     debugPrint('----------- [findPathWithWaypoints End] -----------');
     return PathResult(path: fullPath, totalCost: totalCost);
   }
