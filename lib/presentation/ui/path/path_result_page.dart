@@ -87,7 +87,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
   void _onStartNavigation() {
     context.push(
-      '/home/pathSelection/pathResult',
+      '/home/pathSelection/pathNavi',
       extra: {
         'start': widget.start,
         'end': widget.end,
@@ -460,7 +460,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                     ),
                                   ),
 
-                                // 층 이동 버튼 (기존 코드 유지)
+                                // 층 이동 버튼
                                 Positioned(
                                   bottom: 16,
                                   right: 16,
@@ -518,7 +518,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                         ),
                       ),
 
-                      // CostCard 오버레이 (기존 코드 유지)
+                      // CostCard 오버레이
                       Positioned(
                         top: 24,
                         left: 20,
@@ -534,7 +534,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                   ),
                 ),
 
-                // 하단 버튼 영역 (기존 코드 유지)
+                // 하단 버튼 영역
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
