@@ -136,9 +136,15 @@ class AppRouter {
           GoRoute(
             path: "measureResult",
             builder: (context, state) {
-              final extra = state.extra;
-              final double? strideLength = extra is double ? extra : null;
-              return MeasureResultPage(strideLength: strideLength);
+              // 1. MeasurePage에서 보낸 Map 데이터를 받습니다.
+              // (context.push("/measure/measureResult", extra: {...}) 로 보낸 값)
+              final args = state.extra as Map<String, dynamic>;
+
+              // 2. Map에서 데이터를 꺼내 생성자에 넣어줍니다.
+              return MeasureResultPage(
+                walkedSteps: args['walkedSteps'] as int,
+                totalDistance: args['totalDistance'] as double,
+              );
             },
           ),
         ],

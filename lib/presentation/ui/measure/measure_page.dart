@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -12,6 +13,12 @@ import 'package:go_router/go_router.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// 측정 진행 단계를 정의합니다.
+/// ready: 경로 탐색 완료, 사용자가 시작 지점에 서 있는지 확인하는 단계
+/// standby: 준비 완료 버튼 누름, '출발' 버튼을 누르기 대기하는 단계
+/// measuring: 걷는 중, '도착' 버튼을 누르기 대기하는 단계
+enum MeasureStep { ready, standby, measuring }
+
 class MeasurePage extends StatefulWidget {
   final Poi? startPoi;
 
@@ -22,6 +29,7 @@ class MeasurePage extends StatefulWidget {
 }
 
 class _MeasurePageState extends State<MeasurePage> {
+  // 보폭 측정 서비스 (경로 탐색용)
   final CalibrationService _calibrationService = CalibrationService(
     PoiRepository(),
   );
@@ -33,25 +41,36 @@ class _MeasurePageState extends State<MeasurePage> {
   final TransformationController _transformationController =
       TransformationController();
 
+  // 탐색된 경로 정보 (목적지 Vertex, POI 포함)
   CalibrationRoute? _route;
+
+  // 로딩 및 에러 상태 관리
   bool _isLoading = true;
   String? _errorMessage;
-  int _stepCount = 0; // 측정 중 이동한 걸음수
-  int _initialStepCount = 0; // 측정 시작 시점의 걸음수
+
+  // ---------------------------------------------------------------------------
+  // [걸음수 측정 관련 변수]
+  // ---------------------------------------------------------------------------
+  int _currentPedometerSteps = 0; // 센서에서 들어오는 실시간 누적 걸음수
+  int _startSteps = 0; // '출발' 버튼을 누른 시점의 걸음수 저장
   StreamSubscription<StepCount>? _stepCountSubscription;
   bool _isStepCountAvailable = false;
-  String? _stepCountError;
 
-  // 지도 위치 초기화 여부 확인
+  // 현재 측정 단계 관리 (기본값: 준비 단계)
+  MeasureStep _currentStep = MeasureStep.ready;
+
+  // 지도 초기화 여부 확인
   bool _isMapInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // 초기 타겟 설정
     _targetPoi = widget.startPoi;
 
+    // 권한 요청 및 만보기 센서 초기화
     _requestPermissionAndInit();
+
+    // 시작 지점이 있으면 바로 경로 탐색 시작
     if (widget.startPoi != null) {
       _findRoute();
     } else {
@@ -61,8 +80,8 @@ class _MeasurePageState extends State<MeasurePage> {
       });
     }
 
+    // 지도 움직임(줌/팬) 감지하여 화면 갱신 (경로 선 다시 그리기 위해 필요)
     _transformationController.addListener(() {
-      // 화면 갱신이 필요할 경우 (마커 위치 동기화 등)
       if (mounted) setState(() {});
     });
   }
@@ -74,19 +93,20 @@ class _MeasurePageState extends State<MeasurePage> {
     super.dispose();
   }
 
-  // 지도 초기 위치 설정 (출발지와 목적지 중점이 화면 중앙에 오도록)
+  /// 지도 이미지와 경로가 화면 중앙에 잘 보이도록 초기 위치와 배율을 설정합니다.
   void _initializeMapPosition(Size containerSize) {
     if (_isMapInitialized ||
         _route == null ||
         containerSize.width <= 0 ||
-        containerSize.height <= 0)
+        containerSize.height <= 0) {
       return;
+    }
 
+    // 건물 이름 및 층 정보 가져오기
     final buildingName = _getBuildingName(_route!.startPoi.buildingId);
     final floorString = '${_route!.startPoi.floor}F';
 
-    // 기존에 '2x'로 되어 있어서 좌표 계산 배율이 틀어졌던 것이기 때문에
-    // 마커 로직과 동일하게 '1x' 기준으로 원본 크기를 가져오도록 변경
+    // 지도 원본 이미지 사이즈 가져오기
     final originalSize = MapUtilFunctions.getImageOriginalSize(
       buildingName,
       floorString,
@@ -95,40 +115,45 @@ class _MeasurePageState extends State<MeasurePage> {
 
     if (originalSize.width == 0 || originalSize.height == 0) return;
 
+    // 화면에 표시된 이미지 사이즈 계산 (BoxFit.contain 기준)
     final displayedSize = MapUtilFunctions.getDisplayedImageSize(
       containerSize,
       originalSize,
     );
 
-    // 2. 스케일 계산 (BoxFit.contain이므로 가로/세로 비율 중 맞는 것 하나만 쓰면 됨)
-    // displayedSize는 이미 비율이 맞춰진 크기이므로 width 기준으로 계산
     final scale = displayedSize.width / originalSize.width;
-
-    // 3. 여백(Offset) 계산
     final offsetX = (containerSize.width - displayedSize.width) / 2;
     final offsetY = (containerSize.height - displayedSize.height) / 2;
 
-    // 4. 출발지 좌표를 화면상 절대 좌표로 변환
+    // 출발지 좌표 계산
     final startX = _route!.startPoi.xCoord * scale + offsetX;
     final startY = _route!.startPoi.yCoord * scale + offsetY;
 
-    // 5. 목적지 좌표 계산 (줌 레벨 결정을 위해)
-    final endX = _route!.destinationPoi.xCoord * scale + offsetX;
-    final endY = _route!.destinationPoi.yCoord * scale + offsetY;
+    // 도착지 좌표 계산 (POI가 없으면 Vertex 좌표 사용)
+    final destXVal =
+        _route!.destinationPoi?.xCoord ?? _route!.destinationVertex.x;
+    final destYVal =
+        _route!.destinationPoi?.yCoord ?? _route!.destinationVertex.y;
 
-    // 6. 줌 레벨 계산 (화면 너비의 40% 정도가 되도록)
+    final endX = destXVal * scale + offsetX;
+    final endY = destYVal * scale + offsetY;
+
+    // 두 점 사이의 거리에 따라 줌 레벨 자동 조정
     final dist = math.sqrt(
       math.pow(startX - endX, 2) + math.pow(startY - endY, 2),
     );
+
+    // 거리가 멀면 줌을 작게, 가까우면 줌을 크게 (화면의 40% 정도 차지하도록)
     double targetScale = (dist > 0) ? (containerSize.width * 0.4 / dist) : 3.0;
-    targetScale = targetScale.clamp(2.5, 6.0);
+    targetScale = targetScale.clamp(2.5, 6.0); // 최소/최대 줌 제한
 
-    // 7. 중앙 정렬을 위한 이동량(Translation) 계산
-    // 화면 중앙 - (출발지 * 줌배율)
-    final tx = (containerSize.width / 2) - (startX * targetScale);
-    final ty = (containerSize.height / 2) - (startY * targetScale);
+    // 두 점의 중간 지점이 화면 중앙에 오도록 이동
+    final midX = (startX + endX) / 2;
+    final midY = (startY + endY) / 2;
 
-    // 8. 매트릭스 적용
+    final tx = (containerSize.width / 2) - (midX * targetScale);
+    final ty = (containerSize.height / 2) - (midY * targetScale);
+
     final matrix = Matrix4.identity()
       ..translate(tx, ty)
       ..scale(targetScale);
@@ -139,141 +164,100 @@ class _MeasurePageState extends State<MeasurePage> {
     if (mounted) setState(() {});
   }
 
+  /// 활동 인식 권한 요청 및 만보기 초기화
   Future<void> _requestPermissionAndInit() async {
-    // Android에서 활동 인식 권한 요청
     if (Platform.isAndroid) {
       final status = await Permission.activityRecognition.request();
-
       if (status.isDenied || status.isPermanentlyDenied) {
-        if (mounted) {
-          setState(() {
-            _isStepCountAvailable = false;
-            _stepCountError = "걸음수 측정을 위해 활동 인식 권한이 필요합니다.\n설정에서 권한을 허용해주세요.";
-          });
-        }
+        // 권한 거부 시 처리가 필요하다면 여기에 추가
         return;
       }
     }
-
-    // 권한이 허용되었거나 iOS인 경우 pedometer 초기화
-    await _initPedometer();
+    _initPedometer();
   }
 
-  Future<void> _initPedometer() async {
-    try {
-      // 현재 걸음수 가져오기 (첫 번째 이벤트로 초기값 설정)
-      _stepCountSubscription = Pedometer.stepCountStream.listen(
-        (StepCount event) {
-          if (mounted) {
-            setState(() {
-              // 첫 번째 이벤트면 초기값으로 설정
-              if (_initialStepCount == 0) {
-                _initialStepCount = event.steps;
-                _isStepCountAvailable = true;
-              }
-
-              // 측정 시작 후 이동한 걸음수 = 현재 걸음수 - 시작 시점 걸음수
-              _stepCount = event.steps - _initialStepCount;
-              if (_stepCount < 0) {
-                _stepCount = 0; // 음수 방지
-              }
-            });
-          }
-        },
-        onError: (error) {
-          if (mounted) {
-            setState(() {
-              _isStepCountAvailable = false;
-              _stepCountError =
-                  "걸음수 측정 중 오류: $error\n권한을 확인하거나 실제 기기에서 실행해주세요.";
-            });
-          }
-        },
-        cancelOnError: false,
-      );
-
-      // 스트림이 이벤트를 발생시키지 않는 경우를 대비해 타임아웃 설정
-      Future.delayed(const Duration(seconds: 5), () {
-        if (mounted && !_isStepCountAvailable && _stepCountError == null) {
+  /// 만보기 센서 스트림 구독
+  void _initPedometer() {
+    _stepCountSubscription = Pedometer.stepCountStream.listen(
+      (StepCount event) {
+        if (mounted) {
           setState(() {
-            _stepCountError =
-                "걸음수 측정이 시작되지 않았습니다.\n권한을 확인하거나 기기를 움직여보세요.\n(시뮬레이터에서는 작동하지 않습니다)";
+            _currentPedometerSteps = event.steps;
+            _isStepCountAvailable = true;
           });
         }
-      });
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isStepCountAvailable = false;
-          _stepCountError = "걸음수 측정 초기화 실패: $e\n실제 기기에서 실행해주세요.";
-        });
-      }
-    }
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() {
+            _isStepCountAvailable = false;
+          });
+        }
+      },
+      cancelOnError: false,
+    );
   }
 
+  /// 보폭 측정 경로 탐색 (Hybrid Logic 적용)
   Future<void> _findRoute() async {
-    // _targetPoi가 없으면 실행하지 않음
     if (_targetPoi == null) return;
 
     try {
-      debugPrint("----------- [_findRoute Start] ----------- ");
-      debugPrint(
-        "경로 탐색 시작: Start POI = ${widget.startPoi?.name} (ID: ${widget.startPoi?.id})",
-      );
-
-      // widget.startPoi 대신 _targetPoi 사용
+      // CalibrationService를 통해 최적의 경로(POI 우선, 없으면 랜드마크) 탐색
       final route = await _calibrationService.findTargetRoute(_targetPoi!);
+
       setState(() {
         _route = route;
         _isLoading = false;
+
+        // 탐색 실패 시 null 반환됨 -> _errorMessage를 null로 유지하여 실패 UI(_buildFailureView) 표시
         if (route == null) {
-          // 측정 불가용 UX 화면을 보여주기 위해 _errorMessage를 명시적으로 비워둠
-          // _errorMessage = "측정 가능한 경로를 찾을 수 없습니다.\n콘솔 로그를 확인해주세요.";
           _errorMessage = null;
         }
       });
-    } catch (e, stackTrace) {
-      debugPrint("[Error] 경로 탐색 중 치명적 에러 발생: $e");
-      debugPrint(" -- 스택 트레이스: $stackTrace"); // 에러 파일 위치 디버깅용
-
+    } catch (e) {
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
       });
     }
-    debugPrint("----------- [_findRoute End] ----------- ");
   }
 
-  Future<void> _goToResultPage(double strideLength) async {
-    // 결과 페이지로 이동하고, 사용자가 '확인'을 눌러서 pop될 때까지 대기
-    await context.push("/measure/measureResult", extra: strideLength);
+  // ---------------------------------------------------------------------------
+  // [UI 이벤트 핸들러]
+  // ---------------------------------------------------------------------------
 
-    // 결과 페이지가 닫히면(측정 완료), 홈으로 이동
-    if (mounted) {
-      context.go("/home");
-    }
+  /// [준비됐어요] 버튼 클릭 시 -> 대기 상태로 전환
+  void _onReadyPressed() {
+    setState(() {
+      _currentStep = MeasureStep.standby;
+    });
   }
 
-  void _onArrived() {
-    if (_route == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("경로 정보가 없습니다.")));
-      return;
-    }
+  /// [출발!] 버튼 클릭 시 -> 측정 시작 (시작 걸음수 기록)
+  void _onStartPressed() {
+    setState(() {
+      // 현재 누적 걸음수를 시작점으로 기록 (0부터 시작하는 효과)
+      _startSteps = _currentPedometerSteps;
+      _currentStep = MeasureStep.measuring;
+    });
+  }
 
-    if (_stepCount == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("걸음수가 0입니다. 이동 후 다시 시도해주세요.")),
-      );
-      return;
-    }
+  /// [도착했습니다] 버튼 클릭 시 -> 결과 페이지로 이동
+  void _onArrivedPressed() {
+    if (_route == null) return;
 
-    // 보폭 계산: 총 거리 / 걸음수
-    final double strideLength = _route!.totalDistance / _stepCount;
+    // 최종 걸음수 계산 (현재값 - 시작값)
+    final int walkedSteps = _currentPedometerSteps - _startSteps;
 
-    // 결과 페이지로 이동
-    context.push("/measure/measureResult", extra: strideLength);
+    // 결과 페이지로 이동 (걸음수와 총 거리 전달)
+    context.push(
+      "/measure/measureResult",
+      extra: {
+        "walkedSteps": walkedSteps, // int
+        "totalDistance": _route!.totalDistance, // double
+      },
+    );
   }
 
   String _getBuildingName(int buildingId) {
@@ -290,209 +274,41 @@ class _MeasurePageState extends State<MeasurePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 도착지 이름 및 안내 텍스트 설정
+    String destinationName = "도착지";
+    String guideText = "";
+
+    if (_route != null) {
+      if (_route!.destinationPoi != null) {
+        // POI가 있는 경우
+        destinationName = _route!.destinationPoi!.name;
+        guideText = "(${_route!.totalDistance.toStringAsFixed(1)}m, 직진)";
+      } else {
+        // 랜드마크(코너, 막다른 길)인 경우
+        destinationName = "복도 끝 (코너)";
+        guideText = "(${_route!.totalDistance.toStringAsFixed(1)}m, 직진)";
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text("보폭 측정"), centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-          ? SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, color: Colors.red),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (mounted) {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go("/home");
-                            }
-                          }
-                        },
-                        child: const Text("돌아가기"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
+          // 에러 발생 시 화면
+          ? _buildErrorView()
           : _route == null
-          // -------------------- [예외처리용 화면] --------------------
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // 상단 실패 아이콘 (정상 화면과 위치 통일)
-                    Expanded(
-                      flex: 2,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(40),
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.grey200,
-                          ),
-                          child: Icon(
-                            Icons.straighten_outlined,
-                            size: 48,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // 설명 문구 (정상 화면의 경로 정보와 비슷한 위치)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      margin: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "직선 경로를 찾기 어려워요",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.text,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n도착지로 삼을만한 시설물이 부족합니다.\n다른 장소를 선택하거나 기본값을 사용해주세요.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // 버튼을 아래로 밀어내기 위해 하단 여백 채우기
-                    const Spacer(),
-
-                    // 선택지 제공 버튼: 기본값(0.7m) 설정
-                    GestureDetector(
-                      onTap: () {
-                        _goToResultPage(0.7);
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(40), // 둥근 모서리 통일
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withAlpha(30),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "기본 보폭(70cm)으로 설정",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // 재시도 옵션 (다른 출발지 선택)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () async {
-                            if (mounted) {
-                              // POI 선택 페이지로 이동하여 결과를 기다림
-                              final selectedPoi = await context.push<Poi>(
-                                "/measureSelectPoi",
-                                extra: {"returnResult": true},
-                              );
-
-                              // 선택된 POI가 있으면 상태 업데이트 및 재탐색
-                              if (selectedPoi != null && mounted) {
-                                setState(() {
-                                  _targetPoi = selectedPoi;
-                                  _isLoading = true; // 로딩 표시
-                                  _errorMessage = null; // 에러 초기화
-                                  _route = null; // 기존 경로 초기화
-                                });
-                                _findRoute(); // 재탐색 실행
-                              }
-                            }
-                          },
-                          child: Text(
-                            "다른 출발지 선택하기",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            if (mounted) {
-                              context.go('/home');
-                            }
-                          },
-                          child: Text(
-                            "홈 화면으로 돌아가기",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40), // 하단 여백
-                  ],
-                ),
-              ),
-            )
-          // -------------------- [정상 보폭 측정용 화면] --------------------
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // --------------------경로 정보--------------------
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
+          // -------------------- [경로 탐색 실패 시 UI] --------------------
+          ? _buildFailureView()
+          // -------------------- [측정 화면 (지도 표시)] --------------------
+          : Column(
+              children: [
+                // -------------------- 상단 안내 영역 --------------------
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.grey200,
                       borderRadius: BorderRadius.circular(12),
@@ -501,353 +317,501 @@ class _MeasurePageState extends State<MeasurePage> {
                       children: [
                         Text(
                           "출발: ${_route!.startPoi.name}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "목적지: ${_route!.destinationPoi.name}",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // --------------------지도 영역--------------------
-                  Builder(
-                    builder: (context) {
-                      final buildingName = _getBuildingName(
-                        _route!.startPoi.buildingId,
-                      );
-                      final floorString = '${_route!.startPoi.floor}F';
-
-                      // 2x 이미지 경로
-                      final mapImagePath = MapUtilFunctions.getImagePath(
-                        buildingName,
-                        floorString,
-                        '2x',
-                      );
-
-                      return Container(
-                        height: 300,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.grey200,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final containerSize = Size(
-                                constraints.maxWidth,
-                                constraints.maxHeight,
-                              );
-
-                              // 초기 위치 계산 (최초 1회)
-                              if (!_isMapInitialized) {
-                                // LayoutBuilder 내부에서 setState 직접 호출 불가하므로 postFrameCallback
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  _initializeMapPosition(containerSize);
-                                });
-                              }
-
-                              // 마커 위치 계산을 위한 변수들
-                              final originalSize =
-                                  MapUtilFunctions.getImageOriginalSize(
-                                    buildingName,
-                                    floorString,
-                                    '1x',
-                                  );
-
-                              final displayedSize =
-                                  MapUtilFunctions.getDisplayedImageSize(
-                                    containerSize,
-                                    originalSize,
-                                  );
-
-                              final scaleX =
-                                  displayedSize.width / originalSize.width;
-                              final scaleY =
-                                  displayedSize.height / originalSize.height;
-
-                              // 이미지가 중앙 정렬되면서 생기는 오프셋 (BoxFit.contain 특성)
-                              final offsetX =
-                                  (containerSize.width - displayedSize.width) /
-                                  2;
-                              final offsetY =
-                                  (containerSize.height -
-                                      displayedSize.height) /
-                                  2;
-
-                              return Stack(
-                                children: [
-                                  // InteractiveViewer
-                                  Positioned.fill(
-                                    child: InteractiveViewer(
-                                      transformationController:
-                                          _transformationController,
-                                      panEnabled: true, // 사용자가 지도 이동 가능
-                                      scaleEnabled: true, // 사용자가 지도 확대/축소 가능
-                                      minScale: 1.0,
-                                      maxScale: 10.0,
-                                      alignment:
-                                          Alignment.topLeft, // 좌표계 기준을 왼쪽 위로 설정
-                                      boundaryMargin: const EdgeInsets.all(
-                                        500,
-                                      ), // 여유 공간 넉넉히
-                                      child: Image.asset(
-                                        mapImagePath,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                  ),
-
-                                  // 출발지 마커
-                                  Builder(
-                                    builder: (context) {
-                                      // 1. 기본 화면 좌표 (Zoom 1.0)
-                                      final initialX =
-                                          _route!.startPoi.xCoord * scaleX +
-                                          offsetX;
-                                      final initialY =
-                                          _route!.startPoi.yCoord * scaleY +
-                                          offsetY;
-
-                                      // 2. 현재 변환 행렬 적용
-                                      final matrix =
-                                          _transformationController.value;
-                                      final transformedX =
-                                          matrix.storage[0] * initialX +
-                                          matrix.storage[4] * initialY +
-                                          matrix.storage[12];
-                                      final transformedY =
-                                          matrix.storage[1] * initialX +
-                                          matrix.storage[5] * initialY +
-                                          matrix.storage[13];
-
-                                      return Positioned(
-                                        left: transformedX - 12, // 마커 크기 절반 보정
-                                        top: transformedY - 24, // 마커 크기 절반 보정
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.3,
-                                                ),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            Icons.person_pin_circle,
-                                            color: AppColors.primary,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-
-                                  // 도착지 마커
-                                  Builder(
-                                    builder: (context) {
-                                      final initialX =
-                                          _route!.destinationPoi.xCoord *
-                                              scaleX +
-                                          offsetX;
-                                      final initialY =
-                                          _route!.destinationPoi.yCoord *
-                                              scaleY +
-                                          offsetY;
-
-                                      final matrix =
-                                          _transformationController.value;
-                                      final transformedX =
-                                          matrix.storage[0] * initialX +
-                                          matrix.storage[4] * initialY +
-                                          matrix.storage[12];
-                                      final transformedY =
-                                          matrix.storage[1] * initialX +
-                                          matrix.storage[5] * initialY +
-                                          matrix.storage[13];
-
-                                      return Positioned(
-                                        left: transformedX - 12,
-                                        top: transformedY - 24,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.3,
-                                                ),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            Icons.location_on,
-                                            color: Colors.red,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  // --------------------안내 텍스트--------------------
-                  Text(
-                    '목적지까지 이동한 후\n도착 버튼을 눌러주세요',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // --------------------걸음수 표시--------------------
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
+                        const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              "걸음수: ",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            const Icon(Icons.arrow_forward, size: 16),
                             const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.grey200,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _stepCount.toString(),
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
+                            Text(
+                              "도착: $destinationName",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
                               ),
                             ),
                           ],
                         ),
-                        if (!_isStepCountAvailable)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8),
-                            child: Text(
-                              "걸음수 측정을 사용할 수 없습니다.",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          guideText,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  // --------------------도착, 다음에 측정하기 버튼--------------------
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: _onArrived,
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: 100,
-                          height: 50,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: const Text(
-                            "도착",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          if (context.mounted) {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go("/home");
-                            }
-                          }
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          height: 50,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.grey200,
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: const Text(
-                            "다음에 측정하기",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                ],
-              ),
+                ),
+
+                // -------------------- 지도 영역 --------------------
+                Expanded(child: _buildMapArea()),
+
+                // -------------------- 하단 버튼 액션 영역 --------------------
+                _buildBottomActionArea(),
+              ],
             ),
     );
+  }
+
+  /// 하단 버튼 영역 (단계별 UI 분기)
+  Widget _buildBottomActionArea() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 1),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 단계 1: 준비 확인
+          if (_currentStep == MeasureStep.ready) ...[
+            const Text(
+              "시작 위치에 정확히 서 계신가요?",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _onReadyPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "준비됐어요",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+          ]
+          // 단계 2: 출발 대기
+          else if (_currentStep == MeasureStep.standby) ...[
+            const Text(
+              "아래 버튼을 누르고 걸어주세요!",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: ElevatedButton(
+                onPressed: _onStartPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: const CircleBorder(),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  "출발!",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ]
+          // 단계 3: 측정 중 (도착 대기)
+          else if (_currentStep == MeasureStep.measuring) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("걷는 중... ", style: TextStyle(fontSize: 16)),
+                Text(
+                  // 현재 걸음수 표시
+                  "${_currentPedometerSteps - _startSteps}",
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Text(" 걸음", style: TextStyle(fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _onArrivedPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.text, // 도착 버튼은 검정색 계열
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "도착했습니다",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 지도 및 경로 오버레이 빌더
+  Widget _buildMapArea() {
+    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final floorString = '${_route!.startPoi.floor}F';
+    final mapImagePath = MapUtilFunctions.getImagePath(
+      buildingName,
+      floorString,
+      '2x',
+    );
+
+    return ClipRect(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final containerSize = Size(
+            constraints.maxWidth,
+            constraints.maxHeight,
+          );
+
+          // 지도 초기화 (최초 1회)
+          if (!_isMapInitialized) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _initializeMapPosition(containerSize);
+            });
+          }
+
+          // 좌표 계산용 변수 준비
+          final originalSize = MapUtilFunctions.getImageOriginalSize(
+            buildingName,
+            floorString,
+            '1x',
+          );
+          final displayedSize = MapUtilFunctions.getDisplayedImageSize(
+            containerSize,
+            originalSize,
+          );
+          final scaleX = displayedSize.width / originalSize.width;
+          final scaleY = displayedSize.height / originalSize.height;
+          final offsetX = (containerSize.width - displayedSize.width) / 2;
+          final offsetY = (containerSize.height - displayedSize.height) / 2;
+
+          // 도착지 좌표 (POI가 없으면 Vertex 좌표 사용)
+          final destX =
+              _route!.destinationPoi?.xCoord ?? _route!.destinationVertex.x;
+          final destY =
+              _route!.destinationPoi?.yCoord ?? _route!.destinationVertex.y;
+
+          return Stack(
+            children: [
+              // 1. 지도 이미지 (줌/팬 가능)
+              Positioned.fill(
+                child: InteractiveViewer(
+                  transformationController: _transformationController,
+                  minScale: 1.0,
+                  maxScale: 10.0,
+                  boundaryMargin: const EdgeInsets.all(500),
+                  child: Image.asset(mapImagePath, fit: BoxFit.contain),
+                ),
+              ),
+
+              // 2. 파란색 경로 선 (CustomPainter)
+              // InteractiveViewer 위에 그리기 위해 Matrix 변환 적용
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _PathPainter(
+                    startX: _route!.startPoi.xCoord,
+                    startY: _route!.startPoi.yCoord,
+                    endX: destX,
+                    endY: destY,
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    offsetX: offsetX,
+                    offsetY: offsetY,
+                    matrix: _transformationController.value,
+                  ),
+                ),
+              ),
+
+              // 3. 출발지 마커
+              _buildMarker(
+                x: _route!.startPoi.xCoord,
+                y: _route!.startPoi.yCoord,
+                scaleX: scaleX,
+                scaleY: scaleY,
+                offsetX: offsetX,
+                offsetY: offsetY,
+                icon: Icons.person_pin_circle,
+                color: AppColors.primary,
+              ),
+
+              // 4. 도착지 마커
+              _buildMarker(
+                x: destX,
+                y: destY,
+                scaleX: scaleX,
+                scaleY: scaleY,
+                offsetX: offsetX,
+                offsetY: offsetY,
+                icon: Icons.flag,
+                color: Colors.red,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 지도 위 마커 위젯 생성 헬퍼
+  Widget _buildMarker({
+    required double x,
+    required double y,
+    required double scaleX,
+    required double scaleY,
+    required double offsetX,
+    required double offsetY,
+    required IconData icon,
+    required Color color,
+  }) {
+    // InteractiveViewer의 매트릭스를 직접 적용하여 절대 위치 계산
+    final initialX = x * scaleX + offsetX;
+    final initialY = y * scaleY + offsetY;
+
+    final matrix = _transformationController.value;
+    final transformedX =
+        matrix.storage[0] * initialX +
+        matrix.storage[4] * initialY +
+        matrix.storage[12];
+    final transformedY =
+        matrix.storage[1] * initialX +
+        matrix.storage[5] * initialY +
+        matrix.storage[13];
+
+    return Positioned(
+      left: transformedX - 16, // 아이콘 크기/2 보정 (중앙 정렬)
+      top: transformedY - 32, // 아이콘 바닥이 좌표에 오도록 보정
+      child: Icon(icon, color: color, size: 32),
+    );
+  }
+
+  // 에러 발생 시 뷰
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage ?? "알 수 없는 오류",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                if (context.canPop())
+                  context.pop();
+                else
+                  context.go("/home");
+              },
+              child: const Text("돌아가기"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 경로 탐색 실패 시 뷰
+  Widget _buildFailureView() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(40),
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.grey200,
+                  ),
+                  child: Icon(
+                    Icons.straighten_outlined,
+                    size: 48,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ),
+            Column(
+              children: [
+                const Text(
+                  "적당한 측정 경로가 없어요",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n보폭 측정에 적합한 경로(직선 혹은 POI)가 부족합니다.\n조금 더 넓은 복도로 이동해보세요.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+
+            // 기본값 설정 버튼 (사용자 편의)
+            GestureDetector(
+              onTap: () {
+                // 기본값 저장 후 결과 페이지 등 이동 처리 필요할 수 있음
+                // 여기서는 생략하거나 홈으로 이동
+                context.go("/home");
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "다음에 하기",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 다른 출발지 선택 버튼
+            TextButton(
+              onPressed: () async {
+                if (mounted) {
+                  final selectedPoi = await context.push<Poi>(
+                    "/measureSelectPoi",
+                    extra: {"returnResult": true},
+                  );
+                  if (selectedPoi != null && mounted) {
+                    setState(() {
+                      _targetPoi = selectedPoi;
+                      _isLoading = true;
+                      _errorMessage = null;
+                      _route = null;
+                      _currentStep = MeasureStep.ready; // 상태 초기화
+                      _isMapInitialized = false;
+                    });
+                    _findRoute();
+                  }
+                }
+              },
+              child: Text(
+                "다른 출발지 선택하기",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// [경로 그리기용 Painter 클래스]
+// -----------------------------------------------------------------------------
+class _PathPainter extends CustomPainter {
+  final double startX;
+  final double startY;
+  final double endX;
+  final double endY;
+  final double scaleX;
+  final double scaleY;
+  final double offsetX;
+  final double offsetY;
+  final Matrix4 matrix;
+
+  _PathPainter({
+    required this.startX,
+    required this.startY,
+    required this.endX,
+    required this.endY,
+    required this.scaleX,
+    required this.scaleY,
+    required this.offsetX,
+    required this.offsetY,
+    required this.matrix,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 파란색 선 스타일 정의
+    final paint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 4.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // 1. 이미지 기준 좌표로 변환
+    final sX = startX * scaleX + offsetX;
+    final sY = startY * scaleY + offsetY;
+    final eX = endX * scaleX + offsetX;
+    final eY = endY * scaleY + offsetY;
+
+    // 2. InteractiveViewer 매트릭스 변환 적용 (줌/팬 반영)
+    final p1 = _transformPoint(sX, sY);
+    final p2 = _transformPoint(eX, eY);
+
+    // 선 그리기
+    canvas.drawLine(p1, p2, paint);
+  }
+
+  Offset _transformPoint(double x, double y) {
+    // 행렬 연산을 통해 현재 화면상의 절대 좌표 계산
+    final tx =
+        matrix.storage[0] * x + matrix.storage[4] * y + matrix.storage[12];
+    final ty =
+        matrix.storage[1] * x + matrix.storage[5] * y + matrix.storage[13];
+    return Offset(tx, ty);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PathPainter oldDelegate) {
+    // 매트릭스가 변경되면(줌/이동 시) 다시 그려야 함
+    return oldDelegate.matrix != matrix;
   }
 }

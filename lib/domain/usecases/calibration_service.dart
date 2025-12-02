@@ -1,240 +1,235 @@
+// lib/domain/usecases/calibration_service.dart
+
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:flutter/foundation.dart';
 
-/// 보폭 측정 서비스
-/// [PoiRepository]에 의존하여 원본 POI 데이터를 가져오고,
-/// 보폭 측정에 사용할 최적의 경로(편도/왕복)를 탐색
+/// 내부 계산용 후보 객체
+class _CalibrationCandidate {
+  final List<int> vertexPath; // 경로상 정점 ID 리스트
+  final double distance; // 총 거리
+  final Poi? destinationPoi; // 도착지 POI
+  final int turnCount; // 꺾인 횟수
+  final bool isLandmark; // 물리적 랜드마크(코너, 막다른길) 여부
+
+  _CalibrationCandidate({
+    required this.vertexPath,
+    required this.distance,
+    this.destinationPoi,
+    required this.turnCount,
+    this.isLandmark = false,
+  });
+
+  /// 점수 계산 로직 개선
+  /// 사용자 인지 가능성(POI > 랜드마크 > 거리 적합성) 순으로 점수 부여
+  double get score {
+    double baseScore = 0.0;
+
+    // [1순위] 확실한 목적지(POI)가 있는가?
+    // 거리가 조금 멀더라도 POI가 있으면 압도적으로 높은 점수 부여
+    if (destinationPoi != null) {
+      baseScore += 50000.0;
+    }
+    // [2순위] POI는 없지만 물리적 특징(코너, 막다른 길)이 있는가?
+    // 허공에 멈추는 것보다는 코너까지 가는게 명확함
+    else if (isLandmark) {
+      baseScore += 10000.0;
+    }
+
+    // [3순위] 회전 수 페널티 (직진이 최고)
+    // 회전 1회당 500점 감점 (POI 유무를 뒤집을 정도는 아니게 설정)
+    baseScore -= (turnCount * 500.0);
+
+    // [4순위] 거리 적합성 (이상적 거리 7.5m)
+    // 너무 멀어질수록 감점 (1m당 100점 감점)
+    final distancePenalty = (distance - 7.5).abs() * 100.0;
+    baseScore -= distancePenalty;
+
+    return baseScore;
+  }
+}
+
 class CalibrationService {
   final PoiRepository _poiRepo;
 
   CalibrationService(this._poiRepo);
 
   // ===========================================================================
-  // 보폭 측정 경로 탐색
+  // 상수 정의
+  // ===========================================================================
+  // 최적 거리 범위
+  static const double _optimalMin = 6.3;
+  static const double _optimalMax = 8.7;
+
+  // 확장 허용 범위 (POI가 있다면 여기까지 허용)
+  static const double _extendedMax = 13.0;
+
+  // 꺾임 허용 횟수
+  static const int _maxTurn = 2;
+
+  // ===========================================================================
+  // 메인 로직
   // ===========================================================================
 
-  /// 보폭 측정을 위한 최적의 경로를 찾아 반환
-  /// 1순위: 7m 근방(5.6m 이상)의 편도(one-way)
-  /// 2순위: 가장 긴 직선 경로를 왕복(round-trip)
-  Future<CalibrationRoute?> findTargetRoute(
-    Poi startPoi, {
-    double idealDistance = 7.0, // 목표 거리
-  }) async {
-    // 최소 편도 거리 설정
-    final double minOneWayDistance = idealDistance * 0.8; // 5.6m
-    // 측정 불가 거리 설정
-    final double minRoundTripDistance = 1.0;
+  Future<CalibrationRoute?> findTargetRoute(Poi startPoi) async {
+    if (startPoi.vertexId == null) return null;
 
-    // 1. 시작 POI에 연결된 "시작 정점(Vertex)"을 가져옴
-    if (startPoi.vertexId == null) {
-      debugPrint("[FindRoute] 실패: 시작 POI(${startPoi.name})에 vertexId가 없습니다.");
-      return null;
+    final startVertexId = startPoi.vertexId!;
+    final startVertex = await _poiRepo.getVertexById(startVertexId);
+    if (startVertex == null) return null;
+
+    final List<_CalibrationCandidate> candidates = [];
+    final initialEdges = await _poiRepo.getEdgesForVertex(startVertexId);
+
+    // DFS 탐색 시작
+    for (final edge in initialEdges) {
+      if (!_isWalkable(edge.way)) continue;
+
+      await _recursiveSearch(
+        currentVertexId: edge.toVertexId,
+        path: [startVertexId, edge.toVertexId],
+        currentDistance: edge.length,
+        turnCount: 0,
+        currentWay: edge.way,
+        candidates: candidates,
+      );
     }
 
-    final Vertex? startVertex = await _poiRepo.getVertexById(
-      startPoi.vertexId!,
+    if (candidates.isEmpty) return null;
+
+    // 점수순 정렬 (POI 있음 > 랜드마크임 > 거리 적절함 순서)
+    candidates.sort((a, b) => b.score.compareTo(a.score));
+
+    final best = candidates.first;
+    final endVertex = await _poiRepo.getVertexById(best.vertexPath.last);
+
+    // 만약 POI가 없는 곳이 당첨되었다면, 사용자에게 보여줄 힌트 텍스트 생성
+    String? hintDescription;
+    if (best.destinationPoi == null && best.isLandmark) {
+      hintDescription = "길이 끝나는 곳(혹은 코너)까지 이동";
+    }
+
+    // destinationPoi가 null일 때를 대비해,
+    // 화면에 보여줄 가상의 이름이 필요하다면 UI단에서 처리하거나
+    // 여기서 임시 POI를 만들 수도 있지만,
+    // 앞서 정한대로 'Entity는 Nullable POI'를 유지합니다.
+
+    return CalibrationRoute(
+      startPoi: startPoi,
+      destinationVertex: endVertex!,
+      destinationPoi: best.destinationPoi, // null일 수 있음 (UI에서 처리 필요)
+      totalDistance: best.distance,
+      mode: "one-way",
     );
-    if (startVertex == null) {
-      debugPrint(
-        "[FindRoute] 실패: Vertex ID(${startPoi.vertexId})에 해당하는 정점 데이터를 찾을 수 없습니다.",
-      );
-      return null;
-    }
-
-    // [(도착점 Vertex, 누적 경로 거리)]
-    List<(Vertex, double)> availablePaths = [];
-
-    // 경로 탐색 시작
-    // 시작 정점에 연결된 모든 엣지(이웃)를 탐색 시작
-    final List<Edge> startEdges = await _poiRepo.getEdgesForVertex(
-      startVertex.id,
-    );
-
-    debugPrint(
-      "[FindRoute] 탐색 시작: Vertex ${startVertex.id}의 연결된 엣지 수: ${startEdges.length}개",
-    );
-
-    // 양쪽 2개의 이웃 방향(각 엣지 방향)으로 "직선 경로"를 찾음
-    for (var startEdge in startEdges) {
-      // 계단 엣지는 제외 (length가 0이고 way가 up/down인 경우)
-      if (startEdge.way.isStair && startEdge.length == 0) {
-        continue;
-      }
-
-      final (endVertex, distance) = await _traceStraightPath(
-        currentVertexId: startEdge.getOtherVertexId(startVertex.id),
-        prevVertexId: startVertex.id,
-        currentWay: startEdge.way,
-        accumulatedDistance: startEdge.length,
-        idealDistance: idealDistance,
-      );
-
-      debugPrint(
-        "[FindRoute] 경로 탐색 결과: 거리 $distance m, 도착 Vertex ${endVertex?.id}",
-      );
-
-      if (endVertex != null) {
-        availablePaths.add((endVertex, distance));
-      } else {}
-    }
-
-    // 유효한 직선 경로가 아예 없는 경우
-    if (availablePaths.isEmpty) {
-      debugPrint("[FindRoute] 실패: 유효한 직선 경로를 찾지 못했습니다.");
-      return null;
-    }
-
-    // 이전 커밋까지는 찾은 경로들 중 가장 긴 경로만 확인 후 유효하지 않다면(연결된 POI없음) null을 반환해서 예외 처리에 취약했음
-    // 그래서 차순위 후보 경로들도 순회하며 유효한지(POI가 있는지) 확인하여 예외 처리 보강
-    availablePaths.sort((a, b) => b.$2.compareTo(a.$2)); // 내림차순 정렬
-
-    for (final (bestVertex, bestDistance) in availablePaths) {
-      debugPrint(
-        "[FindRoute] 후보 경로 확인 중: 거리 $bestDistance m, 도착 Vertex ${bestVertex.id}",
-      );
-
-      // 1. 측정 불가 거리 조건 체크 (너무 짧으면 패스)
-      if (bestDistance < minRoundTripDistance) {
-        debugPrint("   pass: 거리가 너무 짧음 ($bestDistance m)");
-        continue;
-      }
-
-      // 2. 도착 Vertex에 연결된 POI가 있는지 확인
-      final List<Poi> destinationPois = await _poiRepo.getPoisByVertexId(
-        bestVertex.id,
-      );
-
-      if (destinationPois.isEmpty) {
-        debugPrint("   pass: 도착 지점(Vertex ${bestVertex.id})에 연결된 POI가 없음");
-        continue; // 이 경로를 포기하고 다음 경로(차선책)로 넘어감
-      }
-
-      // 3. 유효한 경로를 찾았으므로 도착지 설정 로직 진행
-      // 가장 가까운 POI 선택 (Vertex와의 거리가 가장 가까운 것)
-      Poi destinationPoi = destinationPois.first;
-      double minDistance = _poiRepo.getStraightLineDistance(
-        destinationPoi,
-        bestVertex,
-      );
-
-      for (final poi in destinationPois) {
-        final distance = _poiRepo.getStraightLineDistance(poi, bestVertex);
-        if (distance < minDistance) {
-          minDistance = distance;
-          destinationPoi = poi;
-        }
-      }
-
-      // 편도/왕복 모드 및 총 거리 결정
-      final bool isOneWay = bestDistance >= minOneWayDistance;
-
-      final double totalDistance = isOneWay
-          ? bestDistance // 5.6m 이상 (편도)
-          : bestDistance * 2.0; // 1m~5.6m (왕복)
-
-      final String mode = isOneWay ? "one-way" : "round-trip";
-
-      debugPrint(
-        "[FindRoute] 최종 성공: 도착지 ${destinationPoi.name} (거리: $totalDistance, 모드: $mode)",
-      );
-
-      // 찾았으면 바로 반환
-      return CalibrationRoute(
-        startPoi: startPoi,
-        destinationPoi: destinationPoi,
-        totalDistance: totalDistance,
-        mode: mode,
-      );
-    }
-
-    // 반복문이 끝날 때까지 return이 안 되었다면 최종 실패로 간주
-    debugPrint("[FindRoute] 실패: 모든 후보 경로가 유효하지 않습니다 (POI 없음 등).");
-    return null;
   }
 
-  /// 한쪽 방향으로 "직선"이 끝날 때까지 탐색하는 헬퍼 함수
-  /// (마지막 직선 Vertex, 거기까지의 총 경로 상 누적 거리)를 반환
-  /// "직선"이 끝나거나, 누적 거리가 7m 이상인 경우 탐색 종료
-  Future<(Vertex?, double)> _traceStraightPath({
-    required int currentVertexId, // 탐색을 시작할 정점
-    required int prevVertexId,
-    required WayType currentWay, // "horizon" 또는 "vertical" 등
-    required double accumulatedDistance, // 누적 거리
-    required double idealDistance, // 7m
+  // ===========================================================================
+  // 재귀 탐색 (DFS)
+  // ===========================================================================
+
+  Future<void> _recursiveSearch({
+    required int currentVertexId,
+    required List<int> path,
+    required double currentDistance,
+    required int turnCount,
+    required WayType currentWay,
+    required List<_CalibrationCandidate> candidates,
   }) async {
-    // 1. 루프를 위한 상태 변수 초기화
-    int pId = prevVertexId; // V1
-    int cId = currentVertexId; // V2
-    WayType wayToFollow = currentWay; // "horizon" 등
-    double accDist = accumulatedDistance;
-    Vertex? lastStraightVertex;
+    // 1. 탐색 거리 한계 (13m 넘으면 무조건 중단)
+    if (currentDistance > _extendedMax) return;
 
-    // 무한 루프에 빠지는 것을 막기 위해 최대 1000번의 깊이까지만 허용
-    int safetyCounter = 0;
-    const int maxIterations = 1000;
+    // 현재 위치 정보 조회
+    final pois = await _poiRepo.getPoisByVertexId(currentVertexId);
+    final nextEdges = await _poiRepo.getEdgesForVertex(currentVertexId);
 
-    // 직선 경로가 끊길 때까지 while 루프
-    while (true) {
-      if (++safetyCounter > maxIterations) {
-        debugPrint(
-          "[Warning] _traceStraightPath: 무한 루프 감지로 인해 강제 종료됨(VertexID: $cId)",
-        );
-        break;
-      }
+    // 2. 물리적 특징(Landmark) 판별
+    // 더 이상 갈 길이 없거나(막다른 길), 길이 갈라지는 곳(교차로)인지 확인
+    // (여기서는 단순화를 위해 '다음 엣지가 없으면 막다른 길'로 간주)
+    // 단, 왔던 길은 제외해야 하므로 (edge count - 1) 등을 고려해야 정확하지만
+    // 여기서는 '직진 불가능' 상황 등을 랜드마크로 볼 수 있음.
 
-      final currentVertex = await _poiRepo.getVertexById(cId);
-      if (currentVertex == null) {
-        break; // 맵 데이터 오류
-      }
+    // 유효한 다음 경로 개수 (왔던 길 제외)
+    int validNextPaths = 0;
+    bool isCorner = false;
 
-      // 마지막 유효 정점 기록
-      lastStraightVertex = currentVertex;
-
-      // [탐색 종료 조건 1: 목표 거리 도달]
-      if (accDist >= idealDistance) {
-        break; // 7m를 넘었으므로 탐색 성공
-      }
-
-      // 현재 정점(cId)에 연결된 모든 엣지(Edge)를 가져옴
-      final List<Edge> edges = await _poiRepo.getEdgesForVertex(cId);
-
-      // 다음 엣지 찾기 (단, 왔던 길(pId) 제외)
-      Edge? nextEdge;
-      for (var edge in edges) {
-        final otherVertexId = edge.getOtherVertexId(cId);
-        if (otherVertexId != pId) {
-          // 계단 엣지는 제외
-          if (edge.way.isStair && edge.length == 0) {
-            continue;
-          }
-          nextEdge = edge;
-          break; // 복도식 구조라 다음 엣지는 1개뿐
+    for (final e in nextEdges) {
+      if (path.length >= 2 && e.toVertexId == path[path.length - 2]) continue;
+      if (_isWalkable(e.way)) {
+        validNextPaths++;
+        // 진행 방향이 바뀌면 코너
+        if (e.way != currentWay && e.way.supportsTurnCalculation) {
+          isCorner = true;
         }
       }
-
-      // 탐색 종료 조건 2: 꺾이거나 막다른 길
-      // 막다른 길 : 다음 엣지가 없거나
-      // 꺾임 : 다음 엣지의 'way'가 현재 'wayToFollow'와 다르면
-      if (nextEdge == null) {
-        break;
-      }
-      if (nextEdge.way != wayToFollow) {
-        break;
-      }
-
-      // 다음 루프 준비
-      // 거리 누적
-      accDist += nextEdge.length;
-
-      // 정점 ID 갱신
-      pId = cId;
-      cId = nextEdge.getOtherVertexId(pId);
     }
 
-    // 마지막 직선 경로의 Vertex와, 거기까지의 총 누적 거리 반환
-    return (lastStraightVertex, accDist);
+    // 랜드마크 여부: POI가 없더라도 멈추기 좋은 지점인가?
+    // - 막다른 길 (validNextPaths == 0)
+    // - 코너 직전 (isCorner == true 인데 여기서 멈춘다면? -> 이건 애매함. 코너는 꺾고 나서가 아니라 꺾이는 지점)
+    // 여기서는 단순하게 "갈 길이 없으면 막다른 길"로 간주
+    final bool isDeadEnd = (validNextPaths == 0);
+
+    // =========================================================
+    // [후보 등록 로직]
+    // =========================================================
+
+    // A. 최적 거리 (6.3 ~ 8.7m) 구간
+    if (currentDistance >= _optimalMin && currentDistance <= _optimalMax) {
+      candidates.add(
+        _CalibrationCandidate(
+          vertexPath: List.from(path),
+          distance: currentDistance,
+          turnCount: turnCount,
+          destinationPoi: pois.isNotEmpty ? pois.first : null,
+          isLandmark: isDeadEnd, // 막다른 길이면 가산점
+        ),
+      );
+    }
+    // B. 확장 거리 (8.7 ~ 13.0m) 구간
+    // 여기서는 'POI가 있는 경우' 혹은 '막다른 길'인 경우만 후보로 인정
+    // (허공에 12m 걷게 하는 것은 방지)
+    else if (currentDistance > _optimalMax && currentDistance <= _extendedMax) {
+      if (pois.isNotEmpty || isDeadEnd) {
+        candidates.add(
+          _CalibrationCandidate(
+            vertexPath: List.from(path),
+            distance: currentDistance,
+            turnCount: turnCount,
+            destinationPoi: pois.isNotEmpty ? pois.first : null,
+            isLandmark: isDeadEnd,
+          ),
+        );
+      }
+    }
+
+    // 다음 경로 탐색
+    for (final nextEdge in nextEdges) {
+      // 왔던 길 되돌아가기 방지
+      if (path.length >= 2 && nextEdge.toVertexId == path[path.length - 2])
+        continue;
+      if (!_isWalkable(nextEdge.way)) continue;
+
+      int nextTurnCount = turnCount;
+      if (currentWay != nextEdge.way && nextEdge.way.supportsTurnCalculation) {
+        nextTurnCount++;
+      }
+
+      if (nextTurnCount > _maxTurn) continue;
+
+      await _recursiveSearch(
+        currentVertexId: nextEdge.toVertexId,
+        path: [...path, nextEdge.toVertexId],
+        currentDistance: currentDistance + nextEdge.length,
+        turnCount: nextTurnCount,
+        currentWay: nextEdge.way,
+        candidates: candidates,
+      );
+    }
+  }
+
+  bool _isWalkable(WayType way) {
+    return way == WayType.horizon || way == WayType.vertical;
   }
 }
