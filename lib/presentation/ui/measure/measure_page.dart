@@ -663,14 +663,27 @@ class _MeasurePageState extends State<MeasurePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  "선택하신 '${_targetPoi?.name ?? '위치'}' 주변에는\n보폭 측정에 적합한 경로(직선 혹은 POI)가 부족합니다.\n조금 더 넓은 복도로 이동해보세요.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                    height: 1.5,
-                  ),
+
+                // [수정된 부분] Text -> Wrap으로 변경하여 단어 단위 줄바꿈 구현
+                Builder(
+                  builder: (context) {
+                    final String textContent =
+                        "선택하신 '${_targetPoi?.name ?? '위치'}' 주변에는 보폭 측정에 적합한 경로(직선 혹은 POI)가 부족합니다. 조금 더 넓은 복도로 이동해보세요.";
+
+                    return Wrap(
+                      alignment: WrapAlignment.center,
+                      runSpacing: 4.0, // 줄 간격 (== height: 1.5)
+                      children: textContent.split(' ').map((word) {
+                        return Text(
+                          "$word ",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ],
             ),
