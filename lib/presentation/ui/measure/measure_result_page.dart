@@ -73,30 +73,31 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
     if (!mounted) return;
 
     // 재측정 유도 팝업 (정확도 향상 제안)
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("저장 완료"),
-        content: const Text("정확도를 높이기 위해\n한 번 더 측정해볼까요?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              context.pop(); // 팝업 닫기
-              context.go("/home"); // 홈으로 이동
-            },
-            child: const Text("아니요, 끝낼래요"),
-          ),
-          TextButton(
-            onPressed: () {
-              context.pop(); // 팝업 닫기
-              context.pop(); // 결과 페이지 닫기 -> 측정 페이지로 복귀 (재측정)
-            },
-            child: const Text("네, 더 할래요"),
-          ),
-        ],
-      ),
-    );
+    // 굳이 없어도 될 것 같아서 일단은 주석처리
+    // showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   builder: (context) => AlertDialog(
+    //     title: const Text("저장 완료"),
+    //     content: const Text("정확도를 높이기 위해\n한 번 더 측정해볼까요?"),
+    //     actions: [
+    //       TextButton(
+    //         onPressed: () {
+    //           context.pop(); // 팝업 닫기
+    //           context.go("/home"); // 홈으로 이동
+    //         },
+    //         child: const Text("아니요, 끝낼래요"),
+    //       ),
+    //       TextButton(
+    //         onPressed: () {
+    //           context.pop(); // 팝업 닫기
+    //           context.pop(); // 결과 페이지 닫기 -> 측정 페이지로 복귀 (재측정)
+    //         },
+    //         child: const Text("네, 더 할래요"),
+    //       ),
+    //     ],
+    //   ),
+    // );
   }
 
   @override
@@ -249,36 +250,33 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
                     ),
                   ],
                 ),
-              // <<<<<<< HEAD
               const SizedBox(height: 16),
-              // =======
-              //               const Spacer(),
-              //               // --------------------확인 버튼--------------------
-              //               GestureDetector(
-              //                 onTap: () {
-              //                   if (context.mounted) {
-              //                     context.go('/home');
-              //                   }
-              //                 },
-              //                 child: Container(
-              //                   alignment: Alignment.center,
-              //                   width: double.infinity,
-              //                   padding: const EdgeInsets.symmetric(vertical: 16),
-              //                   decoration: BoxDecoration(
-              //                     color: AppColors.primary,
-              //                     borderRadius: BorderRadius.circular(40),
-              //                   ),
-              //                   child: const Text(
-              //                     "확인",
-              //                     style: TextStyle(
-              //                       fontWeight: FontWeight.w600,
-              //                       fontSize: 20,
-              //                       color: Colors.white,
-              //                     ),
-              //                   ),
-              //                 ),
-              //               ),
-              // >>>>>>> 1ed1e12d2204d2618a81181d239c8f8ed55560ef
+              const Spacer(),
+              // --------------------확인 버튼--------------------
+              GestureDetector(
+                onTap: () {
+                  if (context.mounted) {
+                    context.go('/home');
+                  }
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  child: const Text(
+                    "확인",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
