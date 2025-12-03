@@ -249,7 +249,36 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
                     ),
                   ],
                 ),
+              // <<<<<<< HEAD
               const SizedBox(height: 16),
+              // =======
+              //               const Spacer(),
+              //               // --------------------확인 버튼--------------------
+              //               GestureDetector(
+              //                 onTap: () {
+              //                   if (context.mounted) {
+              //                     context.go('/home');
+              //                   }
+              //                 },
+              //                 child: Container(
+              //                   alignment: Alignment.center,
+              //                   width: double.infinity,
+              //                   padding: const EdgeInsets.symmetric(vertical: 16),
+              //                   decoration: BoxDecoration(
+              //                     color: AppColors.primary,
+              //                     borderRadius: BorderRadius.circular(40),
+              //                   ),
+              //                   child: const Text(
+              //                     "확인",
+              //                     style: TextStyle(
+              //                       fontWeight: FontWeight.w600,
+              //                       fontSize: 20,
+              //                       color: Colors.white,
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ),
+              // >>>>>>> 1ed1e12d2204d2618a81181d239c8f8ed55560ef
             ],
           ),
         ),

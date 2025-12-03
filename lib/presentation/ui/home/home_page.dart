@@ -279,6 +279,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                             flex: 1,
                             child: GestureDetector(
                               onTap: () {
+                                // 길찾기 화면으로 진입 시 기존에 입력된 출발지/목적지 정보 초기화
+                                ref
+                                    .read(pathSelectionProvider.notifier)
+                                    .reset();
                                 context.go('/home/pathSelection');
                               },
                               child: Container(
