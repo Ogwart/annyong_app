@@ -57,13 +57,22 @@ class BeaconScanService {
   static const double _outgoingCriterion = -73.5;
 
   static const String _beaconName = 'Holy-IOT';
+
+  // timeout 관련 변수 정의
+  // 칼만필터+히스테리시스만으로는 사용자의 급격한 이탈을 잡을 수 없음. 따라서 비콘 신호가 끊기면 이탈로 간주
+  // TODO: _coastingDurationMs 실험 필요. UX상으론 깜빡거림보단 3초 기다려주는게 낫다는데 어떨진 봐야함
+  static const int _coastingDurationMs = 3000; // 신호가 끊겨도 유지하는 관성 주행 시간
+  static const double _ghostRssi = -99.0; // 가상 패킷으로 주입할 가상 패킷 RSSI 값
+  static const int _maintenanceTimerPeriodMs = 1000; // 체크 타이머 주기
   // ---------------------------------------------------------
 
   StreamSubscription<List<ScanResult>>? _scanSubscription;
+  Timer? _maintenanceTimer; // 주기적으로 Coasting/Ghost Packet 체크하는 타이머
 
   // 감지된 비콘별 상태 관리
   final Map<String, KalmanFilter> _kalmanFilters = {};
   final Map<String, bool> _beaconInRangeStatus = {}; // MAC ID -> isInside
+  final Map<String, DateTime> _lastSeenTime = {}; // MAC ID -> 마지막 수신 시각
 
   // 현재 인접한 POI ID 리스트를 브로드캐스트하기 위한 스트림 컨트롤러
   final StreamController<List<int>> _poiStreamController =
@@ -80,8 +89,6 @@ class BeaconScanService {
   Future<void> startBackgroundScan() async {
     if (_isScanning) return;
 
-    // Bluetooth 지원 여부 및 켜짐 상태 확인은 호출부(Splash)에서 권한 체크 후 수행한다고 가정
-    // 안전을 위해 한 번 더 체크
     if (await FlutterBluePlus.isSupported == false) return;
     if (await FlutterBluePlus.adapterState.first != BluetoothAdapterState.on) {
       return;
@@ -98,93 +105,140 @@ class BeaconScanService {
         .map((b) => b.macId.toLowerCase())
         .toSet();
 
-    // 스캔 시작 (지속 스캔)
+    // 1. 스캔 시작 (지속 스캔)
     await FlutterBluePlus.startScan(
-      // timeout을 null로 주거나 아주 길게 주어 지속 스캔 (Android의 경우)
-      // 또는 스트림이 끊기지 않도록 관리
       androidUsesFineLocation: false,
       continuousUpdates: true,
     );
 
-    _scanSubscription = FlutterBluePlus.scanResults.listen(
-      (results) async {
-        // 이번 스캔 루프에서 유효한(In Range) 비콘들의 MAC 집합
-        Set<String> validMacs = {};
+    // 2. 유지보수 타이머 시작 (Coasting & Ghost Packet 로직용)
+    _startMaintenanceTimer(registeredMacAddresses);
 
+    _scanSubscription = FlutterBluePlus.scanResults.listen(
+      (results) {
         for (ScanResult result in results) {
           final device = result.device;
-          final rawRssi = result.rssi.toDouble();
           final macAddress = device.remoteId.str
               .replaceAll(':', '')
               .toLowerCase();
 
-          // 1. 타겟 비콘 필터링
+          // 타겟 비콘 필터링
           if (device.platformName.isNotEmpty &&
               device.platformName != _beaconName) {
             continue;
           }
           if (!registeredMacAddresses.contains(macAddress)) continue;
 
-          // 2. 칼만 필터 적용
-          _kalmanFilters.putIfAbsent(
-            macAddress,
-            () => KalmanFilter(R: _kalmanR, Q: _kalmanQ),
-          );
-          final filteredRssi = _kalmanFilters[macAddress]!.filter(rawRssi);
+          // 실제 신호 수신 처리
+          final rawRssi = result.rssi.toDouble();
+          _lastSeenTime[macAddress] = DateTime.now(); // 마지막 수신 시각 갱신
 
-          // 3. 히스테리시스 로직 적용
-          bool isCurrentlyIn = _beaconInRangeStatus[macAddress] ?? false;
-          bool newState = isCurrentlyIn;
-
-          if (!isCurrentlyIn && filteredRssi >= _incomingCriterion) {
-            // 진입 조건 충족
-            newState = true;
-            debugPrint(
-              '[Beacon Enter] MAC: $macAddress | Raw: $rawRssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-            );
-          } else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
-            // 이탈 조건 충족
-            newState = false;
-            debugPrint(
-              '[Beacon Exit] MAC: $macAddress | Raw: $rawRssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-            );
-          }
-
-          _beaconInRangeStatus[macAddress] = newState;
-
-          if (newState) {
-            validMacs.add(macAddress);
-          }
-        }
-
-        // 4. 유효한 비콘들의 POI ID 수집 및 업데이트
-        if (validMacs.isNotEmpty) {
-          final Set<int> newPoiIds = {};
-          for (final mac in validMacs) {
-            final poiIds = await _beaconRepository.getNearPoiIdsByMac(mac);
-            newPoiIds.addAll(poiIds);
-          }
-
-          // 상태가 변경되었을 때만 스트림 전송 (단순화된 비교)
-          if (!_listEquals(_currentNearbyPoiIds, newPoiIds.toList())) {
-            _currentNearbyPoiIds = newPoiIds.toList();
-            _poiStreamController.add(_currentNearbyPoiIds);
-            debugPrint(
-              '[BeaconService] Detected POIs Updated: $_currentNearbyPoiIds',
-            );
-          }
-        } else {
-          if (_currentNearbyPoiIds.isNotEmpty) {
-            _currentNearbyPoiIds = [];
-            _poiStreamController.add([]);
-            debugPrint('[BeaconService] All POIs lost.');
-          }
+          // 로직 통합 처리 (실제 데이터)
+          _processBeaconSignal(macAddress, rawRssi);
         }
       },
       onError: (e) {
         debugPrint('[BeaconService] Scan Error: $e');
       },
     );
+  }
+
+  /// timeout 감지를 위한 유지보수 타이머
+  void _startMaintenanceTimer(Set<String> registeredMacs) {
+    _maintenanceTimer?.cancel();
+    _maintenanceTimer = Timer.periodic(
+      const Duration(milliseconds: _maintenanceTimerPeriodMs),
+      (timer) {
+        final now = DateTime.now();
+
+        // 메모리에 올라와 있는(한 번이라도 스캔된) 비콘들을 대상으로 상태 점검
+        // _lastSeenTime에 키가 있다는 것은 한 번이라도 스캔되었다는 뜻
+        final knownMacs = _lastSeenTime.keys.toList();
+
+        for (final mac in knownMacs) {
+          final lastSeen = _lastSeenTime[mac]!;
+          final difference = now.difference(lastSeen).inMilliseconds;
+
+          if (difference < _coastingDurationMs) {
+            // [Coasting 단계]: _coastingDurationMs만큼 기다림 -> 아무것도 하지 않음 (기존 값 유지)
+            // 등 가리거나 수신 오류로 못받았던 것일 수도 있으니 바로 timeout시키지 않고 대기
+          } else {
+            // [Termination 단계]: 기다림 한계 초과 -> 가상 패킷(Ghost Packet) 주입 시작
+            // 이정도까지 패킷 수신이 없다는 건 오류가 아니라 진짜 나간 걸로 간주하고 칼만필터값 낮추기
+            // 혹여 N초 이상의 오류일 수도 있으므로 바로 끊기보단 자연스럽게 나간 것처럼 보이게 하기 위함임
+            _processBeaconSignal(mac, _ghostRssi);
+          }
+        }
+      },
+    );
+  }
+
+  /// 비콘 신호 처리 통합 로직 (실제 신호 + 가상 신호 공용)
+  /// [rssi] : 실제 측정값 또는 Ghost Packet(-99.0)
+  void _processBeaconSignal(String macAddress, double rssi) async {
+    // 1. 칼만 필터 적용
+    _kalmanFilters.putIfAbsent(
+      macAddress,
+      () => KalmanFilter(R: _kalmanR, Q: _kalmanQ),
+    );
+    final filteredRssi = _kalmanFilters[macAddress]!.filter(rssi);
+
+    // 2. 히스테리시스 로직 적용
+    bool isCurrentlyIn = _beaconInRangeStatus[macAddress] ?? false;
+    bool newState = isCurrentlyIn;
+
+    if (!isCurrentlyIn && filteredRssi >= _incomingCriterion) {
+      // 진입 조건 충족
+      newState = true;
+      debugPrint(
+        '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      );
+    } else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
+      // 이탈 조건 충족
+      newState = false;
+      debugPrint(
+        '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      );
+    }
+
+    // 상태 변경 여부 확인
+    if (newState != isCurrentlyIn) {
+      _beaconInRangeStatus[macAddress] = newState;
+      // 상태가 변경되었으므로 전체 POI 목록 갱신 필요
+      await _updateNearbyPois();
+    }
+  }
+
+  /// 현재 'In Range' 상태인 비콘들을 기반으로 POI 목록 갱신 및 브로드캐스트
+  Future<void> _updateNearbyPois() async {
+    final activeMacs = _beaconInRangeStatus.entries
+        .where((entry) => entry.value == true) // 진입 상태인 것만 필터링
+        .map((entry) => entry.key)
+        .toSet();
+
+    if (activeMacs.isNotEmpty) {
+      final Set<int> newPoiIds = {};
+      for (final mac in activeMacs) {
+        final poiIds = await _beaconRepository.getNearPoiIdsByMac(mac);
+        newPoiIds.addAll(poiIds);
+      }
+
+      final newList = newPoiIds.toList();
+      if (!_listEquals(_currentNearbyPoiIds, newList)) {
+        _currentNearbyPoiIds = newList;
+        _poiStreamController.add(_currentNearbyPoiIds);
+        debugPrint(
+          '[BeaconService] Detected POIs Updated: $_currentNearbyPoiIds',
+        );
+      }
+    } else {
+      // 활성화된 비콘이 하나도 없음
+      if (_currentNearbyPoiIds.isNotEmpty) {
+        _currentNearbyPoiIds = [];
+        _poiStreamController.add([]);
+        debugPrint('[BeaconService] All POIs lost.');
+      }
+    }
   }
 
   /// 비콘 스캐닝 종료 (앱 종료 시 호출)
@@ -195,28 +249,28 @@ class BeaconScanService {
     _isScanning = false;
     await _scanSubscription?.cancel();
     _scanSubscription = null;
+
+    // 타이머 종료
+    _maintenanceTimer?.cancel();
+    _maintenanceTimer = null;
+
     await FlutterBluePlus.stopScan();
     // 상태 초기화
     _kalmanFilters.clear();
     _beaconInRangeStatus.clear();
+    _lastSeenTime.clear();
     _currentNearbyPoiIds.clear();
   }
 
-  /// (구) 메서드 호환성 유지: 현재 지속 스캔 중 감지된 값을 즉시 반환
+  /// (구) 메서드 호환성 유지
+  // TODO: 추후 이 기법의 안정성이 확보되면 주석처리 or 삭제할 예정
   Future<List<int>> scanNearbyBeaconsAndGetPoiIds() async {
-    // 이미 백그라운드 스캔이 돌고 있다면 현재 캐시된 값 반환
     if (_isScanning) {
       return _currentNearbyPoiIds;
     } else {
-      // 스캔이 돌고 있지 않다면(예: 권한 문제로 시작 안됨 등),
-      // 잠시 켰다가 값을 가져오도록 유도하거나 빈 값 반환
-      // 여기서는 일시적으로 3초간 스캔 후 반환하도록 구현 (기존 로직과 유사하게)
       await startBackgroundScan();
       await Future.delayed(const Duration(seconds: 3));
       final result = List<int>.from(_currentNearbyPoiIds);
-      // MeasureNoticePage 등에서 일회성으로 부른 경우라면
-      // 앱 전체 생명주기와 별개로 동작할 수 있으므로 상황에 따라 stop을 호출할지 결정해야 함.
-      // 요구사항 5에 따라 앱 전체에서 돈다고 했으므로 stop 하지 않음.
       return result;
     }
   }
