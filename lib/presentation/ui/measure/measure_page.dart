@@ -428,6 +428,14 @@ class _MeasurePageState extends State<MeasurePage> {
                 ),
               ],
             ),
+
+            // [추가된 부분] 팁 텍스트 추가
+            const SizedBox(height: 8),
+            const Text(
+              "[TIP] 감지되지 않는다면, 세게 3~5회 흔들어보세요!",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+
             // 공간 확보용 더미 컨테이너 (버튼 높이만큼)
             const SizedBox(height: 32),
           ]
