@@ -158,7 +158,7 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "걸음 수가 너무 적거나(7보 미만),\n보폭이 너무 크거나 작습니다.\n다시 한 번 걸어보시는 걸 추천드려요!",
+                  "걸음 수가 너무 적거나(7보 미만),\n보폭이 너무 크거나 작습니다.\n다시 한 번 걸어보시는 걸 추천드려요!\n일반적인 보폭은 0.45m ~ 0.95m예요.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.grey,
@@ -198,7 +198,9 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
                       width: double.infinity,
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: () => context.pop(), // 뒤로가기 -> 재측정
+                        // pop 할 때 true 값을 전달하여 재측정임을 알림
+                        // 그냥 뒤로 가버리면 이전 걸음 수가 그대로 남아있어 재측정의 의미가 없음
+                        onPressed: () => context.pop(true),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.primary),
                           shape: RoundedRectangleBorder(

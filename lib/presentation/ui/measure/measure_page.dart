@@ -248,20 +248,27 @@ class _MeasurePageState extends State<MeasurePage> {
   // standby 상태에서 센서가 반응하면 자동으로 measuring으로 넘어가므로 불필요
 
   /// [도착했습니다] 버튼 클릭 시 -> 결과 페이지로 이동
-  void _onArrivedPressed() {
+  // async로 선언하여 push 결과를 await로 받음 -> 재측정인 경우를 구분하여 처리하기 위함
+  void _onArrivedPressed() async {
     if (_route == null) return;
 
     // 최종 걸음수 계산 (현재값 - 시작값)
     // _startSteps는 (첫 감지값 - 1)이므로, 첫 감지 시 (감지값 - (감지값-1)) = 1걸음이 됨
     final int walkedSteps = _currentPedometerSteps - _startSteps;
 
-    context.push(
+    // 만약 재측정이면 상태를 준비 단계로 초기화
+    final bool? shouldRetry = await context.push<bool>(
       "/measure/measureResult",
       extra: {
-        "walkedSteps": walkedSteps, // int
-        "totalDistance": _route!.totalDistance, // double
+        "walkedSteps": walkedSteps,
+        "totalDistance": _route!.totalDistance,
       },
     );
+    if (shouldRetry == true && mounted) {
+      setState(() {
+        _currentStep = MeasureStep.ready;
+      });
+    }
   }
 
   String _getBuildingName(int buildingId) {
