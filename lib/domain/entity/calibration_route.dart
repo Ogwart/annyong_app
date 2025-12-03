@@ -13,6 +13,9 @@ class CalibrationRoute {
   /// 목적지 POI (목적지 Vertex에 POI가 있다면 포함, 없으면 null)
   final Poi? destinationPoi;
 
+  /// [필수 수정] 경로를 구성하는 모든 정점 리스트 (지도의 꺾인 선을 그리기 위함)
+  final List<Vertex> pathVertices;
+
   /// 총 이동 거리 (미터)
   final double totalDistance;
 
@@ -23,6 +26,7 @@ class CalibrationRoute {
     required this.startPoi,
     required this.destinationVertex, // 필수 (길 안내용)
     this.destinationPoi, // 선택 (정보 표시용)
+    required this.pathVertices, //경로 표시 용
     required this.totalDistance,
     required this.mode,
   });

@@ -60,11 +60,11 @@ class CalibrationService {
   // 상수 정의
   // ===========================================================================
   // 최적 거리 범위
-  static const double _optimalMin = 6.3;
-  static const double _optimalMax = 8.7;
+  static const double _optimalMin = 5.0;
+  static const double _optimalMax = 10.0;
 
   // 확장 허용 범위 (POI가 있다면 여기까지 허용)
-  static const double _extendedMax = 13.0;
+  static const double _extendedMax = 15.0;
 
   // 꺾임 허용 횟수
   static const int _maxTurn = 2;
@@ -103,6 +103,15 @@ class CalibrationService {
     candidates.sort((a, b) => b.score.compareTo(a.score));
 
     final best = candidates.first;
+    // 경로상의 모든 Vertex 객체 가져오기 (선을 꺾어서 그리기 위해 필요)
+    final List<Vertex> pathVertices = [];
+    for (final vId in best.vertexPath) {
+      final v = await _poiRepo.getVertexById(vId);
+      if (v != null) pathVertices.add(v);
+    }
+
+    if (pathVertices.isEmpty) return null; // 로직상 희박
+
     final endVertex = await _poiRepo.getVertexById(best.vertexPath.last);
 
     // 만약 POI가 없는 곳이 당첨되었다면, 사용자에게 보여줄 힌트 텍스트 생성
@@ -120,6 +129,7 @@ class CalibrationService {
       startPoi: startPoi,
       destinationVertex: endVertex!,
       destinationPoi: best.destinationPoi, // null일 수 있음 (UI에서 처리 필요)
+      pathVertices: pathVertices, // [NEW] 전체 경로 리스트 전달
       totalDistance: best.distance,
       mode: "one-way",
     );
