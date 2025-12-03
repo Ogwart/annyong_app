@@ -85,16 +85,6 @@
    "y_coord": 748
  },
  {
-   "vertex_id": 18,
-   "x_coord": 163,
-   "y_coord": 758
- },
- {
-   "vertex_id": 19,
-   "x_coord": 188,
-   "y_coord": 758
- },
- {
    "vertex_id": 20,
    "x_coord": 252,
    "y_coord": 748
@@ -193,11 +183,6 @@
    "vertex_id": 39,
    "x_coord": 591,
    "y_coord": 794
- },
- {
-   "vertex_id": 40,
-   "x_coord": 591,
-   "y_coord": 803
  },
  {
    "vertex_id": 41,
@@ -656,8 +641,8 @@
  },
  {
    "vertex_id": 133,
-   "x_coord": 1584,
-   "y_coord": 716
+   "x_coord": 797,
+   "y_coord": 777
  },
  {
    "vertex_id": 134,

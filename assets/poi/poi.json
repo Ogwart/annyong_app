@@ -57,7 +57,7 @@
  {
    "poi_id": 10,
    "poi_name": "소화전",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -90,7 +90,7 @@
  {
    "poi_id": 13,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -112,7 +112,7 @@
  {
    "poi_id": 15,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -134,7 +134,7 @@
  {
    "poi_id": 17,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -156,7 +156,7 @@
  {
    "poi_id": 19,
    "poi_name": "정수기",
-   "description": null,
+   "description": "",
    "poi_category_id": 8,
    "building_id": 1,
    "floor": 1,
@@ -189,7 +189,7 @@
  {
    "poi_id": 22,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -200,7 +200,7 @@
  {
    "poi_id": 23,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -211,7 +211,7 @@
  {
    "poi_id": 24,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -244,7 +244,7 @@
  {
    "poi_id": 27,
    "poi_name": "소화전",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -255,7 +255,7 @@
  {
    "poi_id": 28,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -310,7 +310,7 @@
  {
    "poi_id": 37,
    "poi_name": "계단",
-   "description": "5동 출입문 옆에 위치",
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 1,
@@ -321,7 +321,7 @@
  {
    "poi_id": 38,
    "poi_name": "소화기",
-   "description": "일반소화기 1개, 5S101 출입문 옆에 위치",
+   "description": "일반소화기 1개, 5S101 문 옆에 위치",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -343,7 +343,7 @@
  {
    "poi_id": 40,
    "poi_name": "소화전",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -365,7 +365,7 @@
  {
    "poi_id": 42,
    "poi_name": "소화전",
-   "description": "로비 코너에 옆에 위치",
+   "description": "로비 코너에 위치",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 1,
@@ -453,7 +453,7 @@
  {
    "poi_id": 50,
    "poi_name": "출입문",
-   "description": "5남 출입문, 대운동장 및 정석과 연결",
+   "description": "5남 출입문 - 정석과 인접",
    "poi_category_id": 6,
    "building_id": 1,
    "floor": 1,
@@ -464,7 +464,7 @@
  {
    "poi_id": 52,
    "poi_name": "출입문",
-   "description": "5동 출입문, 60주년과 연결",
+   "description": "5동 출입문 - 대운동장과 인접",
    "poi_category_id": 6,
    "building_id": 1,
    "floor": 1,
@@ -484,6 +484,39 @@
    "vertex_id": 141
  },
  {
+   "poi_id": 54,
+   "poi_name": "5S145",
+   "description": "인하역사자료실",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 127,
+   "y_coord": 705,
+   "vertex_id": 6
+ },
+ {
+   "poi_id": 55,
+   "poi_name": "5S144",
+   "description": "한국학연구소 소장실",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 127,
+   "y_coord": 749,
+   "vertex_id": 14
+ },
+ {
+   "poi_id": 56,
+   "poi_name": "5S143",
+   "description": "한국학연구소",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 135,
+   "y_coord": 810,
+   "vertex_id": 14
+ },
+ {
    "poi_id": 57,
    "poi_name": "5S140",
    "description": "강의실",
@@ -492,7 +525,7 @@
    "floor": 1,
    "x_coord": 247,
    "y_coord": 810,
-   "vertex_id": 19
+   "vertex_id": 15
  },
  {
    "poi_id": 58,
@@ -519,46 +552,277 @@
  {
    "poi_id": 60,
    "poi_name": "여학생휴게실",
-   "description": "여학생휴게실(5S130)",
+   "description": "5S130",
    "poi_category_id": 2,
    "building_id": 1,
    "floor": 1,
    "x_coord": 567,
    "y_coord": 833,
-   "vertex_id": 40
+   "vertex_id": 39
+ },
+ {
+   "poi_id": 61,
+   "poi_name": "유영종교수실",
+   "description": "영미인문유럽학부교수실(5S124)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 778,
+   "y_coord": 819,
+   "vertex_id": 66
+ },
+ {
+   "poi_id": 62,
+   "poi_name": "김종석교수실",
+   "description": "영미인문유럽학부교수실(5S123)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 814,
+   "y_coord": 819,
+   "vertex_id": 67
+ },
+ {
+   "poi_id": 63,
+   "poi_name": "박혜영교수실",
+   "description": "영미인문유럽학부교수실(5S122)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 850,
+   "y_coord": 819,
+   "vertex_id": 68
+ },
+ {
+   "poi_id": 64,
+   "poi_name": "윤미선교수실",
+   "description": "영미인문유럽학부교수실(5S121)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 886,
+   "y_coord": 819,
+   "vertex_id": 69
+ },
+ {
+   "poi_id": 65,
+   "poi_name": "강지수교수실",
+   "description": "영미인문유럽학부교수실(5S120)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 922,
+   "y_coord": 819,
+   "vertex_id": 70
+ },
+ {
+   "poi_id": 66,
+   "poi_name": "홍순현교수실",
+   "description": "영미인문유럽학부교수실(5S119)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 958,
+   "y_coord": 819,
+   "vertex_id": 71
+ },
+ {
+   "poi_id": 67,
+   "poi_name": "김의영교수실",
+   "description": "영미인문유럽학부교수실(5S118)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 994,
+   "y_coord": 819,
+   "vertex_id": 72
+ },
+ {
+   "poi_id": 68,
+   "poi_name": "노은주교수실",
+   "description": "영미인문유럽학부교수실(5S117)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1030,
+   "y_coord": 819,
+   "vertex_id": 73
  },
  {
    "poi_id": 69,
    "poi_name": "영어영문학",
    "description": "영어영문학전공사무실(5S116)",
+   "poi_category_id": 1,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1086,
+   "y_coord": 819,
+   "vertex_id": 74
+ },
+ {
+   "poi_id": 71,
+   "poi_name": "박강훈교수실",
+   "description": "일본언어문화학과교수실(5S109)",
    "poi_category_id": 3,
    "building_id": 1,
    "floor": 1,
-   "x_coord": 1088,
+   "x_coord": 1304,
    "y_coord": 819,
-   "vertex_id": 74
+   "vertex_id": 117
+ },
+ {
+   "poi_id": 72,
+   "poi_name": "김병형교수실",
+   "description": "인공지능공학과교수실(5S108)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1353,
+   "y_coord": 819,
+   "vertex_id": 119
+ },
+ {
+   "poi_id": 73,
+   "poi_name": "김승환교수실",
+   "description": "국제학부교수실(카카니비제이P)\\n데이터사이언스학과교수실(5S107)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1390,
+   "y_coord": 819,
+   "vertex_id": 120
+ },
+ {
+   "poi_id": 74,
+   "poi_name": "정의민교수실",
+   "description": "데이터사이언스학과교수실(5S107)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1425,
+   "y_coord": 819,
+   "vertex_id": 121
+ },
+ {
+   "poi_id": 75,
+   "poi_name": "김도국교수실",
+   "description": "인공지능공학과교수실(5S105)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1462,
+   "y_coord": 819,
+   "vertex_id": 122
+ },
+ {
+   "poi_id": 76,
+   "poi_name": "모세종교수실",
+   "description": "일본언어문화학과교수실(5S104)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1497,
+   "y_coord": 819,
+   "vertex_id": 124
  },
  {
    "poi_id": 77,
    "poi_name": "일본언어문화학",
    "description": "일본언어문화학과사무실(5S103)",
-   "poi_category_id": 3,
+   "poi_category_id": 1,
    "building_id": 1,
    "floor": 1,
-   "x_coord": 1554,
+   "x_coord": 1552,
    "y_coord": 819,
    "vertex_id": 125
  },
  {
+   "poi_id": 79,
+   "poi_name": "교육기자재실",
+   "description": "5S151",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 1519,
+   "y_coord": 675,
+   "vertex_id": 115
+ },
+ {
+   "poi_id": 87,
+   "poi_name": "5S166",
+   "description": "수학과실습실",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 890,
+   "y_coord": 675,
+   "vertex_id": 57
+ },
+ {
+   "poi_id": 88,
+   "poi_name": "김윤정교수실",
+   "description": "디지털테크놀로지학과교수실(5S167)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 854,
+   "y_coord": 675,
+   "vertex_id": 56
+ },
+ {
+   "poi_id": 89,
+   "poi_name": "강희라교수실",
+   "description": "디지털테크놀로지학과교수실(5S168)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 818,
+   "y_coord": 675,
+   "vertex_id": 55
+ },
+ {
+   "poi_id": 90,
+   "poi_name": "이경은교수실",
+   "description": "인공지능공학과교수실(5S169)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 782,
+   "y_coord": 675,
+   "vertex_id": 54
+ },
+ {
    "poi_id": 93,
    "poi_name": "아름라운지",
-   "description": "아름라운지(5S131)",
+   "description": "5S131",
    "poi_category_id": 2,
    "building_id": 1,
    "floor": 1,
    "x_coord": 533,
    "y_coord": 683,
    "vertex_id": 34
+ },
+ {
+   "poi_id": 95,
+   "poi_name": "소영교수실",
+   "description": "중국학과교수실(5S135B)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 423,
+   "y_coord": 683,
+   "vertex_id": 26
+ },
+ {
+   "poi_id": 96,
+   "poi_name": "김빅토리아교수실",
+   "description": "국제학부교수실(5S135C)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 1,
+   "x_coord": 399,
+   "y_coord": 683,
+   "vertex_id": 24
  },
  {
    "poi_id": 97,
@@ -596,7 +860,7 @@
  {
    "poi_id": 116,
    "poi_name": "소화기",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -651,7 +915,7 @@
  {
    "poi_id": 123,
    "poi_name": "소화기",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -662,7 +926,7 @@
  {
    "poi_id": 124,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -673,7 +937,7 @@
  {
    "poi_id": 125,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -717,7 +981,7 @@
  {
    "poi_id": 129,
    "poi_name": "소화전",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -728,7 +992,7 @@
  {
    "poi_id": 130,
    "poi_name": "쓰레기통",
-   "description": null,
+   "description": "",
    "poi_category_id": 12,
    "building_id": 1,
    "floor": 2,
@@ -750,7 +1014,7 @@
  {
    "poi_id": 132,
    "poi_name": "소화기",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -761,7 +1025,7 @@
  {
    "poi_id": 133,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -772,7 +1036,7 @@
  {
    "poi_id": 134,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -783,7 +1047,7 @@
  {
    "poi_id": 135,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
@@ -816,7 +1080,7 @@
  {
    "poi_id": 138,
    "poi_name": "소화기",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 1,
    "floor": 2,
@@ -838,13 +1102,24 @@
  {
    "poi_id": 140,
    "poi_name": "계단",
-   "description": null,
+   "description": "",
    "poi_category_id": 4,
    "building_id": 1,
    "floor": 2,
    "x_coord": 1649,
    "y_coord": 754,
    "vertex_id": 583
+ },
+ {
+   "poi_id": 144,
+   "poi_name": "연극영화학과",
+   "description": "5S242",
+   "poi_category_id": 1,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 137,
+   "y_coord": 850,
+   "vertex_id": 119
  },
  {
    "poi_id": 145,
@@ -869,6 +1144,17 @@
    "vertex_id": 527
  },
  {
+   "poi_id": 148,
+   "poi_name": "신희성교수실",
+   "description": "자연과학대학교수실(5S236A)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 441,
+   "y_coord": 820,
+   "vertex_id": 124
+ },
+ {
    "poi_id": 149,
    "poi_name": "5S234",
    "description": "강의실",
@@ -891,21 +1177,175 @@
    "vertex_id": 533
  },
  {
-   "poi_id": 160,
-   "poi_name": "사학과",
-   "description": "사학과사무실(5S215)",
+   "poi_id": 151,
+   "poi_name": "고인석교수실",
+   "description": "철학과교수실(5S224)",
    "poi_category_id": 3,
    "building_id": 1,
    "floor": 2,
-   "x_coord": 1109,
+   "x_coord": 784,
+   "y_coord": 827,
+   "vertex_id": 133
+ },
+ {
+   "poi_id": 152,
+   "poi_name": "최동용교수실",
+   "description": "철학과교수실(5S223)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 819,
+   "y_coord": 827,
+   "vertex_id": 134
+ },
+ {
+   "poi_id": 153,
+   "poi_name": "육상호교수실",
+   "description": "문화콘텐츠문화경영학과교수실(5S222)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 856,
+   "y_coord": 827,
+   "vertex_id": 134
+ },
+ {
+   "poi_id": 154,
+   "poi_name": "이봉규교수실",
+   "description": "철학과교수실(5S221)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 893,
+   "y_coord": 827,
+   "vertex_id": 136
+ },
+ {
+   "poi_id": 156,
+   "poi_name": "정혜승교수실",
+   "description": "문화콘텐츠문화경영학과교수실(5S219)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 964,
+   "y_coord": 827,
+   "vertex_id": 138
+ },
+ {
+   "poi_id": 160,
+   "poi_name": "사학과",
+   "description": "5S215",
+   "poi_category_id": 1,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1107,
    "y_coord": 827,
    "vertex_id": 599
  },
  {
+   "poi_id": 162,
+   "poi_name": "이병찬교수실",
+   "description": "자연과학대학교수실(5S209)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1323,
+   "y_coord": 820,
+   "vertex_id": 168
+ },
+ {
+   "poi_id": 163,
+   "poi_name": "손재영교수실",
+   "description": "문화콘텐츠문화경영학과교수실(5S208)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1359,
+   "y_coord": 820,
+   "vertex_id": 169
+ },
+ {
+   "poi_id": 164,
+   "poi_name": "정종현교수실",
+   "description": "한국어문학과교수실(5S207)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1395,
+   "y_coord": 820,
+   "vertex_id": 170
+ },
+ {
+   "poi_id": 165,
+   "poi_name": "강동호교수실",
+   "description": "한국어문학과교수실(5S206)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1431,
+   "y_coord": 820,
+   "vertex_id": 170
+ },
+ {
+   "poi_id": 166,
+   "poi_name": "이주영교수실",
+   "description": "사학과교수실(5S205)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1467,
+   "y_coord": 820,
+   "vertex_id": 172
+ },
+ {
+   "poi_id": 167,
+   "poi_name": "이효원교수실",
+   "description": "한국어문학과교수실(5S204)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1503,
+   "y_coord": 820,
+   "vertex_id": 172
+ },
+ {
+   "poi_id": 168,
+   "poi_name": "이의종교수실",
+   "description": "한국어문학과교수실(5S203)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1539,
+   "y_coord": 820,
+   "vertex_id": 174
+ },
+ {
+   "poi_id": 169,
+   "poi_name": "김동식교수실",
+   "description": "한국어문학과교수실(5S202)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1575,
+   "y_coord": 820,
+   "vertex_id": 174
+ },
+ {
+   "poi_id": 170,
+   "poi_name": "이병찬교수실",
+   "description": "자연과학대학교수실(5S201)",
+   "poi_category_id": 3,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 1611,
+   "y_coord": 820,
+   "vertex_id": 175
+ },
+ {
    "poi_id": 171,
    "poi_name": "의학과학생회",
-   "description": "의학과학생회실(5S201A)",
-   "poi_category_id": 3,
+   "description": "5S201A",
+   "poi_category_id": 1,
    "building_id": 1,
    "floor": 2,
    "x_coord": 1661,
@@ -915,8 +1355,8 @@
  {
    "poi_id": 175,
    "poi_name": "법학과",
-   "description": "법학과사무실(5S262)",
-   "poi_category_id": 3,
+   "description": "5S262",
+   "poi_category_id": 1,
    "building_id": 1,
    "floor": 2,
    "x_coord": 1038,
@@ -926,13 +1366,24 @@
  {
    "poi_id": 176,
    "poi_name": "국문과",
-   "description": "국문과사무실(5S263)",
-   "poi_category_id": 3,
+   "description": "5S263",
+   "poi_category_id": 1,
    "building_id": 1,
    "floor": 2,
    "x_coord": 1002,
    "y_coord": 677,
    "vertex_id": 552
+ },
+ {
+   "poi_id": 182,
+   "poi_name": "중국학과",
+   "description": "5S269",
+   "poi_category_id": 1,
+   "building_id": 1,
+   "floor": 2,
+   "x_coord": 786,
+   "y_coord": 677,
+   "vertex_id": 141
  },
  {
    "poi_id": 186,
@@ -981,7 +1432,7 @@
  {
    "poi_id": 244,
    "poi_name": "소화기",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 2,
    "floor": 1,
@@ -1014,7 +1465,7 @@
  {
    "poi_id": 248,
    "poi_name": "엘리베이터",
-   "description": "전층운행",
+   "description": "B1~14층 운행",
    "poi_category_id": 4,
    "building_id": 2,
    "floor": 1,
@@ -1025,7 +1476,7 @@
  {
    "poi_id": 249,
    "poi_name": "엘리베이터",
-   "description": "1, 7~9층 운행",
+   "description": "1, 5~9층 운행",
    "poi_category_id": 4,
    "building_id": 2,
    "floor": 1,
@@ -1036,7 +1487,7 @@
  {
    "poi_id": 250,
    "poi_name": "소화전",
-   "description": null,
+   "description": "",
    "poi_category_id": 11,
    "building_id": 2,
    "floor": 1,
@@ -1047,7 +1498,7 @@
  {
    "poi_id": 251,
    "poi_name": "엘리베이터",
-   "description": "1, 7~9층 운행",
+   "description": "1, 5~9층 운행",
    "poi_category_id": 4,
    "building_id": 2,
    "floor": 1,
@@ -1091,7 +1542,7 @@
  {
    "poi_id": 261,
    "poi_name": "해동라운지",
-   "description": "해동돋을볕라운지(60주년-113)",
+   "description": "60주년-113",
    "poi_category_id": 2,
    "building_id": 2,
    "floor": 1,
