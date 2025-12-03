@@ -49,14 +49,12 @@ class BeaconScanService {
   // ---------------- Configuration Variables ----------------
   // 칼만 필터 R, Q 값 초기화
   static const double _kalmanR = 40.0;
-  static const double _kalmanQ = 0.3;
+  static const double _kalmanQ = 0.45;
 
-  // 1m 기준 RSSI (TxPower)
-  static const int _rssiAtOneMeter = -56;
-
+  // 실험적 1m 기준 RSSI (TxPower): -56;
   // 히스테리시스 경계 (진입/이탈)
-  static const double _incomingCriterion = -68.0;
-  static const double _outgoingCriterion = -78.0;
+  static const double _incomingCriterion = -67.5;
+  static const double _outgoingCriterion = -73.5;
 
   static const String _beaconName = 'Holy-IOT';
   // ---------------------------------------------------------
