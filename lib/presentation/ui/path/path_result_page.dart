@@ -21,19 +21,86 @@ class PathPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
+    // 1. 경로 생성 (하나의 Path로 연결)
+    final path = Path();
+    if (points.isNotEmpty) {
+      path.moveTo(points[0].dx, points[0].dy);
+      for (int i = 1; i < points.length; i++) {
+        // 불연속적인 점(선분의 시작점이 이전 선분의 끝점과 다를 경우) 처리
+        // points 구조: [p1, p2, p3, p4, ...] (이미 연결된 순서로 온다고 가정해야 함)
+        // 하지만 호출부 로직을 보면 [시작1, 끝1, 시작2, 끝2] 형태로 들어옴
+        // 따라서 i가 홀수일 때(끝점)는 lineTo, 짝수일 때(시작점)는 체크 필요
+
+        // 호출부 로직: pathPoints.add(Offset(p1x, p1y)); pathPoints.add(Offset(p2x, p2y));
+        // 즉, i=0(시작), i=1(끝), i=2(시작), i=3(끝) ...
+
+        if (i % 2 == 0) {
+          // 새로운 선분의 시작점
+          // 이전 선분의 끝점(points[i-1])과 현재 시작점(points[i])이 같으면 이어그리기(아무것도 안 함, 다음 루프에서 lineTo로 이어짐)
+          // 다르면 끊어서 이동
+          if (points[i] != points[i - 1]) {
+            path.moveTo(points[i].dx, points[i].dy);
+          }
+        } else {
+          // 선분의 끝점
+          path.lineTo(points[i].dx, points[i].dy);
+        }
+      }
+    }
+
+    // 2. 테두리 그리기 (흰색, 더 두껍게)
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    //final path = Path();
-    // 선이 끊기지 않고 이어지도록 하기 위해 path.lineTo 사용
-    // points 구조: [시작점1, 끝점1, 시작점2, 끝점2, ...]
-    // TODO: 층이 바뀌는 등 불연속적인 구간은 points 리스트 구성 시 처리 필요
-    for (int i = 0; i < points.length - 1; i += 2) {
-      canvas.drawLine(points[i], points[i + 1], paint);
+    canvas.drawPath(path, borderPaint);
+
+    // 3. 경로 그리기 (기존 색상, 기존 두께)
+    final pathPaint = Paint()
+      ..color = color
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(path, pathPaint);
+
+    // 화살표
+    final arrowPaint = Paint()
+      ..color = AppColors.secondary
+      ..style = PaintingStyle.fill;
+
+    // 경로를 따라가며 일정 간격마다 화살표 배치
+    for (final metric in path.computeMetrics()) {
+      const double dashWidth = 20.0; // 화살표 간격
+      const double arrowSize = 1.5; // 화살표 크기
+
+      double distance = dashWidth;
+      while (distance < metric.length) {
+        final tangent = metric.getTangentForOffset(distance);
+        if (tangent != null) {
+          final position = tangent.position;
+          final angle = -tangent.angle; // Canvas 좌표계와 atan2 방향 고려
+
+          canvas.save();
+          canvas.translate(position.dx, position.dy);
+          canvas.rotate(angle); // 진행 방향으로 회전
+
+          // 화살표 모양 그리기 (삼각형)
+          final arrowPath = Path()
+            ..moveTo(-arrowSize, -arrowSize) // 왼쪽 위
+            ..lineTo(arrowSize, 0) // 오른쪽 중앙 (화살표 끝)
+            ..lineTo(-arrowSize, arrowSize) // 왼쪽 아래
+            ..close();
+
+          canvas.drawPath(arrowPath, arrowPaint);
+          canvas.restore();
+        }
+        distance += 40.0; // 다음 화살표까지 거리
+      }
     }
   }
 
