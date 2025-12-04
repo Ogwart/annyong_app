@@ -43,7 +43,7 @@ class _CostCardState extends State<CostCard> {
           border: Border.all(color: AppColors.grey200, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha(5),
               blurRadius: 10,
               offset: const Offset(2, 4),
             ),
@@ -104,7 +104,7 @@ class _CostCardState extends State<CostCard> {
           margin: const EdgeInsets.only(left: 12),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withAlpha(10),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
@@ -191,7 +191,7 @@ class _CostCardState extends State<CostCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withAlpha(10),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

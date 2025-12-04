@@ -79,8 +79,9 @@ class _MeasurePageState extends State<MeasurePage> {
     if (_isMapInitialized ||
         _route == null ||
         containerSize.width <= 0 ||
-        containerSize.height <= 0)
+        containerSize.height <= 0) {
       return;
+    }
 
     final buildingName = _getBuildingName(_route!.startPoi.buildingId);
     final floorString = '${_route!.startPoi.floor}F';

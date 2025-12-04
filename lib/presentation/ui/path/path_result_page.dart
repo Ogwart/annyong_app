@@ -28,7 +28,7 @@ class PathPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path();
+    //final path = Path();
     // 선이 끊기지 않고 이어지도록 하기 위해 path.lineTo 사용
     // points 구조: [시작점1, 끝점1, 시작점2, 끝점2, ...]
     // TODO: 층이 바뀌는 등 불연속적인 구간은 points 리스트 구성 시 처리 필요
@@ -364,8 +364,8 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.2,
+                                                color: Colors.black.withAlpha(
+                                                  20,
                                                 ),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 4),
@@ -429,9 +429,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.1,
-                                              ),
+                                              color: Colors.black.withAlpha(10),
                                               blurRadius: 4,
                                               offset: const Offset(0, 2),
                                             ),
@@ -542,7 +540,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withAlpha(5),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       ),

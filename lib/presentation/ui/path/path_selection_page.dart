@@ -371,7 +371,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                   border: Border.all(color: AppColors.grey200, width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withAlpha(5),
                       blurRadius: 20,
                       offset: const Offset(2, 4),
                       spreadRadius: 0,
@@ -556,8 +556,9 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                                               shape: BoxShape.circle,
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.2),
+                                                  color: Colors.black.withAlpha(
+                                                    20,
+                                                  ),
                                                   blurRadius: 6,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -631,7 +632,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
+                                          color: Colors.black.withAlpha(10),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),

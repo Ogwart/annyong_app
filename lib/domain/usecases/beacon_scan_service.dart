@@ -52,7 +52,7 @@ class BeaconScanService {
   static const double _kalmanQ = 0.3;
 
   // 1m 기준 RSSI (TxPower)
-  static const int _rssiAtOneMeter = -56;
+  //static const int _rssiAtOneMeter = -56;
 
   // 히스테리시스 경계 (진입/이탈)
   static const double _incomingCriterion = -68.0;

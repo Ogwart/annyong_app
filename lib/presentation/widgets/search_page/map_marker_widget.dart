@@ -34,8 +34,8 @@ class MapMarkerWidget extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.5) // 선택: 파란색 그림자
-                      : Colors.black.withOpacity(0.2), // 미선택: 연회색 그림자
+                      ? AppColors.primary.withAlpha(5) // 선택: 파란색 그림자
+                      : Colors.black.withAlpha(20), // 미선택: 연회색 그림자
                   blurRadius: isSelected ? 12 : 6,
                   offset: const Offset(0, 4),
                   spreadRadius: isSelected ? 2 : 0,

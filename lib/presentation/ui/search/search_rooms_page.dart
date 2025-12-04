@@ -262,8 +262,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                   child: Stack(
                     children: [
                       CategoryBox(
-                        categoryName:
-                            "${widget.searchType.replaceAll('\n', '/')}",
+                        categoryName: widget.searchType.replaceAll('\n', '/'),
                       ),
                       if (selectedClassroom != null) SelectedCategoryFlag(),
                     ],
