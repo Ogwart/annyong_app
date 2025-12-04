@@ -11,6 +11,7 @@ import 'package:annyong/presentation/widgets/path_page/reset_button.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
+import 'package:vector_math/vector_math_64.dart' as math64;
 
 class PathSelectionPage extends ConsumerStatefulWidget {
   const PathSelectionPage({super.key});
@@ -197,7 +198,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
             _mapContainerSize!.height / 2);
 
     final targetMatrix = Matrix4.identity()
-      ..translate(targetX, targetY)
+      ..translateByVector3(math64.Vector3(targetX, targetY, 0))
       ..scale(targetZoom);
 
     _mapAnimation =

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:vector_math/vector_math_64.dart' as math64;
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -131,7 +132,7 @@ class _MeasurePageState extends State<MeasurePage> {
 
     // 8. 매트릭스 적용
     final matrix = Matrix4.identity()
-      ..translate(tx, ty)
+      ..scaleByVector3(math64.Vector3(tx, ty, 0))
       ..scale(targetScale);
 
     _transformationController.value = matrix;
