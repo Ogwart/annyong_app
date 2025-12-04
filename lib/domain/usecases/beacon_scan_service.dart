@@ -49,18 +49,17 @@ class BeaconScanService {
   // ---------------- Configuration Variables ----------------
   // 칼만 필터 R, Q 값 초기화
   static const double _kalmanR = 40.0;
-  static const double _kalmanQ = 0.45;
+  static const double _kalmanQ = 0.5;
 
   // 실험적 1m 기준 RSSI (TxPower): -56;
   // 히스테리시스 경계 (진입/이탈)
-  static const double _incomingCriterion = -67.5;
+  static const double _incomingCriterion = -68.5;
   static const double _outgoingCriterion = -73.5;
 
   static const String _beaconName = 'Holy-IOT';
 
   // timeout 관련 변수 정의
   // 칼만필터+히스테리시스만으로는 사용자의 급격한 이탈을 잡을 수 없음. 따라서 비콘 신호가 끊기면 이탈로 간주
-  // TODO: _coastingDurationMs 실험 필요. UX상으론 깜빡거림보단 3초 기다려주는게 낫다는데 어떨진 봐야함
   static const int _coastingDurationMs = 3000; // 신호가 끊겨도 유지하는 관성 주행 시간
   static const double _ghostRssi = -99.0; // 가상 패킷으로 주입할 가상 패킷 RSSI 값
   static const int _maintenanceTimerPeriodMs = 1000; // 체크 타이머 주기
