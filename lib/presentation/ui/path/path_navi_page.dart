@@ -4,6 +4,7 @@ import 'package:annyong/domain/usecases/path_finder.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:annyong/presentation/util/get_building_name.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/path_finder_provider.dart';
 import 'package:annyong/domain/usecases/path_description_builder.dart';
@@ -12,6 +13,7 @@ import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:vector_math/vector_math_64.dart' as math64;
+import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 
 class PathNaviPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -69,7 +71,9 @@ class _RippleMarkerState extends State<RippleMarker>
               height: 60 * _controller.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity((1 - _controller.value)),
+                color: AppColors.primary.withAlpha(
+                  ((1 - _controller.value) * 100).toInt(),
+                ),
               ),
             ),
           ),
@@ -90,15 +94,23 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
   // 경로 탐색 결과 캐싱
   PathResult? _cachedPathResult;
 
+  // 현재 보고 있는 건물과 층 상태
+  late String _currentBuilding;
+  late String _currentFloor;
+
   @override
   void initState() {
     super.initState();
+    // 초기 상태 설정
+    _currentBuilding = getBuildingName(widget.start.buildingId);
+    _currentFloor = '${widget.start.floor}F';
+
     // 페이지 진입 시 길 안내 시작
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final navigationNotifier = ref.read(navigationViewModelProvider.notifier);
-      // 출발 POI로 초기 위치 설정
-      navigationNotifier.setInitialPositionFromPoi(widget.start);
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final navigationNotifier = ref.read(navigationViewModelProvider.notifier);
+    //   // 출발 POI로 초기 위치 설정
+    //   navigationNotifier.setInitialPositionFromPoi(widget.start);
+    // });
 
     _mapAnimationController = AnimationController(
       vsync: this,
@@ -135,7 +147,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
     super.dispose();
   }
 
-  // 초기 위치로 지도 이동 애니메이션
+  // 초기 위치로 지도 이동
   void _animateToStart(
     Size containerSize,
     Size displayedImageSize,
@@ -160,7 +172,6 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
     final targetY = widget.start.yCoord * scaleY + imageOffsetY;
 
     // 5. 화면 중앙에 위치시키기 위한 Translation 계산
-    // 화면 중앙 - (타겟 좌표 * 줌)
     final translateX = (containerSize.width / 2) - (targetX * targetZoom);
     final translateY = (containerSize.height / 2) - (targetY * targetZoom);
 
@@ -169,7 +180,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
       ..translateByVector3(math64.Vector3(translateX, translateY, 0))
       ..scale(targetZoom);
 
-    // 7. 애니메이션 실행
+    // 7. 애니메이션
     _mapAnimation =
         Matrix4Tween(
           begin: _transformationController.value,
@@ -185,17 +196,28 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
     _isMapInitialized = true;
   }
 
-  /// buildingId를 건물 이름으로 변환
-  String _getBuildingName(int buildingId) {
-    switch (buildingId) {
-      case 1:
-      case 2:
-        return '5호관';
-      case 3:
-        return '하이테크관';
-      default:
-        return '5호관';
-    }
+  // 건물 전환
+  void _cycleBuildings(Set<String> involvedBuildings) {
+    if (involvedBuildings.isEmpty) return;
+
+    setState(() {
+      final buildingList = involvedBuildings.toList();
+      final currentIndex = buildingList.indexOf(_currentBuilding);
+      final nextIndex = (currentIndex + 1) % buildingList.length;
+
+      _currentBuilding = buildingList[nextIndex];
+      _currentFloor = '1F';
+      _transformationController.value = Matrix4.identity();
+      // 건물 전환 시 애니메이션 초기화 (필요시)
+      _isMapInitialized = false;
+    });
+  }
+
+  // 층 전환
+  void _changeFloor(String floor) {
+    setState(() {
+      _currentFloor = floor;
+    });
   }
 
   @override
@@ -227,23 +249,38 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
             ),
           ),
           data: (pathFinder) {
-            // 캐싱된 결과가 있으면 재사용, 없으면 새로 계산
             if (_cachedPathResult == null) {
-              // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
-              // 유효하지 않은 것은 -1로 대체
               final List<int> visitOrder = [
                 widget.start.vertexId ?? -1,
                 ...widget.waypoints.map((e) => e.vertexId ?? -1),
                 widget.end.vertexId ?? -1,
               ];
 
-              // 유효하지 않은 정점이 있을 때 예외 처리
               if (visitOrder.contains(-1)) {
                 return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
               }
 
               // 경유지 포함하여 경로 탐색
               _cachedPathResult = pathFinder.findPathWithWaypoints(visitOrder);
+
+              // 경로 시작 지점(Vertex)으로 초기 사용자 위치 설정
+              final calculatedPath = _cachedPathResult;
+              if (calculatedPath != null && calculatedPath.path.isNotEmpty) {
+                final startVertexId = calculatedPath.path.first;
+                final startVertex = pathFinder.vertices[startVertexId];
+
+                if (startVertex != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ref
+                        .read(navigationViewModelProvider.notifier)
+                        .setInitialPosition(
+                          x: startVertex.x,
+                          y: startVertex.y,
+                          floor: widget.start.floor,
+                        );
+                  });
+                }
+              }
             }
 
             final result = _cachedPathResult;
@@ -290,13 +327,17 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
 
             // 사용자의 현재 건물과 층 정보 가져오기
             final navigationState = ref.watch(navigationViewModelProvider);
-            final buildingName = _getBuildingName(widget.start.buildingId);
-            final floorString = '${widget.start.floor}F';
 
-            // 지도 이미지 경로 (2x 해상도 사용)
+            // 관련된 건물 목록 추출 (건물 전환 버튼용)
+            final allPois = [widget.start, ...widget.waypoints, widget.end];
+            final involvedBuildings = allPois
+                .map((p) => getBuildingName(p.buildingId))
+                .toSet();
+
+            // 지도 이미지 경로 (2x 해상도 사용) - 현재 선택된 건물/층 기준
             final mapImagePath = MapUtilFunctions.getImagePath(
-              buildingName,
-              floorString,
+              _currentBuilding,
+              _currentFloor,
               '2x',
             );
 
@@ -322,8 +363,8 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                         // path_result_page에서는 '1x'를 기준으로 계산했음. 동일하게 맞춤
                         final calcOriginalSize =
                             MapUtilFunctions.getImageOriginalSize(
-                              buildingName,
-                              floorString,
+                              _currentBuilding,
+                              _currentFloor,
                               '1x',
                             );
 
@@ -344,7 +385,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                             (containerSize.height - displayedImageSize.height) /
                             2;
 
-                        // 초기 진입 시 애니메이션 실행
+                        // 초기 진입 시 애니메이션 실행 (지도 초기화 안 됐을 때만)
                         if (!_isMapInitialized) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             _animateToStart(
@@ -365,20 +406,15 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                             final v1 = pathFinder.vertices[fromId];
                             final v2 = pathFinder.vertices[toId];
 
-                            // 현재 층에 해당하는지 확인 (간단하게 ID 대역으로 체크하거나, vertex 정보에 층 정보가 있다면 활용)
-                            // 여기서는 path_result_page의 _isVertexOnCurrentMap 로직을 인라인으로 구현하거나 함수로 분리 필요
-                            // 일단 간단히 층 정보가 일치하는지만 체크 (v1, v2 좌표가 지도 범위 내인지 등)
-                            // 하지만 Vertex 자체에는 층 정보가 없으므로 ID 대역을 써야 함.
-                            // 이 페이지엔 _isVertexOnCurrentMap 함수가 없으므로 추가하거나, 간단히 구현
-
+                            // 현재 층에 해당하는지 확인
                             // 5호관 1층: 0~499, 2층: 500~999, 60주년 1층: 1000~
                             bool isVertexOnMap(int id) {
-                              if (buildingName == '5호관') {
-                                if (floorString == '1F') return id < 500;
-                                if (floorString == '2F') {
+                              if (_currentBuilding == '5호관') {
+                                if (_currentFloor == '1F') return id < 500;
+                                if (_currentFloor == '2F') {
                                   return id >= 500 && id < 1000;
                                 }
-                              } else if (buildingName.contains('60주년')) {
+                              } else if (_currentBuilding.contains('60주년')) {
                                 return id >= 1000;
                               }
                               return false;
@@ -454,6 +490,16 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                                   currentX = widget.start.xCoord;
                                   currentY = widget.start.yCoord;
                                   currentFloor = widget.start.floor;
+
+                                  // 경로 시작점(Vertex)이 있으면 해당 위치 사용
+                                  if (result.path.isNotEmpty) {
+                                    final startVertex =
+                                        pathFinder.vertices[result.path.first];
+                                    if (startVertex != null) {
+                                      currentX = startVertex.x;
+                                      currentY = startVertex.y;
+                                    }
+                                  }
                                 }
 
                                 // 1. 층 확인
@@ -509,7 +555,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                                           ],
                                         ),
                                         child: Icon(
-                                          Icons.person_pin_circle,
+                                          Icons.person,
                                           color: AppColors.primary,
                                           size: 24,
                                         ),
@@ -572,6 +618,107 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
 
                             // 상단 상태 정보 (CountSteps)
                             CountSteps(navigationState: navigationState),
+
+                            // 건물 전환 버튼 (경로에 포함된 건물이 2개 이상일 때)
+                            if (involvedBuildings.length > 1)
+                              Positioned(
+                                bottom: 16,
+                                left: 16,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _cycleBuildings(involvedBuildings),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(10),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _currentBuilding,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: AppColors.text,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.swap_horiz_rounded,
+                                          size: 16,
+                                          color: AppColors.text,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // 층 이동 버튼
+                            Positioned(
+                              bottom: 16,
+                              right: 16,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children:
+                                    MapUtilFunctions.getAvailableFloors(
+                                      _currentBuilding,
+                                    ).map((floor) {
+                                      // 해당 층에 마커가 있는지 확인 (빨간 뱃지용)
+                                      final bool hasPointOnThisFloor = allPois
+                                          .any((poi) {
+                                            // 현재 건물의 층에 해당하는 POI가 있는지 확인
+                                            // 건물 이름 비교가 필요함
+                                            final poiBuildingName =
+                                                getBuildingName(poi.buildingId);
+                                            return poiBuildingName ==
+                                                    _currentBuilding &&
+                                                '${poi.floor}F' == floor;
+                                          });
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          alignment: Alignment.topRight,
+                                          children: [
+                                            FloorButton(
+                                              floor: floor,
+                                              isSelected:
+                                                  _currentFloor == floor,
+                                              onTap: () => _changeFloor(floor),
+                                            ),
+                                            if (hasPointOnThisFloor)
+                                              Positioned(
+                                                top: 6,
+                                                right: 6,
+                                                child: Container(
+                                                  width: 12,
+                                                  height: 12,
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.warning,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
                           ],
                         );
                       }, // LayoutBuilder builder

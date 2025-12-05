@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart' as math64;
+import 'package:annyong/presentation/util/get_building_name.dart';
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
@@ -84,7 +85,7 @@ class _MeasurePageState extends State<MeasurePage> {
       return;
     }
 
-    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final buildingName = getBuildingName(_route!.startPoi.buildingId);
     final floorString = '${_route!.startPoi.floor}F';
 
     // 기존에 '2x'로 되어 있어서 좌표 계산 배율이 틀어졌던 것이기 때문에
@@ -276,18 +277,6 @@ class _MeasurePageState extends State<MeasurePage> {
 
     // 결과 페이지로 이동
     context.push("/measure/measureResult", extra: strideLength);
-  }
-
-  String _getBuildingName(int buildingId) {
-    switch (buildingId) {
-      case 1:
-      case 2:
-        return '5호관';
-      case 3:
-        return '하이테크관';
-      default:
-        return '5호관';
-    }
   }
 
   @override
@@ -523,7 +512,7 @@ class _MeasurePageState extends State<MeasurePage> {
                   // --------------------지도 영역--------------------
                   Builder(
                     builder: (context) {
-                      final buildingName = _getBuildingName(
+                      final buildingName = getBuildingName(
                         _route!.startPoi.buildingId,
                       );
                       final floorString = '${_route!.startPoi.floor}F';
