@@ -14,6 +14,7 @@ import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:vector_math/vector_math_64.dart' as math64;
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
+import 'package:go_router/go_router.dart';
 
 class PathNaviPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -725,6 +726,42 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                     ), // LayoutBuilder
                   ), // Container
                 ), // Expanded
+                // 하단 버튼 영역
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(5),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => context.go('/home'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '안내 종료',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ); // Column
           },
