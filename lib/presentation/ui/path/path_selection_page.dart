@@ -413,9 +413,13 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                       buildingToShow,
                     );
                     if (_currentBuildingId != targetBuildingId) {
-                      _currentBuildingId = targetBuildingId;
-                      _lastCenteredPoiId = null;
-                      _transformationController.value = Matrix4.identity();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          _currentBuildingId = targetBuildingId;
+                          _lastCenteredPoiId = null;
+                          _transformationController.value = Matrix4.identity();
+                        }
+                      });
                     }
 
                     // 이미지 경로
@@ -512,7 +516,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
                                     final transformation =
                                         _transformationController.value;
                                     final initialScreenX =
-                                        poi!.xCoord * scaleX + imageOffsetX;
+                                        poi.xCoord * scaleX + imageOffsetX;
                                     final initialScreenY =
                                         poi.yCoord * scaleY + imageOffsetY;
                                     final transformedX =
