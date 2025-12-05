@@ -12,6 +12,7 @@ import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/ui/path/path_result_page.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:vector_math/vector_math_64.dart' as math64;
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:go_router/go_router.dart';
@@ -152,6 +153,104 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
       }
     });
     super.dispose();
+  }
+
+  /// POI 마커를 조건에 맞게 생성하는 헬퍼 메서드
+  Widget _buildPoiMarker({
+    required Poi poi,
+    required String type, // 'departure', 'destination', 'waypoint'
+    required double scaleX,
+    required double scaleY,
+    required double imageOffsetX,
+    required double imageOffsetY,
+  }) {
+    // 아이콘 및 색상 결정
+    String iconPath;
+    String label;
+
+    if (type == 'departure') {
+      iconPath = 'assets/icons/svg/departure_marker.svg';
+      label = '출발지';
+    } else if (type == 'destination') {
+      iconPath = 'assets/icons/svg/destination_marker.svg';
+      label = '목적지';
+    } else {
+      iconPath = 'assets/icons/svg/stopover_marker.svg';
+      label = '경유지';
+    }
+
+    // 좌표 변환
+    final localX = poi.xCoord * scaleX + imageOffsetX;
+    final localY = poi.yCoord * scaleY + imageOffsetY;
+
+    final currentMatrix = _transformationController.value;
+    final screenX =
+        currentMatrix.storage[0] * localX +
+        currentMatrix.storage[4] * localY +
+        currentMatrix.storage[12];
+    final screenY =
+        currentMatrix.storage[1] * localX +
+        currentMatrix.storage[5] * localY +
+        currentMatrix.storage[13];
+
+    // 줌 레벨에 따른 라벨 표시 여부 (예: 2배 이상일 때 표시)
+    final currentZoom = currentMatrix.getMaxScaleOnAxis();
+    final bool showLabel = currentZoom >= 2.0;
+    const double iconSize = 35.0;
+
+    return Positioned(
+      left: screenX - (iconSize / 2),
+      top: screenY - (iconSize / 2),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 마커 아이콘
+          Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2), // alpha 수정
+                  blurRadius: 6,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: SvgPicture.asset(iconPath),
+          ),
+          // 라벨 (선택적 표시)
+          if (showLabel)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Stack(
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 3
+                        ..color = Colors.white,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   // 초기 위치로 지도 이동
@@ -378,6 +477,19 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final containerSize = constraints.biggest;
+
+                        // 1. 현재 보고 있는 지도의 건물 ID와 층수 계산
+                        final int currentMapBuildingId =
+                            MapUtilFunctions.getBuildingId(_currentBuilding);
+                        final int currentMapFloorNum =
+                            MapUtilFunctions.getFloorNumber(_currentFloor);
+
+                        // 현재 보고 있는 지도의 건물 ID와 층수
+                        final int currentBuildingId =
+                            MapUtilFunctions.getBuildingId(_currentBuilding);
+                        final int currentFloorNum =
+                            MapUtilFunctions.getFloorNumber(_currentFloor);
+
                         // path_result_page에서는 '1x'를 기준으로 계산했음. 동일하게 맞춤
                         final calcOriginalSize =
                             MapUtilFunctions.getImageOriginalSize(
@@ -499,6 +611,12 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                             // 사용자 위치 마커 (InteractiveViewer 좌표 변환 적용)
                             navigationState.when(
                               data: (state) {
+                                // 만약 사용자의 현재층/건물이 보고 있는 지도 층/건물과 다르다면 숨김
+                                if (state.buildingId != currentMapBuildingId ||
+                                    state.floor != currentMapFloorNum) {
+                                  return const SizedBox.shrink();
+                                }
+
                                 double currentX = state.x;
                                 double currentY = state.y;
                                 int currentFloor = state.floor;
@@ -586,52 +704,46 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                               error: (_, __) => const SizedBox.shrink(),
                             ),
 
-                            // 도착지 마커
-                            if (widget.end.floor == widget.start.floor)
-                              Builder(
-                                builder: (context) {
-                                  final localX =
-                                      widget.end.xCoord * scaleX + imageOffsetX;
-                                  final localY =
-                                      widget.end.yCoord * scaleY + imageOffsetY;
+                            // 마커가 현재 보고있는 지도의 층/건물과 일치할 때만 랜더링
+                            // 출발지 마커
+                            if (widget.start.buildingId ==
+                                    currentMapBuildingId &&
+                                widget.start.floor == currentMapFloorNum)
+                              _buildPoiMarker(
+                                poi: widget.start,
+                                type: 'departure',
+                                scaleX: scaleX,
+                                scaleY: scaleY,
+                                imageOffsetX: imageOffsetX,
+                                imageOffsetY: imageOffsetY,
+                              ),
 
-                                  final currentMatrix =
-                                      _transformationController.value;
-                                  final screenX =
-                                      currentMatrix.storage[0] * localX +
-                                      currentMatrix.storage[4] * localY +
-                                      currentMatrix.storage[12];
-                                  final screenY =
-                                      currentMatrix.storage[1] * localX +
-                                      currentMatrix.storage[5] * localY +
-                                      currentMatrix.storage[13];
+                            // 경유지 마커들
+                            ...widget.waypoints.map((waypoint) {
+                              if (waypoint.buildingId == currentMapBuildingId &&
+                                  waypoint.floor == currentMapFloorNum) {
+                                return _buildPoiMarker(
+                                  poi: waypoint,
+                                  type: 'waypoint',
+                                  scaleX: scaleX,
+                                  scaleY: scaleY,
+                                  imageOffsetX: imageOffsetX,
+                                  imageOffsetY: imageOffsetY,
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            }),
 
-                                  return Positioned(
-                                    left: screenX - 12,
-                                    top: screenY - 24,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.location_on,
-                                        color: Colors.red,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  );
-                                },
+                            // 목적지 마커
+                            if (widget.end.buildingId == currentMapBuildingId &&
+                                widget.end.floor == currentMapFloorNum)
+                              _buildPoiMarker(
+                                poi: widget.end,
+                                type: 'destination',
+                                scaleX: scaleX,
+                                scaleY: scaleY,
+                                imageOffsetX: imageOffsetX,
+                                imageOffsetY: imageOffsetY,
                               ),
 
                             // 상단 상태 정보 (CountSteps)

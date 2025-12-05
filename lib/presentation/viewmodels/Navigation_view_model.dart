@@ -8,27 +8,18 @@ import 'dart:math' as math;
 
 /// 사용자의 현재 위치 및 네비게이션 상태
 class NavigationState {
-  /// 현재 X 좌표 (미터 단위)
-  final double x;
-
-  /// 현재 Y 좌표 (미터 단위)
-  final double y;
-
-  /// 현재 층수
-  final int floor;
-
-  /// 사용자가 바라보는 방향 (라디안, 0 = 북쪽, 시계방향)
-  final double heading;
-
-  /// 현재까지의 총 걸음수
-  final int stepCount;
-
-  /// 초기 걸음수 (측정 시작 시점)
-  final int initialStepCount;
+  final double x; // 현재 X 좌표 (미터 단위)
+  final double y; // 현재 Y 좌표 (미터 단위)
+  final int floor; // 현재 층수
+  final int buildingId; // 현재 건물
+  final double heading; // 사용자가 바라보는 방향 (라디안, 0 = 북쪽, 시계방향)
+  final int stepCount; // 현재까지의 총 걸음수
+  final int initialStepCount; // 초기 걸음수 (측정 시작 시점)
 
   NavigationState({
     this.x = 0.0,
     this.y = 0.0,
+    this.buildingId = 1,
     this.floor = 1,
     this.heading = 0.0,
     this.stepCount = 0,
@@ -38,6 +29,7 @@ class NavigationState {
   NavigationState copyWith({
     double? x,
     double? y,
+    int? buildingId,
     int? floor,
     double? heading,
     int? stepCount,
@@ -46,6 +38,7 @@ class NavigationState {
     return NavigationState(
       x: x ?? this.x,
       y: y ?? this.y,
+      buildingId: buildingId ?? this.buildingId,
       floor: floor ?? this.floor,
       heading: heading ?? this.heading,
       stepCount: stepCount ?? this.stepCount,
@@ -199,6 +192,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     required double beaconX,
     required double beaconY,
     required int beaconFloor,
+    required int beaconBuildingId,
     required double signalStrength,
   }) {
     if (signalStrength >= -65) {
@@ -206,7 +200,12 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       // 길찾기 중일 때만
       if (currentState != null) {
         state = AsyncValue.data(
-          currentState.copyWith(x: beaconX, y: beaconY, floor: beaconFloor),
+          currentState.copyWith(
+            x: beaconX,
+            y: beaconY,
+            floor: beaconFloor,
+            buildingId: beaconBuildingId,
+          ),
         );
       }
     }
@@ -217,6 +216,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     required double x,
     required double y,
     required int floor,
+    int buildingId = 1,
     double? heading,
   }) {
     final currentState = state.value;
@@ -227,6 +227,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
           y: y,
           floor: floor,
           heading: heading ?? currentState.heading,
+          buildingId: buildingId,
         ),
       );
     }
@@ -244,6 +245,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
           heading: heading ?? currentState.heading,
           stepCount: 0,
           initialStepCount: 0,
+          buildingId: departurePoi.buildingId,
         ),
       );
     }
