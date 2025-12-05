@@ -1,5 +1,6 @@
 //import 'dart:convert';
 import 'dart:math' as math;
+import 'package:annyong/domain/usecases/path_finder.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,8 @@ import 'package:annyong/domain/usecases/path_description_builder.dart';
 import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
+import 'package:annyong/presentation/ui/path/path_result_page.dart';
+import 'package:vector_math/vector_math_64.dart' as math64;
 
 class PathNaviPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -26,7 +29,67 @@ class PathNaviPage extends ConsumerStatefulWidget {
   ConsumerState<PathNaviPage> createState() => _PathNaviPageState();
 }
 
-class _PathNaviPageState extends ConsumerState<PathNaviPage> {
+class RippleMarker extends StatefulWidget {
+  const RippleMarker({super.key});
+
+  @override
+  State<RippleMarker> createState() => _RippleMarkerState();
+}
+
+class _RippleMarkerState extends State<RippleMarker>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return SizedBox(
+          width: 60,
+          height: 60,
+          child: Center(
+            child: Container(
+              width: 60 * _controller.value, // 최대 크기 60
+              height: 60 * _controller.value,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity((1 - _controller.value)),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PathNaviPageState extends ConsumerState<PathNaviPage>
+    with SingleTickerProviderStateMixin {
+  final TransformationController _transformationController =
+      TransformationController();
+  late AnimationController _mapAnimationController;
+  Animation<Matrix4>? _mapAnimation;
+  //Size? _mapContainerSize;
+  bool _isMapInitialized = false;
+  // 경로 탐색 결과 캐싱
+  PathResult? _cachedPathResult;
+
   @override
   void initState() {
     super.initState();
@@ -36,10 +99,27 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
       // 출발 POI로 초기 위치 설정
       navigationNotifier.setInitialPositionFromPoi(widget.start);
     });
+
+    _mapAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _mapAnimationController.addListener(() {
+      if (_mapAnimation != null) {
+        _transformationController.value = _mapAnimation!.value;
+      }
+    });
+
+    _transformationController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _transformationController.dispose();
+    _mapAnimationController.dispose();
     // 페이지 종료 시 길 안내 종료 및 초기화
     // 위젯 빌드 중 상태 변경을 방지하기 위해 다음 프레임에 실행
     Future.microtask(() {
@@ -53,6 +133,56 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
       }
     });
     super.dispose();
+  }
+
+  // 초기 위치로 지도 이동 애니메이션
+  void _animateToStart(
+    Size containerSize,
+    Size displayedImageSize,
+    Size originalSize,
+  ) {
+    if (_isMapInitialized) return;
+
+    // 1. 스케일 계산
+    final scaleX = displayedImageSize.width / originalSize.width;
+    final scaleY = displayedImageSize.height / originalSize.height;
+
+    // 2. 이미지 오프셋 (중앙 정렬 보정)
+    final imageOffsetX = (containerSize.width - displayedImageSize.width) / 2;
+    final imageOffsetY = (containerSize.height - displayedImageSize.height) / 2;
+
+    // 3. 목표 줌 레벨 설정
+    const double targetZoom = 3.0;
+
+    // 4. 목표 중심점 계산 (출발지 좌표 기준)
+    // 이미지 내에서의 절대 좌표
+    final targetX = widget.start.xCoord * scaleX + imageOffsetX;
+    final targetY = widget.start.yCoord * scaleY + imageOffsetY;
+
+    // 5. 화면 중앙에 위치시키기 위한 Translation 계산
+    // 화면 중앙 - (타겟 좌표 * 줌)
+    final translateX = (containerSize.width / 2) - (targetX * targetZoom);
+    final translateY = (containerSize.height / 2) - (targetY * targetZoom);
+
+    // 6. 목표 매트릭스 생성
+    final targetMatrix = Matrix4.identity()
+      ..translateByVector3(math64.Vector3(translateX, translateY, 0))
+      ..scale(targetZoom);
+
+    // 7. 애니메이션 실행
+    _mapAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: targetMatrix,
+        ).animate(
+          CurvedAnimation(
+            parent: _mapAnimationController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
+
+    _mapAnimationController.forward(from: 0);
+    _isMapInitialized = true;
   }
 
   /// buildingId를 건물 이름으로 변환
@@ -97,21 +227,26 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
             ),
           ),
           data: (pathFinder) {
-            // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
-            // 유효하지 않은 것은 -1로 대체
-            final List<int> visitOrder = [
-              widget.start.vertexId ?? -1,
-              ...widget.waypoints.map((e) => e.vertexId ?? -1),
-              widget.end.vertexId ?? -1,
-            ];
+            // 캐싱된 결과가 있으면 재사용, 없으면 새로 계산
+            if (_cachedPathResult == null) {
+              // 방문해야 할 모든 지점의 Vertex ID를 순서대로 리스트화
+              // 유효하지 않은 것은 -1로 대체
+              final List<int> visitOrder = [
+                widget.start.vertexId ?? -1,
+                ...widget.waypoints.map((e) => e.vertexId ?? -1),
+                widget.end.vertexId ?? -1,
+              ];
 
-            // 유효하지 않은 정점이 있을 때 예외 처리
-            if (visitOrder.contains(-1)) {
-              return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+              // 유효하지 않은 정점이 있을 때 예외 처리
+              if (visitOrder.contains(-1)) {
+                return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+              }
+
+              // 경유지 포함하여 경로 탐색
+              _cachedPathResult = pathFinder.findPathWithWaypoints(visitOrder);
             }
 
-            // 경유지 포함하여 경로 탐색
-            final result = pathFinder.findPathWithWaypoints(visitOrder);
+            final result = _cachedPathResult;
 
             // 경로 못 찾았을 때 UI 처리
             if (result == null || result.path.isEmpty) {
@@ -150,12 +285,6 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
               result.totalCost,
             );
 
-            //const JsonEncoder encoder = JsonEncoder.withIndent('  ');
-            //final String prettyJson = encoder.convert(jsonResult);
-            //debugPrint('----------- [Path Result JSON Start] -----------');
-            //debugPrint(prettyJson);
-            //debugPrint('----------- [Path Result JSON End] -----------');
-
             // 유효한 경로 찾았을 때 UI 렌더링
             final double totalCost = jsonResult['total_cost'] ?? 0.0;
 
@@ -171,126 +300,286 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
               '2x',
             );
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ------------------출발, 경유, 도착, 총 비용------------------
-                  CostCard(
+            return Column(
+              children: [
+                // ------------------출발, 경유, 도착, 총 비용------------------
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: CostCard(
                     departure: widget.start.name,
                     destination: widget.end.name,
                     totalCost: totalCost,
                     waypoints: widget.waypoints,
                   ),
-                  const SizedBox(height: 20),
-                  // ------------------지도 및 사용자 위치------------------
-                  Container(
-                    height: 300,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.grey200,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Stack(
-                        children: [
-                          // 지도 이미지
-                          Positioned.fill(
-                            child: Image.asset(
-                              mapImagePath,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          // 사용자 위치 마커 (현재 층일 때만 표시)
-                          navigationState.when(
-                            data: (state) {
-                              // 현재 지도 층과 사용자 층이 일치할 때만 마커 표시
-                              if (state.floor != widget.start.floor) {
-                                return const SizedBox.shrink();
+                ),
+                // ------------------지도 및 사용자 위치------------------
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final containerSize = constraints.biggest;
+                        // path_result_page에서는 '1x'를 기준으로 계산했음. 동일하게 맞춤
+                        final calcOriginalSize =
+                            MapUtilFunctions.getImageOriginalSize(
+                              buildingName,
+                              floorString,
+                              '1x',
+                            );
+
+                        final displayedImageSize =
+                            MapUtilFunctions.getDisplayedImageSize(
+                              containerSize,
+                              calcOriginalSize,
+                            );
+
+                        final scaleX =
+                            displayedImageSize.width / calcOriginalSize.width;
+                        final scaleY =
+                            displayedImageSize.height / calcOriginalSize.height;
+                        final imageOffsetX =
+                            (containerSize.width - displayedImageSize.width) /
+                            2;
+                        final imageOffsetY =
+                            (containerSize.height - displayedImageSize.height) /
+                            2;
+
+                        // 초기 진입 시 애니메이션 실행
+                        if (!_isMapInitialized) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _animateToStart(
+                              containerSize,
+                              displayedImageSize,
+                              calcOriginalSize,
+                            );
+                          });
+                        }
+
+                        // 경로 좌표 계산 로직 (path_result_page 복사)
+                        final List<Offset> pathPoints = [];
+
+                        if (result.path.length > 1) {
+                          for (int i = 0; i < result.path.length - 1; i++) {
+                            final int fromId = result.path[i];
+                            final int toId = result.path[i + 1];
+                            final v1 = pathFinder.vertices[fromId];
+                            final v2 = pathFinder.vertices[toId];
+
+                            // 현재 층에 해당하는지 확인 (간단하게 ID 대역으로 체크하거나, vertex 정보에 층 정보가 있다면 활용)
+                            // 여기서는 path_result_page의 _isVertexOnCurrentMap 로직을 인라인으로 구현하거나 함수로 분리 필요
+                            // 일단 간단히 층 정보가 일치하는지만 체크 (v1, v2 좌표가 지도 범위 내인지 등)
+                            // 하지만 Vertex 자체에는 층 정보가 없으므로 ID 대역을 써야 함.
+                            // 이 페이지엔 _isVertexOnCurrentMap 함수가 없으므로 추가하거나, 간단히 구현
+
+                            // 5호관 1층: 0~499, 2층: 500~999, 60주년 1층: 1000~
+                            bool isVertexOnMap(int id) {
+                              if (buildingName == '5호관') {
+                                if (floorString == '1F') return id < 500;
+                                if (floorString == '2F') {
+                                  return id >= 500 && id < 1000;
+                                }
+                              } else if (buildingName.contains('60주년')) {
+                                return id >= 1000;
                               }
+                              return false;
+                            }
 
-                              // 사용자 좌표를 화면 좌표로 변환
-                              // (search_result_page와 동일한 변환 로직 사용)
-                              final scaledX = state.x * 0.19;
-                              final scaledY = state.y * 0.19;
-                              final adjustedX = scaledX - 10;
-                              final adjustedY = scaledY + 50;
+                            if (v1 != null &&
+                                v2 != null &&
+                                isVertexOnMap(fromId) &&
+                                isVertexOnMap(toId)) {
+                              final p1x = v1.x * scaleX;
+                              final p1y = v1.y * scaleY;
+                              final p2x = v2.x * scaleX;
+                              final p2y = v2.y * scaleY;
 
-                              return Positioned(
-                                left: adjustedX - 12,
-                                top: adjustedY - 24,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.3,
+                              pathPoints.add(Offset(p1x, p1y));
+                              pathPoints.add(Offset(p2x, p2y));
+                            }
+                          }
+                        }
+
+                        return Stack(
+                          children: [
+                            // InteractiveViewer로 감싼 지도 및 경로
+                            Positioned.fill(
+                              child: InteractiveViewer(
+                                transformationController:
+                                    _transformationController,
+                                minScale: 1.0,
+                                maxScale: 4.0,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: displayedImageSize.width,
+                                    height: displayedImageSize.height,
+                                    child: Stack(
+                                      children: [
+                                        // 지도 이미지
+                                        Image.asset(
+                                          mapImagePath,
+                                          fit: BoxFit.contain,
+                                          width: displayedImageSize.width,
+                                          height: displayedImageSize.height,
                                         ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.person_pin_circle,
-                                    color: AppColors.primary,
-                                    size: 24,
-                                  ),
-                                ),
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
-                          // 도착지 마커 (현재 층일 때만 표시)
-                          if (widget.end.floor == widget.start.floor)
-                            Builder(
-                              builder: (context) {
-                                // 도착지 POI 좌표를 화면 좌표로 변환
-                                final scaledX = widget.end.xCoord * 0.19;
-                                final scaledY = widget.end.yCoord * 0.19;
-                                final adjustedX = scaledX - 10;
-                                final adjustedY = scaledY + 50;
-
-                                return Positioned(
-                                  left: adjustedX - 12,
-                                  top: adjustedY - 24,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.3,
+                                        // 경로 그리기
+                                        IgnorePointer(
+                                          child: CustomPaint(
+                                            size: Size(
+                                              displayedImageSize.width,
+                                              displayedImageSize.height,
+                                            ),
+                                            painter: PathPainter(
+                                              // path_result_page.dart에서 import됨
+                                              points: pathPoints,
+                                              color: AppColors.primary,
+                                            ),
                                           ),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
                                         ),
                                       ],
                                     ),
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: 24,
-                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // 사용자 위치 마커 (InteractiveViewer 좌표 변환 적용)
+                            navigationState.when(
+                              data: (state) {
+                                double currentX = state.x;
+                                double currentY = state.y;
+                                int currentFloor = state.floor;
+
+                                // 초기화되지 않은 좌표(0,0)인 경우 출발지 정보 사용
+                                if (state.x == 0 && state.y == 0) {
+                                  currentX = widget.start.xCoord;
+                                  currentY = widget.start.yCoord;
+                                  currentFloor = widget.start.floor;
+                                }
+
+                                // 1. 층 확인
+                                if (currentFloor != widget.start.floor) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                // 사용자 좌표 -> 화면 좌표 변환
+                                // state.x, state.y는 원본 좌표계 기준이라 가정
+                                // path_result_page와 동일하게 스케일 적용
+                                // 단, 기존 코드에서 0.19를 곱하던 것은 하드코딩된 값이므로,
+                                // 여기서는 계산된 scaleX, scaleY를 사용하는 것이 정확함.
+                                // 하지만 기존 코드가 0.19를 쓴 이유(지도 원본 해상도 차이 등)를 고려해야 함.
+                                // 일단 위에서 계산한 scaleX, scaleY를 사용하여 동적으로 맞춤.
+
+                                final localX = currentX * scaleX + imageOffsetX;
+                                final localY = currentY * scaleY + imageOffsetY;
+
+                                // Matrix 적용하여 현재 화면상 좌표 계산
+                                final currentMatrix =
+                                    _transformationController.value;
+                                final screenX =
+                                    currentMatrix.storage[0] * localX +
+                                    currentMatrix.storage[4] * localY +
+                                    currentMatrix.storage[12];
+                                final screenY =
+                                    currentMatrix.storage[1] * localX +
+                                    currentMatrix.storage[5] * localY +
+                                    currentMatrix.storage[13];
+
+                                return Positioned(
+                                  left: screenX - 30, // Ripple 최대 크기(60)의 절반
+                                  top:
+                                      screenY -
+                                      42, // 아이콘 위치 보정 (24 + 36의 중간점 고려)
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      const RippleMarker(),
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.3,
+                                              ),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.person_pin_circle,
+                                          color: AppColors.primary,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
                             ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+
+                            // 도착지 마커
+                            if (widget.end.floor == widget.start.floor)
+                              Builder(
+                                builder: (context) {
+                                  final localX =
+                                      widget.end.xCoord * scaleX + imageOffsetX;
+                                  final localY =
+                                      widget.end.yCoord * scaleY + imageOffsetY;
+
+                                  final currentMatrix =
+                                      _transformationController.value;
+                                  final screenX =
+                                      currentMatrix.storage[0] * localX +
+                                      currentMatrix.storage[4] * localY +
+                                      currentMatrix.storage[12];
+                                  final screenY =
+                                      currentMatrix.storage[1] * localX +
+                                      currentMatrix.storage[5] * localY +
+                                      currentMatrix.storage[13];
+
+                                  return Positioned(
+                                    left: screenX - 12,
+                                    top: screenY - 24,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.location_on,
+                                        color: Colors.red,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+
+                            // 상단 상태 정보 (CountSteps)
+                            CountSteps(navigationState: navigationState),
+                          ],
+                        );
+                      }, // LayoutBuilder builder
+                    ), // LayoutBuilder
+                  ), // Container
+                ), // Expanded
+              ],
+            ); // Column
           },
         ),
       ),
