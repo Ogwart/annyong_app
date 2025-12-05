@@ -1553,7 +1553,7 @@
  {
    "poi_id": 262,
    "poi_name": "60주년-112",
-   "description": "탄소중립 실습실",
+   "description": "강의실",
    "poi_category_id": 1,
    "building_id": 2,
    "floor": 1,
@@ -1564,7 +1564,7 @@
  {
    "poi_id": 263,
    "poi_name": "60주년-108",
-   "description": "계단식 강의실 4",
+   "description": "강의실",
    "poi_category_id": 1,
    "building_id": 2,
    "floor": 1,
@@ -1575,7 +1575,7 @@
  {
    "poi_id": 264,
    "poi_name": "60주년-107",
-   "description": "계단식 강의실 3",
+   "description": "강의실",
    "poi_category_id": 1,
    "building_id": 2,
    "floor": 1,
@@ -1586,7 +1586,7 @@
  {
    "poi_id": 265,
    "poi_name": "60주년-106",
-   "description": "계단식 강의실 2",
+   "description": "강의실",
    "poi_category_id": 1,
    "building_id": 2,
    "floor": 1,
