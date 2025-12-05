@@ -291,6 +291,11 @@ class AppRouter {
                       final Poi start = extra['start'] as Poi;
                       final Poi end = extra['end'] as Poi;
 
+                      final List<int>? preCalculatedPath =
+                          extra['preCalculatedPath'] as List<int>?;
+                      final double? preCalculatedCost =
+                          extra['preCalculatedCost'] as double?;
+
                       return PathNaviPage(
                         start: start,
                         end: end,
@@ -298,6 +303,8 @@ class AppRouter {
                             (extra['waypoints'] as List<dynamic>?)
                                 ?.cast<Poi>() ??
                             [],
+                        preCalculatedPath: preCalculatedPath,
+                        preCalculatedCost: preCalculatedCost,
                       );
                     },
                   ),

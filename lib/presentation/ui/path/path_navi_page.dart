@@ -21,11 +21,17 @@ class PathNaviPage extends ConsumerStatefulWidget {
   final Poi end;
   final List<Poi> waypoints;
 
+  // 계산된 경로를 받는 파라미터
+  final List<int>? preCalculatedPath;
+  final double? preCalculatedCost;
+
   const PathNaviPage({
     super.key,
     required this.start,
     required this.end,
     this.waypoints = const [],
+    this.preCalculatedPath,
+    this.preCalculatedCost,
   });
 
   @override
@@ -250,21 +256,32 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
             ),
           ),
           data: (pathFinder) {
+            // 캐싱된 경로가 없을 때
             if (_cachedPathResult == null) {
-              final List<int> visitOrder = [
-                widget.start.vertexId ?? -1,
-                ...widget.waypoints.map((e) => e.vertexId ?? -1),
-                widget.end.vertexId ?? -1,
-              ];
+              // 1. 만약 이전 페이지에서 넘겨준 계산된 경로가 있다면 그걸 사용
+              if (widget.preCalculatedPath != null &&
+                  widget.preCalculatedCost != null) {
+                _cachedPathResult = PathResult(
+                  path: widget.preCalculatedPath!,
+                  totalCost: widget.preCalculatedCost!,
+                );
+              }
+              // 2. 없다면 직접 계산
+              else {
+                final List<int> visitOrder = [
+                  widget.start.vertexId ?? -1,
+                  ...widget.waypoints.map((e) => e.vertexId ?? -1),
+                  widget.end.vertexId ?? -1,
+                ];
 
-              if (visitOrder.contains(-1)) {
-                return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+                if (!visitOrder.contains(-1)) {
+                  _cachedPathResult = pathFinder.findPathWithWaypoints(
+                    visitOrder,
+                  );
+                }
               }
 
-              // 경유지 포함하여 경로 탐색
-              _cachedPathResult = pathFinder.findPathWithWaypoints(visitOrder);
-
-              // 경로 시작 지점(Vertex)으로 초기 사용자 위치 설정
+              // 경로 시작 지점으로 초기 위치 설정 (한번만 실행)
               final calculatedPath = _cachedPathResult;
               if (calculatedPath != null && calculatedPath.path.isNotEmpty) {
                 final startVertexId = calculatedPath.path.first;

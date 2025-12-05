@@ -1,3 +1,4 @@
+import 'package:annyong/domain/usecases/path_finder.dart';
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
 import 'package:flutter/material.dart';
@@ -132,6 +133,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
   late String _currentBuilding;
   late String _currentFloor;
+  PathResult? _cachedPathResult; // 경로 탐색 결과 캐싱용
 
   @override
   void initState() {
@@ -159,6 +161,9 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
         'start': widget.start,
         'end': widget.end,
         'waypoints': widget.waypoints,
+        // 캐싱된 결과가 있다면 함께 전달
+        'preCalculatedPath': _cachedPathResult?.path,
+        'preCalculatedCost': _cachedPathResult?.totalCost,
       },
     );
   }
@@ -211,18 +216,23 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
           error: (err, stack) => Center(child: Text('오류 발생: $err')),
           data: (pathFinder) {
             // 경로 계산 로직
-            final List<int> visitOrder = [
-              widget.start.vertexId ?? -1,
-              ...widget.waypoints.map((e) => e.vertexId ?? -1),
-              widget.end.vertexId ?? -1,
-            ];
+            // 캐싱된 결과가 없을 때에만 경로 탐색 실행
+            if (_cachedPathResult == null) {
+              final List<int> visitOrder = [
+                widget.start.vertexId ?? -1,
+                ...widget.waypoints.map((e) => e.vertexId ?? -1),
+                widget.end.vertexId ?? -1,
+              ];
 
-            if (visitOrder.contains(-1)) {
-              return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+              if (visitOrder.contains(-1)) {
+                return const Center(child: Text("유효하지 않은 위치 정보가 있습니다."));
+              }
+
+              // 결과 저장
+              _cachedPathResult = pathFinder.findPathWithWaypoints(visitOrder);
             }
 
-            final result = pathFinder.findPathWithWaypoints(visitOrder);
-
+            final result = _cachedPathResult;
             if (result == null || result.path.isEmpty) {
               return const Center(child: Text('경로를 찾을 수 없습니다'));
             }
