@@ -1,20 +1,23 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
+import 'dart:ui'; // [Fix] Offset 클래스 사용을 위해 추가
 
 import 'package:annyong/domain/entity/beacon.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
+// import 'package:annyong/domain/usecases/gps_service.dart'; // 사용하지 않으면 제거, 필요하면 유지
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/domain/usecases/handover_service.dart';
 import 'package:annyong/presentation/viewmodels/navigation_state.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
+// import 'package:flutter/widgets.dart'; // 필요 시 유지
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:flutter_compass/flutter_compass.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //상태를 따로 navigation_state 파일에 정의
 class NavigationViewModel extends AsyncNotifier<NavigationState> {
@@ -35,8 +38,8 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   static const double vertexBufferMeters = 2.0; // 정점 버퍼 2m
 
   // [HandoverService에서 참조하는 상수 추가]
-  static const int rssiThresholdReady = -75; // Handover 준비 기준 RSSI (예시값)
-  static const int rssiThresholdExit = -85; // 실외 전환 기준 RSSI (예시값)
+  static const int rssiThresholdReady = -75; // Handover 준비 기준 RSSI
+  static const int rssiThresholdExit = -85; // 실외 전환 기준 RSSI
 
   //안내 시작했을 때만 IMU 센서값을 받기 시작하도록 수정
   @override
@@ -48,13 +51,11 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   Future<void> startNavigation(List<Vertex> path) async {
     if (path.isEmpty) return;
 
-    // 초기화: 첫 번째 Vertex에서 시작
-    final status = await Permission.activityRecognition.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
-      debugPrint("신체 활동 감지 권한 거부");
-      return;
-    }
+    // [수정] 권한 요청 로직 제거 (SplashPage에서 이미 처리됨)
+    // final status = await Permission.activityRecognition.request();
+    // if (status.isDenied || status.isPermanentlyDenied) { ... }
 
+    // 초기화: 첫 번째 Vertex에서 시작
     final startVertex = path[0];
     double initialHeading = 0.0;
 
@@ -97,8 +98,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       }
 
       // 건물 기울기 보정값: 북동쪽 30도 방향을 기준 북쪽으로 설정
-      // 6호관 건물 기준
-      const double buildingOffsetDegrees = 20.0;
+      const double buildingOffsetDegrees = 30.0;
 
       _imuSubscription = compassEvents.listen(
         (CompassEvent event) {
@@ -125,9 +125,9 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     try {
       _stepCountSubscription = Pedometer.stepCountStream.listen(
         (StepCount event) async {
-          debugPrint("[Step] Event received: ${event.steps}"); // 로그 추가
-
           // async 추가
+          debugPrint("[Step] Event received: ${event.steps}"); // 로그 확인용
+
           final currentState = state.value;
           if (currentState == null) return;
 
@@ -215,18 +215,55 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   /// 걸음수 증가 시 위치 업데이트
   /// [Fix] void -> Future<void>, async 키워드 추가
   Future<void> _updatePositionOnStep(int stepIncrease, int newStepCount) async {
+    final prefs = await SharedPreferences.getInstance();
+    // 'is_first_launch'가 아니라 'stride_length'를 가져와야 하므로 키 확인 필요
+    // StrideService에서 'stride_length' 키를 사용함
+    final strideSnapshot = prefs.getDouble('stride_length') ?? 0.7;
+
+    // int userStride = int.parse(strideSnapshot.toString()); // double을 int로 파싱하면 에러날 수 있음
+    // cm 단위가 아니라 m 단위로 저장되어 있다고 가정 (예: 0.7)
+    // 만약 cm단위(70)로 저장했다면 로직 확인 필요. StrideService 기본값이 0.7이므로 m단위로 보임.
+
     final currentState = state.value;
     if (currentState == null) return;
 
-    // 각 걸음마다 이동 거리 계산
-    // 나침반 좌표계(0도=북쪽, 시계방향)를 화면 좌표계(x=동쪽, y=남쪽)로 변환
-    final pixelsPerStep = stepLengthMeters * pixelsPerMeter;
-    final dx = pixelsPerStep * math.sin(currentState.heading) * stepIncrease;
-    final dy =
-        -pixelsPerStep *
-        math.cos(currentState.heading) *
-        stepIncrease; // 화면 좌표계
+    double currentHeading = currentState.heading;
 
+    // --- Heading 보정 로직 (엣지 위를 걸을 때) ---
+    if (currentState.matchingMode == MapMatchingMode.onEdge &&
+        currentState.currentEdge != null &&
+        currentState.lastVertex != null) {
+      final edge = currentState.currentEdge!;
+      final otherId = edge.getOtherVertexId(currentState.lastVertex!.id);
+
+      final otherV = await _poiRepository.getVertexById(otherId);
+
+      if (otherV != null) {
+        double edgeDx = otherV.x - currentState.lastVertex!.x;
+        double edgeDy = otherV.y - currentState.lastVertex!.y;
+        double edgeAngle = math.atan2(edgeDx, -edgeDy);
+
+        // 각도 차이 계산 (20도 이내면 보정)
+        double diff = (currentHeading - edgeAngle).abs();
+        if (diff > math.pi) diff = 2 * math.pi - diff;
+
+        if (diff < 0.35) {
+          // 약 20도
+          currentHeading = edgeAngle;
+        }
+      }
+    }
+
+    // 픽셀 단위 이동거리 계산
+    // strideSnapshot(m) * pixelsPerMeter(10) => 0.7 * 10 = 7px
+    double pixelDistPerStep = strideSnapshot * pixelsPerMeter;
+
+    // 보정된 Heading으로 이번 이동량 계산
+    final dx = pixelDistPerStep * math.sin(currentHeading) * stepIncrease;
+    final dy =
+        -pixelDistPerStep * math.cos(currentHeading) * stepIncrease; // 화면 좌표계
+
+    // 화면상 좌표 누적
     final newRawX = currentState.rawPixelX + dx;
     final newRawY = currentState.rawPixelY + dy;
 
@@ -234,12 +271,17 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       rawPixelX: newRawX,
       rawPixelY: newRawY,
       stepCount: newStepCount,
+      // heading은 보정된 값으로 업데이트 할지 여부 결정 (여기선 유지)
     );
 
     // 2. Map Matching Logic
     switch (currentState.matchingMode) {
       case MapMatchingMode.onEdge:
-        nextState = await _handleOnEdge(nextState, stepIncrease, pixelsPerStep);
+        nextState = await _handleOnEdge(
+          nextState,
+          stepIncrease,
+          pixelDistPerStep,
+        );
         break;
       case MapMatchingMode.onVertex:
         nextState = await _handleOnVertex(nextState, dx, dy);
@@ -249,12 +291,11 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         break;
     }
 
-    // 3. Handover 상태 체크 (위치 기반)
-    // 현재 상태가 'Indoor'가 아닐 때만(즉, 문 근처거나 전환 중일 때만) 위치 기반 체크를 수행
+    // 3. Handover 상태 체크
     if (nextState.handoverStatus != HandoverStatus.indoor) {
       final handoverUpdate = await _handoverService.checkHandoverLogic(
         currentState: nextState,
-        nearestBeaconType: null, // 걸음 이벤트이므로 비콘 정보 없음
+        nearestBeaconType: null,
         nearestBeaconMac: null,
         currentRssi: null,
       );
@@ -600,7 +641,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   }
 
   /// 구독 취소 및 초기화 (페이지 종료 시 호출)
-  /// NavigationViewModel 클래스 내부로 이동
+  /// [Fix] NavigationViewModel 클래스 내부로 이동
   void stopNavigation() {
     _stepCountSubscription?.cancel();
     _imuSubscription?.cancel();

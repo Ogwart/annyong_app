@@ -1,5 +1,4 @@
 import 'package:annyong/domain/entity/poi.dart';
-import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/presentation/providers/path_finder_provider.dart';
 import 'package:annyong/domain/usecases/path_description_builder.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
