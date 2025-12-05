@@ -608,6 +608,48 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                               ),
                             ),
 
+                            // 마커가 현재 보고있는 지도의 층/건물과 일치할 때만 랜더링
+                            // 출발지 마커
+                            if (widget.start.buildingId ==
+                                    currentMapBuildingId &&
+                                widget.start.floor == currentMapFloorNum)
+                              _buildPoiMarker(
+                                poi: widget.start,
+                                type: 'departure',
+                                scaleX: scaleX,
+                                scaleY: scaleY,
+                                imageOffsetX: imageOffsetX,
+                                imageOffsetY: imageOffsetY,
+                              ),
+
+                            // 경유지 마커들
+                            ...widget.waypoints.map((waypoint) {
+                              if (waypoint.buildingId == currentMapBuildingId &&
+                                  waypoint.floor == currentMapFloorNum) {
+                                return _buildPoiMarker(
+                                  poi: waypoint,
+                                  type: 'waypoint',
+                                  scaleX: scaleX,
+                                  scaleY: scaleY,
+                                  imageOffsetX: imageOffsetX,
+                                  imageOffsetY: imageOffsetY,
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            }),
+
+                            // 목적지 마커
+                            if (widget.end.buildingId == currentMapBuildingId &&
+                                widget.end.floor == currentMapFloorNum)
+                              _buildPoiMarker(
+                                poi: widget.end,
+                                type: 'destination',
+                                scaleX: scaleX,
+                                scaleY: scaleY,
+                                imageOffsetX: imageOffsetX,
+                                imageOffsetY: imageOffsetY,
+                              ),
+
                             // 사용자 위치 마커 (InteractiveViewer 좌표 변환 적용)
                             navigationState.when(
                               data: (state) {
@@ -703,48 +745,6 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                               loading: () => const SizedBox.shrink(),
                               error: (_, __) => const SizedBox.shrink(),
                             ),
-
-                            // 마커가 현재 보고있는 지도의 층/건물과 일치할 때만 랜더링
-                            // 출발지 마커
-                            if (widget.start.buildingId ==
-                                    currentMapBuildingId &&
-                                widget.start.floor == currentMapFloorNum)
-                              _buildPoiMarker(
-                                poi: widget.start,
-                                type: 'departure',
-                                scaleX: scaleX,
-                                scaleY: scaleY,
-                                imageOffsetX: imageOffsetX,
-                                imageOffsetY: imageOffsetY,
-                              ),
-
-                            // 경유지 마커들
-                            ...widget.waypoints.map((waypoint) {
-                              if (waypoint.buildingId == currentMapBuildingId &&
-                                  waypoint.floor == currentMapFloorNum) {
-                                return _buildPoiMarker(
-                                  poi: waypoint,
-                                  type: 'waypoint',
-                                  scaleX: scaleX,
-                                  scaleY: scaleY,
-                                  imageOffsetX: imageOffsetX,
-                                  imageOffsetY: imageOffsetY,
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            }),
-
-                            // 목적지 마커
-                            if (widget.end.buildingId == currentMapBuildingId &&
-                                widget.end.floor == currentMapFloorNum)
-                              _buildPoiMarker(
-                                poi: widget.end,
-                                type: 'destination',
-                                scaleX: scaleX,
-                                scaleY: scaleY,
-                                imageOffsetX: imageOffsetX,
-                                imageOffsetY: imageOffsetY,
-                              ),
 
                             // 상단 상태 정보 (CountSteps)
                             CountSteps(navigationState: navigationState),
