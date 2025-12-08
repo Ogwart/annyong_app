@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:annyong/domain/entity/calibration_route.dart';
+import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/calibration_service.dart';
@@ -537,6 +538,7 @@ class _MeasurePageState extends State<MeasurePage> {
                     offsetX: offsetX,
                     offsetY: offsetY,
                     matrix: _transformationController.value,
+                    pathVertices: _route!.pathVertices,
                   ),
                 ),
               ),
@@ -765,6 +767,7 @@ class _PathPainter extends CustomPainter {
   final double offsetX;
   final double offsetY;
   final Matrix4 matrix;
+  final List<Vertex>? pathVertices;
 
   _PathPainter({
     required this.startX,
@@ -776,6 +779,7 @@ class _PathPainter extends CustomPainter {
     required this.offsetX,
     required this.offsetY,
     required this.matrix,
+    this.pathVertices,
   });
 
   @override
@@ -787,18 +791,50 @@ class _PathPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // 1. 이미지 기준 좌표로 변환
-    final sX = startX * scaleX + offsetX;
-    final sY = startY * scaleY + offsetY;
-    final eX = endX * scaleX + offsetX;
-    final eY = endY * scaleY + offsetY;
+    print("PathPainter: pathVertices count: ${pathVertices?.length}");
 
-    // 2. InteractiveViewer 매트릭스 변환 적용 (줌/팬 반영)
-    final p1 = _transformPoint(sX, sY);
-    final p2 = _transformPoint(eX, eY);
+    // 경로 데이터가 있으면 꺾인 선 그리기
+    if (pathVertices != null && pathVertices!.isNotEmpty) {
+      final path = Path();
 
-    // 선 그리기
-    canvas.drawLine(p1, p2, paint);
+      // 1. 출발지점 (POI)
+      final sX = startX * scaleX + offsetX;
+      final sY = startY * scaleY + offsetY;
+      final pStart = _transformPoint(sX, sY);
+      path.moveTo(pStart.dx, pStart.dy);
+
+      // 2. 경유지점 (Vertices)
+      for (int i = 0; i < pathVertices!.length; i++) {
+        final v = pathVertices![i];
+        final vx = v.x * scaleX + offsetX;
+        final vy = v.y * scaleY + offsetY;
+        final p = _transformPoint(vx, vy);
+        path.lineTo(p.dx, p.dy);
+      }
+
+      // 3. 도착지점 (POI 혹은 Vertex)
+      // 도착지 좌표가 마지막 Vertex와 다를 수 있으므로 연결
+      final eX = endX * scaleX + offsetX;
+      final eY = endY * scaleY + offsetY;
+      final pEnd = _transformPoint(eX, eY);
+      path.lineTo(pEnd.dx, pEnd.dy);
+
+      canvas.drawPath(path, paint);
+    } else {
+      // 기존 로직: 출발-도착 직선 그리기
+      // 1. 이미지 기준 좌표로 변환
+      final sX = startX * scaleX + offsetX;
+      final sY = startY * scaleY + offsetY;
+      final eX = endX * scaleX + offsetX;
+      final eY = endY * scaleY + offsetY;
+
+      // 2. InteractiveViewer 매트릭스 변환 적용 (줌/팬 반영)
+      final p1 = _transformPoint(sX, sY);
+      final p2 = _transformPoint(eX, eY);
+
+      // 선 그리기
+      canvas.drawLine(p1, p2, paint);
+    }
   }
 
   Offset _transformPoint(double x, double y) {

@@ -4,6 +4,7 @@ import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
+import 'package:annyong/presentation/util/pixels_to_meters.dart';
 
 /// 내부 계산용 후보 객체
 class _CalibrationCandidate {
@@ -114,15 +115,27 @@ class CalibrationService {
     final List<_CalibrationCandidate> candidates = [];
     final initialEdges = localEdgesMap[startVertexId] ?? [];
 
+    // [수정] 출발 POI와 시작 정점 사이의 거리 계산 (픽셀 -> 미터 변환)
+    final startOffsetMeters = pointsToMeters(
+      startPoi.xCoord,
+      startPoi.yCoord,
+      startVertex.x,
+      startVertex.y,
+    );
+
     // DFS 탐색 시작
     for (final edge in initialEdges) {
       if (!_isWalkable(edge.way)) continue;
+
+      // [수정] 엣지 길이도 미터로 변환
+      final edgeLengthMeters = pixelsToMeters(edge.length);
 
       // await 삭제
       _recursiveSearchSync(
         currentVertexId: edge.toVertexId,
         path: [startVertexId, edge.toVertexId],
-        currentDistance: edge.length,
+        currentDistance:
+            startOffsetMeters + edgeLengthMeters, // 초기 거리 = 오프셋 + 첫 엣지
         turnCount: 0,
         currentWay: edge.way,
         candidates: candidates,
@@ -134,15 +147,35 @@ class CalibrationService {
     if (candidates.isEmpty) return null;
 
     // 점수순 정렬 (POI 있음 > 랜드마크임 > 거리 적절함 순서)
+    // [DEBUG] 정렬 전 모든 후보 출력
+    print("--- Calibration Candidates (Total: ${candidates.length}) ---");
+    for (int i = 0; i < candidates.length; i++) {
+      final c = candidates[i];
+      print(
+        "[$i] Path: ${c.vertexPath}, Dist: ${c.distance.toStringAsFixed(2)}m, "
+        "Turn: ${c.turnCount}, POI: ${c.destinationPoi?.name}, "
+        "Landmark: ${c.isLandmark}, Score: ${c.score.toStringAsFixed(1)}",
+      );
+    }
+    print("---------------------------------------------------------");
+
     candidates.sort((a, b) => b.score.compareTo(a.score));
 
     final best = candidates.first;
+    print(
+      "BEST >> Path: ${best.vertexPath}, Dist: ${best.distance.toStringAsFixed(2)}m, Score: ${best.score}",
+    );
+
     // 경로상의 모든 Vertex 객체 가져오기 (선을 꺾어서 그리기 위해 필요)
     final List<Vertex> pathVertices = [];
     for (final vId in best.vertexPath) {
       final v = await _poiRepo.getVertexById(vId);
       if (v != null) pathVertices.add(v);
     }
+
+    print(
+      "CalibrationService: pathVertices count: ${pathVertices.length}, IDs: ${best.vertexPath}",
+    );
 
     if (pathVertices.isEmpty) return null; // 로직상 희박
 
@@ -269,10 +302,13 @@ class CalibrationService {
 
       if (nextTurnCount > _maxTurn) continue;
 
+      // [수정] 다음 엣지 길이 미터 변환
+      final nextEdgeLengthMeters = pixelsToMeters(nextEdge.length);
+
       _recursiveSearchSync(
         currentVertexId: nextEdge.toVertexId,
         path: [...path, nextEdge.toVertexId],
-        currentDistance: currentDistance + nextEdge.length,
+        currentDistance: currentDistance + nextEdgeLengthMeters, // 미터 단위 누적
         turnCount: nextTurnCount,
         currentWay: nextEdge.way,
         candidates: candidates,
