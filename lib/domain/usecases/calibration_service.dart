@@ -1,10 +1,9 @@
 // lib/domain/usecases/calibration_service.dart
-
+import 'dart:collection';
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
-import 'package:flutter/foundation.dart';
 
 /// 내부 계산용 후보 객체
 class _CalibrationCandidate {
@@ -60,7 +59,7 @@ class CalibrationService {
   // 상수 정의
   // ===========================================================================
   // 최적 거리 범위
-  static const double _optimalMin = 5.0;
+  static const double _optimalMin = 3.0;
   static const double _optimalMax = 10.0;
 
   // 확장 허용 범위 (POI가 있다면 여기까지 허용)
@@ -80,20 +79,55 @@ class CalibrationService {
     final startVertex = await _poiRepo.getVertexById(startVertexId);
     if (startVertex == null) return null;
 
+    // =========================================================================
+    // [성능 최적화] 데이터 미리 가져오기 (Pre-fetching)
+    // =========================================================================
+    final Map<int, List<Edge>> localEdgesMap = {};
+    final Map<int, List<Poi>> localPoisMap = {};
+
+    final Queue<int> loadQueue = Queue();
+    final Set<int> loadedVertices = {};
+
+    loadQueue.add(startVertexId);
+    loadedVertices.add(startVertexId);
+
+    int safetyCount = 0;
+    while (loadQueue.isNotEmpty && safetyCount < 200) {
+      final currentId = loadQueue.removeFirst();
+      safetyCount++;
+
+      final edges = await _poiRepo.getEdgesForVertex(currentId);
+      localEdgesMap[currentId] = edges;
+
+      final pois = await _poiRepo.getPoisByVertexId(currentId);
+      localPoisMap[currentId] = pois;
+
+      for (final edge in edges) {
+        if (!loadedVertices.contains(edge.toVertexId)) {
+          loadedVertices.add(edge.toVertexId);
+          loadQueue.add(edge.toVertexId);
+        }
+      }
+    }
+    // =========================================================================
+
     final List<_CalibrationCandidate> candidates = [];
-    final initialEdges = await _poiRepo.getEdgesForVertex(startVertexId);
+    final initialEdges = localEdgesMap[startVertexId] ?? [];
 
     // DFS 탐색 시작
     for (final edge in initialEdges) {
       if (!_isWalkable(edge.way)) continue;
 
-      await _recursiveSearch(
+      // await 삭제
+      _recursiveSearchSync(
         currentVertexId: edge.toVertexId,
         path: [startVertexId, edge.toVertexId],
         currentDistance: edge.length,
         turnCount: 0,
         currentWay: edge.way,
         candidates: candidates,
+        edgesMap: localEdgesMap, // 로컬 캐시 전달
+        poisMap: localPoisMap, // 로컬 캐시 전달
       );
     }
 
@@ -139,20 +173,26 @@ class CalibrationService {
   // 재귀 탐색 (DFS)
   // ===========================================================================
 
-  Future<void> _recursiveSearch({
+  void _recursiveSearchSync({
     required int currentVertexId,
     required List<int> path,
     required double currentDistance,
     required int turnCount,
     required WayType currentWay,
     required List<_CalibrationCandidate> candidates,
-  }) async {
+    required Map<int, List<Edge>> edgesMap, // 데이터 소스
+    required Map<int, List<Poi>> poisMap, // 데이터 소스
+  }) {
+    // _recursiveSearchSync 함수 초입에 로그 추가
+    print("Node $currentVertexId, Dist: $currentDistance");
+
     // 1. 탐색 거리 한계 (13m 넘으면 무조건 중단)
     if (currentDistance > _extendedMax) return;
 
     // 현재 위치 정보 조회
-    final pois = await _poiRepo.getPoisByVertexId(currentVertexId);
-    final nextEdges = await _poiRepo.getEdgesForVertex(currentVertexId);
+    // [성능 개선] await 없이 Map에서 즉시 조회
+    final pois = poisMap[currentVertexId] ?? [];
+    final nextEdges = edgesMap[currentVertexId] ?? [];
 
     // 2. 물리적 특징(Landmark) 판별
     // 더 이상 갈 길이 없거나(막다른 길), 길이 갈라지는 곳(교차로)인지 확인
@@ -178,8 +218,8 @@ class CalibrationService {
     // 랜드마크 여부: POI가 없더라도 멈추기 좋은 지점인가?
     // - 막다른 길 (validNextPaths == 0)
     // - 코너 직전 (isCorner == true 인데 여기서 멈춘다면? -> 이건 애매함. 코너는 꺾고 나서가 아니라 꺾이는 지점)
-    // 여기서는 단순하게 "갈 길이 없으면 막다른 길"로 간주
-    final bool isDeadEnd = (validNextPaths == 0);
+    // 막다른 길(갈 곳이 없음)이거나, 코너(방향이 꺾임)인 경우 랜드마크로 인정
+    final bool isLandmark = (validNextPaths == 0) || isCorner;
 
     // =========================================================
     // [후보 등록 로직]
@@ -193,7 +233,7 @@ class CalibrationService {
           distance: currentDistance,
           turnCount: turnCount,
           destinationPoi: pois.isNotEmpty ? pois.first : null,
-          isLandmark: isDeadEnd, // 막다른 길이면 가산점
+          isLandmark: isLandmark, // 막다른 길이면 가산점
         ),
       );
     }
@@ -201,14 +241,14 @@ class CalibrationService {
     // 여기서는 'POI가 있는 경우' 혹은 '막다른 길'인 경우만 후보로 인정
     // (허공에 12m 걷게 하는 것은 방지)
     else if (currentDistance > _optimalMax && currentDistance <= _extendedMax) {
-      if (pois.isNotEmpty || isDeadEnd) {
+      if (pois.isNotEmpty || isLandmark) {
         candidates.add(
           _CalibrationCandidate(
             vertexPath: List.from(path),
             distance: currentDistance,
             turnCount: turnCount,
             destinationPoi: pois.isNotEmpty ? pois.first : null,
-            isLandmark: isDeadEnd,
+            isLandmark: isLandmark,
           ),
         );
       }
@@ -217,8 +257,9 @@ class CalibrationService {
     // 다음 경로 탐색
     for (final nextEdge in nextEdges) {
       // 왔던 길 되돌아가기 방지
-      if (path.length >= 2 && nextEdge.toVertexId == path[path.length - 2])
+      if (path.length >= 2 && nextEdge.toVertexId == path[path.length - 2]) {
         continue;
+      }
       if (!_isWalkable(nextEdge.way)) continue;
 
       int nextTurnCount = turnCount;
@@ -228,13 +269,15 @@ class CalibrationService {
 
       if (nextTurnCount > _maxTurn) continue;
 
-      await _recursiveSearch(
+      _recursiveSearchSync(
         currentVertexId: nextEdge.toVertexId,
         path: [...path, nextEdge.toVertexId],
         currentDistance: currentDistance + nextEdge.length,
         turnCount: nextTurnCount,
         currentWay: nextEdge.way,
         candidates: candidates,
+        edgesMap: edgesMap,
+        poisMap: poisMap,
       );
     }
   }

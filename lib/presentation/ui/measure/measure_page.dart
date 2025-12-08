@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
-import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/usecases/calibration_service.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
@@ -16,8 +15,8 @@ import 'package:permission_handler/permission_handler.dart';
 
 /// 측정 진행 단계를 정의합니다.
 /// ready: 경로 탐색 완료, 사용자가 시작 지점에 서 있는지 확인하는 단계
-/// standby: 준비 완료 버튼 누름, 센서로부터 첫 걸음 신호를 기다리는 단계 (UI: 걸음 감지중...)
-/// measuring: 첫 걸음 감지됨, 실제 측정 중 단계 (UI: 도착 버튼)
+/// standby: 준비 완료 버튼 누름, '출발' 버튼을 누르기 대기하는 단계
+/// measuring: 걷는 중, '도착' 버튼을 누르기 대기하는 단계
 enum MeasureStep { ready, standby, measuring }
 
 class MeasurePage extends StatefulWidget {
@@ -53,7 +52,7 @@ class _MeasurePageState extends State<MeasurePage> {
   // [걸음수 측정 관련 변수]
   // ---------------------------------------------------------------------------
   int _currentPedometerSteps = 0; // 센서에서 들어오는 실시간 누적 걸음수
-  int _startSteps = 0; // 측정이 시작된 시점(첫 걸음 감지 직전)의 기준 걸음수
+  int _startSteps = 0; // '출발' 버튼을 누른 시점의 걸음수 저장
   StreamSubscription<StepCount>? _stepCountSubscription;
   bool _isStepCountAvailable = false;
 
@@ -178,25 +177,15 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   /// 만보기 센서 스트림 구독
-  /// [UX 수정] 대기 상태일 때 걸음 수 변화가 감지되면 자동으로 측정 상태로 전환
   void _initPedometer() {
     _stepCountSubscription = Pedometer.stepCountStream.listen(
       (StepCount event) {
-        if (!mounted) return;
-
-        setState(() {
-          _currentPedometerSteps = event.steps;
-          _isStepCountAvailable = true;
-
-          // [핵심 로직 변경]
-          // 대기(standby) 상태에서 센서 업데이트가 들어오면 즉시 측정(measuring)으로 전환
-          if (_currentStep == MeasureStep.standby) {
-            // 센서가 업데이트 되었다는 것은 걷기 시작했다는 의미 (혹은 누락된 데이터 수신)
-            // 요청하신대로 (현재 값 - 1)을 시작점으로 잡아, 현재 1걸음부터 시작되도록 함
-            _startSteps = event.steps - 1;
-            _currentStep = MeasureStep.measuring;
-          }
-        });
+        if (mounted) {
+          setState(() {
+            _currentPedometerSteps = event.steps;
+            _isStepCountAvailable = true;
+          });
+        }
       },
       onError: (error) {
         if (mounted) {
@@ -221,6 +210,7 @@ class _MeasurePageState extends State<MeasurePage> {
         _route = route;
         _isLoading = false;
 
+        // 탐색 실패 시 null 반환됨 -> _errorMessage를 null로 유지하여 실패 UI(_buildFailureView) 표시
         if (route == null) {
           _errorMessage = null;
         }
@@ -237,38 +227,37 @@ class _MeasurePageState extends State<MeasurePage> {
   // [UI 이벤트 핸들러]
   // ---------------------------------------------------------------------------
 
-  /// [준비됐어요] 버튼 클릭 시 -> 걸음 감지 대기(Standby) 상태로 전환
+  /// [준비됐어요] 버튼 클릭 시 -> 대기 상태로 전환
   void _onReadyPressed() {
     setState(() {
       _currentStep = MeasureStep.standby;
     });
   }
 
-  // [_onStartPressed 제거됨]
-  // standby 상태에서 센서가 반응하면 자동으로 measuring으로 넘어가므로 불필요
+  /// [출발!] 버튼 클릭 시 -> 측정 시작 (시작 걸음수 기록)
+  void _onStartPressed() {
+    setState(() {
+      // 현재 누적 걸음수를 시작점으로 기록 (0부터 시작하는 효과)
+      _startSteps = _currentPedometerSteps;
+      _currentStep = MeasureStep.measuring;
+    });
+  }
 
   /// [도착했습니다] 버튼 클릭 시 -> 결과 페이지로 이동
-  // async로 선언하여 push 결과를 await로 받음 -> 재측정인 경우를 구분하여 처리하기 위함
-  void _onArrivedPressed() async {
+  void _onArrivedPressed() {
     if (_route == null) return;
 
     // 최종 걸음수 계산 (현재값 - 시작값)
-    // _startSteps는 (첫 감지값 - 1)이므로, 첫 감지 시 (감지값 - (감지값-1)) = 1걸음이 됨
     final int walkedSteps = _currentPedometerSteps - _startSteps;
 
-    // 만약 재측정이면 상태를 준비 단계로 초기화
-    final bool? shouldRetry = await context.push<bool>(
+    // 결과 페이지로 이동 (걸음수와 총 거리 전달)
+    context.push(
       "/measure/measureResult",
       extra: {
-        "walkedSteps": walkedSteps,
-        "totalDistance": _route!.totalDistance,
+        "walkedSteps": walkedSteps, // int
+        "totalDistance": _route!.totalDistance, // double
       },
     );
-    if (shouldRetry == true && mounted) {
-      setState(() {
-        _currentStep = MeasureStep.ready;
-      });
-    }
   }
 
   String _getBuildingName(int buildingId) {
@@ -285,14 +274,17 @@ class _MeasurePageState extends State<MeasurePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 도착지 이름 및 안내 텍스트 설정
     String destinationName = "도착지";
     String guideText = "";
 
     if (_route != null) {
       if (_route!.destinationPoi != null) {
+        // POI가 있는 경우
         destinationName = _route!.destinationPoi!.name;
         guideText = "(${_route!.totalDistance.toStringAsFixed(1)}m, 직진)";
       } else {
+        // 랜드마크(코너, 막다른 길)인 경우
         destinationName = "복도 끝 (코너)";
         guideText = "(${_route!.totalDistance.toStringAsFixed(1)}m, 직진)";
       }
@@ -303,9 +295,12 @@ class _MeasurePageState extends State<MeasurePage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
+          // 에러 발생 시 화면
           ? _buildErrorView()
           : _route == null
+          // -------------------- [경로 탐색 실패 시 UI] --------------------
           ? _buildFailureView()
+          // -------------------- [측정 화면 (지도 표시)] --------------------
           : Column(
               children: [
                 // -------------------- 상단 안내 영역 --------------------
@@ -374,7 +369,7 @@ class _MeasurePageState extends State<MeasurePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // [단계 1: 준비 확인]
+          // 단계 1: 준비 확인
           if (_currentStep == MeasureStep.ready) ...[
             const Text(
               "시작 위치에 정확히 서 계신가요?",
@@ -399,54 +394,42 @@ class _MeasurePageState extends State<MeasurePage> {
               ),
             ),
           ]
-          // [단계 2: 걸음 감지 대기 (Standby)] - UX 개선 적용됨
+          // 단계 2: 출발 대기
           else if (_currentStep == MeasureStep.standby) ...[
             const Text(
-              "이제 평소 걸음으로 걸어주세요!",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
+              "아래 버튼을 누르고 걸어주세요!",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: ElevatedButton(
+                onPressed: _onStartPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: const CircleBorder(),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  "출발!",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  "걸음을 감지하고 있어요...",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
+              ),
             ),
-
-            // [추가된 부분] 팁 텍스트 추가
-            const SizedBox(height: 8),
-            const Text(
-              "[TIP] 감지되지 않는다면, 세게 3~5회 흔들어보세요!",
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-
-            // 공간 확보용 더미 컨테이너 (버튼 높이만큼)
-            const SizedBox(height: 32),
           ]
-          // [단계 3: 측정 중 (Measuring)]
+          // 단계 3: 측정 중 (도착 대기)
           else if (_currentStep == MeasureStep.measuring) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text("걷는 중... ", style: TextStyle(fontSize: 16)),
                 Text(
-                  // 현재 걸음수 - 시작값
+                  // 현재 걸음수 표시
                   "${_currentPedometerSteps - _startSteps}",
                   style: const TextStyle(
                     fontSize: 28,
@@ -499,12 +482,14 @@ class _MeasurePageState extends State<MeasurePage> {
             constraints.maxHeight,
           );
 
+          // 지도 초기화 (최초 1회)
           if (!_isMapInitialized) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _initializeMapPosition(containerSize);
             });
           }
 
+          // 좌표 계산용 변수 준비
           final originalSize = MapUtilFunctions.getImageOriginalSize(
             buildingName,
             floorString,
@@ -519,6 +504,7 @@ class _MeasurePageState extends State<MeasurePage> {
           final offsetX = (containerSize.width - displayedSize.width) / 2;
           final offsetY = (containerSize.height - displayedSize.height) / 2;
 
+          // 도착지 좌표 (POI가 없으면 Vertex 좌표 사용)
           final destX =
               _route!.destinationPoi?.xCoord ?? _route!.destinationVertex.x;
           final destY =
@@ -538,11 +524,14 @@ class _MeasurePageState extends State<MeasurePage> {
               ),
 
               // 2. 파란색 경로 선 (CustomPainter)
+              // InteractiveViewer 위에 그리기 위해 Matrix 변환 적용
               Positioned.fill(
                 child: CustomPaint(
                   painter: _PathPainter(
-                    // 단순 시작/끝 점 대신, 전체 경로 Vertex 리스트를 전달
-                    pathVertices: _route!.pathVertices,
+                    startX: _route!.startPoi.xCoord,
+                    startY: _route!.startPoi.yCoord,
+                    endX: destX,
+                    endY: destY,
                     scaleX: scaleX,
                     scaleY: scaleY,
                     offsetX: offsetX,
@@ -551,6 +540,7 @@ class _MeasurePageState extends State<MeasurePage> {
                   ),
                 ),
               ),
+
               // 3. 출발지 마커
               _buildMarker(
                 x: _route!.startPoi.xCoord,
@@ -592,6 +582,7 @@ class _MeasurePageState extends State<MeasurePage> {
     required IconData icon,
     required Color color,
   }) {
+    // InteractiveViewer의 매트릭스를 직접 적용하여 절대 위치 계산
     final initialX = x * scaleX + offsetX;
     final initialY = y * scaleY + offsetY;
 
@@ -606,8 +597,8 @@ class _MeasurePageState extends State<MeasurePage> {
         matrix.storage[13];
 
     return Positioned(
-      left: transformedX - 16,
-      top: transformedY - 32,
+      left: transformedX - 16, // 아이콘 크기/2 보정 (중앙 정렬)
+      top: transformedY - 32, // 아이콘 바닥이 좌표에 오도록 보정
       child: Icon(icon, color: color, size: 32),
     );
   }
@@ -628,10 +619,11 @@ class _MeasurePageState extends State<MeasurePage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                if (context.canPop())
+                if (context.canPop()) {
                   context.pop();
-                else
+                } else {
                   context.go("/home");
+                }
               },
               child: const Text("돌아가기"),
             ),
@@ -678,35 +670,24 @@ class _MeasurePageState extends State<MeasurePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // [수정된 부분] Text -> Wrap으로 변경하여 단어 단위 줄바꿈 구현
-                Builder(
-                  builder: (context) {
-                    final String textContent =
-                        "선택하신 '${_targetPoi?.name ?? '위치'}' 주변에는 보폭 측정에 적합한 경로(직선 혹은 POI)가 부족합니다. 조금 더 넓은 복도로 이동해보세요.";
-
-                    return Wrap(
-                      alignment: WrapAlignment.center,
-                      runSpacing: 4.0, // 줄 간격 (== height: 1.5)
-                      children: textContent.split(' ').map((word) {
-                        return Text(
-                          "$word ",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
+                Text(
+                  "선택하신 '${widget.startPoi?.name ?? '위치'}' 주변에는\n보폭 측정에 적합한 경로(직선 혹은 POI)가 부족합니다.\n조금 더 넓은 복도로 이동해보세요.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
             const Spacer(),
 
-            // 기본값 설정 버튼
+            // 기본값 설정 버튼 (사용자 편의)
             GestureDetector(
               onTap: () {
+                // 기본값 저장 후 결과 페이지 등 이동 처리 필요할 수 있음
+                // 여기서는 생략하거나 홈으로 이동
                 context.go("/home");
               },
               child: Container(
@@ -747,7 +728,7 @@ class _MeasurePageState extends State<MeasurePage> {
                       _isLoading = true;
                       _errorMessage = null;
                       _route = null;
-                      _currentStep = MeasureStep.ready;
+                      _currentStep = MeasureStep.ready; // 상태 초기화
                       _isMapInitialized = false;
                     });
                     _findRoute();
@@ -775,8 +756,10 @@ class _MeasurePageState extends State<MeasurePage> {
 // [경로 그리기용 Painter 클래스]
 // -----------------------------------------------------------------------------
 class _PathPainter extends CustomPainter {
-  // Vertex 리스트를 받아서 Polyline을 그립니다.
-  final List<Vertex> pathVertices;
+  final double startX;
+  final double startY;
+  final double endX;
+  final double endY;
   final double scaleX;
   final double scaleY;
   final double offsetX;
@@ -784,7 +767,10 @@ class _PathPainter extends CustomPainter {
   final Matrix4 matrix;
 
   _PathPainter({
-    required this.pathVertices,
+    required this.startX,
+    required this.startY,
+    required this.endX,
+    required this.endY,
     required this.scaleX,
     required this.scaleY,
     required this.offsetX,
@@ -794,53 +780,39 @@ class _PathPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (pathVertices.isEmpty) return;
-
+    // 파란색 선 스타일 정의
     final paint = Paint()
       ..color = Colors.blue
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round; // 꺾이는 부분 부드럽게
+      ..strokeCap = StrokeCap.round;
 
-    final path = Path();
+    // 1. 이미지 기준 좌표로 변환
+    final sX = startX * scaleX + offsetX;
+    final sY = startY * scaleY + offsetY;
+    final eX = endX * scaleX + offsetX;
+    final eY = endY * scaleY + offsetY;
 
-    // 1. 첫 번째 점으로 이동
-    final firstV = pathVertices.first;
-    final startPt = _getTransformedPoint(firstV.x, firstV.y);
-    path.moveTo(startPt.dx, startPt.dy);
+    // 2. InteractiveViewer 매트릭스 변환 적용 (줌/팬 반영)
+    final p1 = _transformPoint(sX, sY);
+    final p2 = _transformPoint(eX, eY);
 
-    // 2. 나머지 점들을 순서대로 연결 (lineTo)
-    for (int i = 1; i < pathVertices.length; i++) {
-      final v = pathVertices[i];
-      final pt = _getTransformedPoint(v.x, v.y);
-      path.lineTo(pt.dx, pt.dy);
-    }
-
-    canvas.drawPath(path, paint);
+    // 선 그리기
+    canvas.drawLine(p1, p2, paint);
   }
 
-  Offset _getTransformedPoint(double mapX, double mapY) {
-    // 1. 이미지상 좌표로 변환
-    final imgX = mapX * scaleX + offsetX;
-    final imgY = mapY * scaleY + offsetY;
-
-    // 2. 줌/팬 매트릭스 적용
+  Offset _transformPoint(double x, double y) {
+    // 행렬 연산을 통해 현재 화면상의 절대 좌표 계산
     final tx =
-        matrix.storage[0] * imgX +
-        matrix.storage[4] * imgY +
-        matrix.storage[12];
+        matrix.storage[0] * x + matrix.storage[4] * y + matrix.storage[12];
     final ty =
-        matrix.storage[1] * imgX +
-        matrix.storage[5] * imgY +
-        matrix.storage[13];
-
+        matrix.storage[1] * x + matrix.storage[5] * y + matrix.storage[13];
     return Offset(tx, ty);
   }
 
   @override
   bool shouldRepaint(covariant _PathPainter oldDelegate) {
-    return oldDelegate.matrix != matrix ||
-        oldDelegate.pathVertices != pathVertices;
+    // 매트릭스가 변경되면(줌/이동 시) 다시 그려야 함
+    return oldDelegate.matrix != matrix;
   }
 }
