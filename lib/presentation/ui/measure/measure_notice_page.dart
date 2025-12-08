@@ -167,7 +167,10 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
 
                                   if (selectedPoi != null && context.mounted) {
                                     // POI 선택 후 측정 페이지로 이동
-                                    context.go("/measure", extra: selectedPoi);
+                                    context.push(
+                                      "/measure",
+                                      extra: selectedPoi,
+                                    );
                                   }
                                 } catch (e) {
                                   // 에러 발생 시 기존 방식대로 진행 (인접 POI 없음)

@@ -4,11 +4,13 @@ class SearchResultState {
   final String searchKeyword;
   final String selectedBuilding;
   final String selectedFloor;
+  final int? focusedPoiId; // 현재 선택된 POI Id
 
   SearchResultState({
     String? searchKeyword,
     String? selectedBuilding,
     String? selectedFloor,
+    this.focusedPoiId,
   }) : searchKeyword = searchKeyword ?? '',
        selectedBuilding = selectedBuilding ?? '5호관',
        selectedFloor = selectedFloor ?? '1F';
@@ -17,11 +19,13 @@ class SearchResultState {
     String? searchKeyword,
     String? selectedBuilding,
     String? selectedFloor,
+    int? focusedPoiId,
   }) {
     return SearchResultState(
       searchKeyword: searchKeyword ?? this.searchKeyword,
       selectedBuilding: selectedBuilding ?? this.selectedBuilding,
       selectedFloor: selectedFloor ?? this.selectedFloor,
+      focusedPoiId: focusedPoiId ?? this.focusedPoiId,
     );
   }
 }
@@ -42,6 +46,22 @@ class SearchResultNotifier extends StateNotifier<SearchResultState> {
   void setSelectedFloor(String floor) {
     if (state.selectedFloor != floor) {
       state = state.copyWith(selectedFloor: floor);
+    }
+  }
+
+  // 리스트 아이템 클릭 시 POI 포커싱
+  void setFocusedPoi(int? poiId) {
+    // copyWith의 '??' 연산자 특성상 null을 전달하면 기존 값이 유지되므로,
+    // 해제(null) 요청이 들어오면 copyWith 대신 직접 생성자를 호출하여 상태를 갱신
+    if (poiId == null) {
+      state = SearchResultState(
+        searchKeyword: state.searchKeyword,
+        selectedBuilding: state.selectedBuilding,
+        selectedFloor: state.selectedFloor,
+        focusedPoiId: null, // 명시적으로 null 할당
+      );
+    } else {
+      state = state.copyWith(focusedPoiId: poiId);
     }
   }
 
@@ -70,7 +90,6 @@ class SearchResultNotifier extends StateNotifier<SearchResultState> {
 
     // 층수에서 숫자만 추출
     final floorNumber = state.selectedFloor.replaceAll('F', '');
-
     return 'assets/map/${buildingPrefix}_${floorNumber}F/${buildingPrefix}_${floorNumber}F_2x.jpg';
   }
 }

@@ -3,11 +3,17 @@ import 'package:annyong/domain/entity/poi.dart';
 String iconPath(Poi poi) {
   switch (poi.categoryId) {
     case 1:
-      return "study_room";
+      {
+        if (poi.description == "강의실") {
+          return "study_room";
+        } else {
+          return "help";
+        }
+      }
     case 2:
       return "rounge";
     case 3:
-      return "help";
+      return "professor_room";
     case 4:
       {
         if (poi.name == "엘리베이터") {

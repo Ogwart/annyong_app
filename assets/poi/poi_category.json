@@ -1,7 +1,7 @@
 [
  {
    "poi_category_id": 1,
-   "poi_category_name": "강의실"
+   "poi_category_name": "강의실\n과사무실"
  },
  {
    "poi_category_id": 2,
@@ -9,7 +9,7 @@
  },
  {
    "poi_category_id": 3,
-   "poi_category_name": "과사무실\n학생회실"
+   "poi_category_name": "교수실"
  },
  {
    "poi_category_id": 4,
