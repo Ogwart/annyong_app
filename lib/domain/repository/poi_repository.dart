@@ -14,6 +14,7 @@ class PoiRepository {
   static final PoiRepository _instance = PoiRepository._();
 
   factory PoiRepository() => _instance;
+  static const double _pixelToMeterScale = 0.1; // 1px = 10cm = 0.1m 변환용 상수
 
   List<PoiCategory>? _cachedCategories;
   List<Poi>? _cachedPois;
@@ -22,10 +23,7 @@ class PoiRepository {
   List<Beacon>? _cachedBeacons;
 
   Future<List<PoiCategory>> fetchCategories() async {
-    if (_cachedCategories != null) {
-      return _cachedCategories!;
-    }
-
+    if (_cachedCategories != null) return _cachedCategories!;
     final raw = await rootBundle.loadString('assets/poi/poi_category.json');
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
     _cachedCategories = decoded
@@ -35,10 +33,7 @@ class PoiRepository {
   }
 
   Future<List<Poi>> fetchPois() async {
-    if (_cachedPois != null) {
-      return _cachedPois!;
-    }
-
+    if (_cachedPois != null) return _cachedPois!;
     final raw = await rootBundle.loadString('assets/poi/poi.json');
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
     _cachedPois = decoded
@@ -49,9 +44,7 @@ class PoiRepository {
 
   /// Vertex 데이터 로드 및 캐싱
   Future<void> _loadVertices() async {
-    if (_cachedVertices != null) {
-      return;
-    }
+    if (_cachedVertices != null) return;
 
     final raw = await rootBundle.loadString('assets/graph/vertex.json');
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
@@ -59,9 +52,7 @@ class PoiRepository {
 
     for (final rawVertex in decoded) {
       try {
-        if (rawVertex is! Map<String, dynamic>) {
-          continue;
-        }
+        if (rawVertex is! Map<String, dynamic>) continue;
         final vertex = Vertex.fromJson(rawVertex);
         _cachedVertices![vertex.id] = vertex;
       } catch (error) {
@@ -70,26 +61,21 @@ class PoiRepository {
     }
   }
 
-  /// Edge 데이터 로드 및 캐싱
+  /// Edge 데이터 로드 및 캐싱 (미터 단위 변환 적용)
   Future<void> _loadEdges() async {
-    if (_cachedAdjacencyList != null) {
-      return;
-    }
+    if (_cachedAdjacencyList != null) return;
 
-    await _loadVertices(); // Vertex가 먼저 로드되어야 함
+    await _loadVertices();
 
     final raw = await rootBundle.loadString('assets/graph/edge.json');
     final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
     _cachedAdjacencyList = {};
 
     for (final rawEdge in decoded) {
-      if (rawEdge is! Map<String, dynamic>) {
-        continue;
-      }
+      if (rawEdge is! Map<String, dynamic>) continue;
 
       final v1Id = _tryParseInt(rawEdge['vertex1_id']);
       final v2Id = _tryParseInt(rawEdge['vertex2_id']);
-      final length = _sanitizeLength(rawEdge['length']);
       final rawWay = rawEdge['way'] as String?;
       final wayType = WayTypeParser.from(rawWay);
 
@@ -101,12 +87,25 @@ class PoiRepository {
         continue;
       }
 
+      final v1 = _cachedVertices![v1Id];
+      final v2 = _cachedVertices![v2Id];
+
+      if (v1 == null || v2 == null) continue;
+
+      // 1. 픽셀 거리 계산
+      final double dx = v1.x - v2.x;
+      final double dy = v1.y - v2.y;
+      final double pixelDistance = sqrt(dx * dx + dy * dy);
+
+      // 2. 미터 단위로 변환
+      final double realDistanceMeters = pixelDistance * _pixelToMeterScale;
+
       _cachedAdjacencyList!
           .putIfAbsent(v1Id, () => [])
           .add(
             Edge(
               toVertexId: v2Id,
-              length: length,
+              length: realDistanceMeters,
               way: wayType,
               isReversed: false,
             ),
@@ -117,7 +116,7 @@ class PoiRepository {
           .add(
             Edge(
               toVertexId: v1Id,
-              length: length,
+              length: realDistanceMeters,
               way: wayType,
               isReversed: true,
             ),
@@ -125,7 +124,6 @@ class PoiRepository {
     }
   }
 
-  //비콘 데이터 로드 및 캐싱
   Future<List<Beacon>> fetchBeacons() async {
     if (_cachedBeacons != null) return _cachedBeacons!;
     try {
@@ -149,27 +147,16 @@ class PoiRepository {
     return null;
   }
 
-  double _sanitizeLength(dynamic value) {
-    if (value is num) {
-      final cleaned = value.toDouble();
-      return cleaned <= 0 ? 0.1 : cleaned;
-    }
-    return 0.1;
-  }
-
-  /// Vertex ID로 Vertex 조회
   Future<Vertex?> getVertexById(int vertexId) async {
     await _loadVertices();
     return _cachedVertices?[vertexId];
   }
 
-  /// Vertex ID로 연결된 모든 POI 조회
   Future<List<Poi>> getPoisByVertexId(int vertexId) async {
     final pois = await fetchPois();
     return pois.where((poi) => poi.vertexId == vertexId).toList();
   }
 
-  /// POI ID 리스트로 POI 조회
   Future<List<Poi>> getPoisByIds(List<int> poiIds) async {
     final pois = await fetchPois();
     final poiMap = {for (var poi in pois) poi.id: poi};
@@ -180,24 +167,25 @@ class PoiRepository {
         .toList();
   }
 
-  /// Vertex ID로 연결된 모든 Edge 조회
   Future<List<Edge>> getEdgesForVertex(int vertexId) async {
     await _loadEdges();
     return _cachedAdjacencyList?[vertexId] ?? [];
   }
 
-  /// 두 점 사이의 유클리드 거리 계산 (POI와 Vertex)
+  /// 두 점 사이의 유클리드 거리 계산
   double getStraightLineDistance(Poi poi, Vertex vertex) {
     final dx = poi.xCoord - vertex.x;
     final dy = poi.yCoord - vertex.y;
-    return sqrt(dx * dx + dy * dy);
+    final pixelDistance = sqrt(dx * dx + dy * dy);
+    return pixelDistance * _pixelToMeterScale;
   }
 
   /// 두 Vertex 사이의 유클리드 거리 계산
   double getStraightLineDistanceBetweenVertices(Vertex v1, Vertex v2) {
     final dx = v1.x - v2.x;
     final dy = v1.y - v2.y;
-    return sqrt(dx * dx + dy * dy);
+    final pixelDistance = sqrt(dx * dx + dy * dy);
+    return pixelDistance * _pixelToMeterScale;
   }
 
   Future<Beacon?> findBeaconByMac(String macId) async {
@@ -213,9 +201,14 @@ class PoiRepository {
 
   // ===========================================================================
   // [NEW] 맵 매칭 & 위치 보정용 헬퍼 함수들
+  // 주의: 맵 매칭은 '화면 좌표(픽셀)' 기반 계산이 필요하므로, 여기서는 픽셀 거리를 반환하거나
+  //      필요시 미터 변환을 선택적으로 수행해야 합니다.
+  //      현재 로직(NavigationViewModel)은 픽셀 기반 판정을 하므로(pixelsPerMeter 사용),
+  //      findNearestEdges는 '픽셀 거리'를 반환하는 것이 맞습니다.
   // ===========================================================================
 
   /// 특정 좌표(x, y)에서 가장 가까운 Edge N개를 찾아서 반환
+  /// 리턴값의 double distance는 '픽셀 단위' 거리입니다.
   Future<List<(Edge, Vertex, Vertex, double)>> findNearestEdges(
     double x,
     double y, {
@@ -235,7 +228,6 @@ class PoiRepository {
         final endV = _cachedVertices![edge.toVertexId];
         if (endV == null) return;
 
-        // 중복 방지 (양방향 엣지 하나로 취급)
         final key = startVId < edge.toVertexId
             ? '$startVId-${edge.toVertexId}'
             : '${edge.toVertexId}-$startVId';
@@ -243,8 +235,9 @@ class PoiRepository {
         if (visitedEdgeKeys.contains(key)) continue;
         visitedEdgeKeys.add(key);
 
-        final dist = _getDistanceToSegment(x, y, startV, endV);
-        candidates.add((edge, startV, endV, dist));
+        // 여기서는 좌표(픽셀) 간의 기하학적 거리이므로 픽셀 단위 유지
+        final distPx = _getDistanceToSegment(x, y, startV, endV);
+        candidates.add((edge, startV, endV, distPx));
       }
     });
 
@@ -252,7 +245,7 @@ class PoiRepository {
     return candidates.take(count).toList();
   }
 
-  /// 점(px, py)와 선분(v1-v2) 사이의 최단 거리 계산
+  /// 점(px, py)와 선분(v1-v2) 사이의 최단 거리 계산 (픽셀 단위)
   double _getDistanceToSegment(double px, double py, Vertex v1, Vertex v2) {
     final double x1 = v1.x;
     final double y1 = v1.y;
