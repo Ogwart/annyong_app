@@ -5,12 +5,13 @@ import 'package:annyong/presentation/ui/menu/bookmark_page.dart';
 import 'package:annyong/presentation/ui/home/home_page.dart';
 import 'package:annyong/presentation/ui/menu/menu_page.dart';
 import 'package:annyong/presentation/ui/path/path_selection_page.dart';
+import 'package:annyong/presentation/ui/path/path_result_page.dart';
+import 'package:annyong/presentation/ui/path/path_navi_page.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/ui/search/search_result_page.dart';
 import 'package:annyong/presentation/ui/search/search_rooms_page.dart';
 import 'package:annyong/presentation/ui/menu/settings_page.dart';
 import 'package:annyong/presentation/ui/splash/splash_page.dart';
-import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:annyong/domain/entity/poi.dart';
@@ -136,9 +137,15 @@ class AppRouter {
           GoRoute(
             path: "measureResult",
             builder: (context, state) {
-              final extra = state.extra;
-              final double? strideLength = extra is double ? extra : null;
-              return MeasureResultPage(strideLength: strideLength);
+              // 1. MeasurePage에서 보낸 Map 데이터를 받습니다.
+              // (context.push("/measure/measureResult", extra: {...}) 로 보낸 값)
+              final args = state.extra as Map<String, dynamic>;
+
+              // 2. Map에서 데이터를 꺼내 생성자에 넣어줍니다.
+              return MeasureResultPage(
+                walkedSteps: args['walkedSteps'] as int,
+                totalDistance: args['totalDistance'] as double,
+              );
             },
           ),
         ],
@@ -274,6 +281,23 @@ class AppRouter {
                       final Poi end = extra['end'] as Poi;
 
                       return PathResultPage(
+                        start: start,
+                        end: end,
+                        waypoints:
+                            (extra['waypoints'] as List<dynamic>?)
+                                ?.cast<Poi>() ??
+                            [],
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: "pathNavi",
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      final Poi start = extra['start'] as Poi;
+                      final Poi end = extra['end'] as Poi;
+
+                      return PathNaviPage(
                         start: start,
                         end: end,
                         waypoints:

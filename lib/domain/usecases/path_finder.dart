@@ -112,7 +112,7 @@ class PathFinder {
 
       totalCost += result.totalCost;
     }
-    debugPrint('-- 경로 탐색 완료: 총비용 $totalCost, 총길이 ${fullPath.length}');
+    debugPrint('경로 탐색 완료: 총비용 $totalCost, 총길이 ${fullPath.length}');
     debugPrint('----------- [findPathWithWaypoints End] -----------');
     return PathResult(path: fullPath, totalCost: totalCost);
   }

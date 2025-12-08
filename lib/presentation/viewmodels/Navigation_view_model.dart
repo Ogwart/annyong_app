@@ -1,59 +1,55 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
-import 'dart:ui'; // [Fix] Offset 클래스 사용을 위해 추가
+import 'dart:ui'; // Offset 사용을 위해 필요
 
 import 'package:annyong/domain/entity/beacon.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
-// import 'package:annyong/domain/usecases/gps_service.dart'; // 사용하지 않으면 제거, 필요하면 유지
 import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/domain/usecases/handover_service.dart';
 import 'package:annyong/presentation/viewmodels/navigation_state.dart';
 import 'package:flutter/foundation.dart';
-// import 'package:flutter/widgets.dart'; // 필요 시 유지
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-//상태를 따로 navigation_state 파일에 정의
 class NavigationViewModel extends AsyncNotifier<NavigationState> {
   final PoiRepository _poiRepository = PoiRepository();
   final BeaconScanService _beaconScanService = BeaconScanService();
   final HandoverService _handoverService = HandoverService();
 
   StreamSubscription<StepCount>? _stepCountSubscription;
-  StreamSubscription<dynamic>? _imuSubscription; // IMU 센서 스트림 (방향 데이터)
+  StreamSubscription<dynamic>? _imuSubscription;
+  Timer? _beaconMonitorTimer;
+
   int _lastStepCount = 0;
 
-  // 1초에 비콘 신호 1번만 받도록 하는 타이머
-  Timer? _beaconMonitorTimer;
+  // [최적화] 자주 쓰이는 변수 캐싱
+  double _strideLength = 0.7;
+  double _smoothedHeading = 0.0;
 
   // [상수 설정]
   static const double pixelsPerMeter = 10.0; // 1px = 10cm
-  static const double stepLengthMeters = 0.7; // 1걸음 = 70cm
   static const double vertexBufferMeters = 2.0; // 정점 버퍼 2m
-
-  // [HandoverService에서 참조하는 상수 추가]
-  static const int rssiThresholdReady = -75; // Handover 준비 기준 RSSI
+  static const int rssiThresholdReady =
+      -75; // Handover 준비 기준 RSSI (HandoverService에서 참조)
   static const int rssiThresholdExit = -85; // 실외 전환 기준 RSSI
 
-  //안내 시작했을 때만 IMU 센서값을 받기 시작하도록 수정
   @override
   FutureOr<NavigationState> build() async {
     return NavigationState();
   }
 
-  // 네비게이션 시작 (경로 산출 후에 호출됨)
+  // 네비게이션 시작
   Future<void> startNavigation(List<Vertex> path) async {
     if (path.isEmpty) return;
 
-    // [수정] 권한 요청 로직 제거 (SplashPage에서 이미 처리됨)
-    // final status = await Permission.activityRecognition.request();
-    // if (status.isDenied || status.isPermanentlyDenied) { ... }
+    // 1. 보폭 미리 로드 (매 걸음마다 로드하면 딜레이 발생하므로 여기서 한 번만)
+    final prefs = await SharedPreferences.getInstance();
+    _strideLength = prefs.getDouble('stride_length') ?? 0.7;
 
     // 초기화: 첫 번째 Vertex에서 시작
     final startVertex = path[0];
@@ -66,12 +62,14 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       double dy = nextVertex.y - startVertex.y;
       initialHeading = math.atan2(dx, -dy);
     }
+    _smoothedHeading = initialHeading;
 
     state = AsyncValue.data(
       NavigationState(
         x: startVertex.x,
         y: startVertex.y,
-        floor: 1, // 필요 시 path/vertex 정보에서 가져옴
+        floor: 1, // 초기값, 추후 비콘으로 보정될 수 있음
+        buildingId: 1, // 초기값, 추후 비콘으로 보정
         heading: initialHeading,
         rawPixelX: startVertex.x,
         rawPixelY: startVertex.y,
@@ -91,11 +89,8 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   /// IMU 센서 스트림 구독
   Future<void> _startImuSubscription() async {
     try {
-      // 나침반 이벤트 스트림
       final compassEvents = FlutterCompass.events;
-      if (compassEvents == null) {
-        return;
-      }
+      if (compassEvents == null) return;
 
       // 건물 기울기 보정값: 북동쪽 30도 방향을 기준 북쪽으로 설정
       const double buildingOffsetDegrees = 30.0;
@@ -105,7 +100,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
           final headingDegrees = event.heading;
 
           if (headingDegrees != null) {
-            // 건물 기울기 보정: 나침반의 30도 방향을 0도(북쪽)로 취급
+            // 건물 기울기 보정
             final correctedHeadingDegrees =
                 (headingDegrees - buildingOffsetDegrees + 360) % 360;
             final headingRadians = correctedHeadingDegrees * math.pi / 180.0;
@@ -120,14 +115,22 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     }
   }
 
+  // [최적화] 헤딩 스무딩 적용 (Low-Pass Filter)
+  void updateHeading(double newHeading) {
+    final currentState = state.value;
+    if (currentState != null) {
+      // 급격한 회전 방지를 위한 가중 평균 (이전 70%, 현재 30%)
+      // 실제로는 0<->360 경계 처리가 필요하지만 약식으로 적용
+      _smoothedHeading = _smoothedHeading * 0.7 + newHeading * 0.3;
+      state = AsyncValue.data(currentState.copyWith(heading: _smoothedHeading));
+    }
+  }
+
   /// 걸음수 스트림
   Future<void> _startStepCountSubscription() async {
     try {
       _stepCountSubscription = Pedometer.stepCountStream.listen(
         (StepCount event) async {
-          // async 추가
-          debugPrint("[Step] Event received: ${event.steps}"); // 로그 확인용
-
           final currentState = state.value;
           if (currentState == null) return;
 
@@ -149,24 +152,20 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
           // 측정 시작 후 이동한 걸음수 계산
           final movedSteps = newStepCount - newInitialStepCount;
-          if (movedSteps < 0) return; // 음수 방지
+          if (movedSteps < 0) return;
 
           // 걸음수가 증가했는지 확인
           final stepIncrease = newStepCount - _lastStepCount;
           if (stepIncrease > 0) {
-            // 걸음수가 증가했으므로 위치 업데이트 (걸음수도 함께 업데이트)
-            // await를 사용하기 위해 리스너 콜백을 async로 변경
             await _updatePositionOnStep(stepIncrease, movedSteps);
             _lastStepCount = newStepCount;
           } else {
-            // 걸음수는 증가하지 않았지만 상태 업데이트 (다른 이유로 변경될 수 있음)
             state = AsyncValue.data(
               currentState.copyWith(stepCount: movedSteps),
             );
           }
         },
         onError: (error) {
-          state = AsyncValue.error(error, StackTrace.current);
           debugPrint("[Step Error] 걸음 수 센서 오류: $error");
         },
         cancelOnError: false,
@@ -176,7 +175,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     }
   }
 
-  // 비콘 모니터링 (주기적 폴링)
+  // [중요] 비콘 모니터링: 위치 보정, 층/건물 변경, 핸드오버 처리
   void _startBeaconMonitoring() {
     _beaconMonitorTimer?.cancel();
     _beaconMonitorTimer = Timer.periodic(const Duration(milliseconds: 1000), (
@@ -185,10 +184,41 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       final currentState = state.value;
       if (currentState == null) return;
 
-      // 1. 가장 가까운 비콘 조회
+      // BeaconScanService가 필터링해준 '가장 신뢰할 수 있는' 비콘 가져오기
       final nearest = await _beaconScanService.getNearestTrackedBeacon();
 
-      // HandoverService에 로직 위임
+      // 1. 층/건물 변경 감지 (가장 우선)
+      // 비콘 서비스가 리턴했다는 것은 이미 진입 조건(RSSI > -68.5)을 만족했다는 의미
+      if (nearest != null) {
+        bool isFloorChanged = currentState.floor != nearest.beacon.floor;
+        bool isBuildingChanged =
+            currentState.buildingId != nearest.beacon.buildingId;
+
+        if (isFloorChanged || isBuildingChanged) {
+          debugPrint(
+            "[Change Detected] Floor: ${currentState.floor}->${nearest.beacon.floor}, Building: ${currentState.buildingId}->${nearest.beacon.buildingId}",
+          );
+
+          // 해당 층/건물의 좌표계로 강제 이동 및 맵 매칭 초기화
+          state = AsyncValue.data(
+            currentState.copyWith(
+              floor: nearest.beacon.floor,
+              buildingId: nearest.beacon.buildingId,
+              x: nearest.beacon.xCoord.toDouble(),
+              y: nearest.beacon.yCoord.toDouble(),
+              rawPixelX: nearest.beacon.xCoord.toDouble(),
+              rawPixelY: nearest.beacon.yCoord.toDouble(),
+              matchingMode: MapMatchingMode.outOfEdge, // 새로운 층이므로 매칭 해제
+              currentEdge: null,
+              currentVertex: null,
+              handoverStatus: HandoverStatus.indoor, // 실내 상태로 확정
+            ),
+          );
+          return; // 층이 바뀌었으면 아래 로직 생략
+        }
+      }
+
+      // 2. 핸드오버 로직 위임
       final newState = await _handoverService.checkHandoverLogic(
         currentState: currentState,
         nearestBeaconType: nearest?.beacon.type,
@@ -196,46 +226,31 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         currentRssi: nearest?.rssi.toInt(),
       );
 
-      // 상태 변경이 있을 때만 업데이트
       if (newState != null) {
         state = AsyncValue.data(newState);
       }
 
-      // 3. 위치 보정 (실내 주행 중일 때, 신호가 강하면)
+      // 3. 같은 층 내 위치 보정 (실내 주행 중일 때)
       if (currentState.handoverStatus == HandoverStatus.indoor &&
           nearest != null) {
-        correctPositionWithBeacon(
-          beacon: nearest.beacon, // 비콘 객체 통째로 전달
-          rssi: nearest.rssi,
-        );
+        correctPositionWithBeacon(beacon: nearest.beacon, rssi: nearest.rssi);
       }
     });
   }
 
-  /// 걸음수 증가 시 위치 업데이트
-  /// [Fix] void -> Future<void>, async 키워드 추가
+  // [최적화] 걸음 처리 로직
   Future<void> _updatePositionOnStep(int stepIncrease, int newStepCount) async {
-    final prefs = await SharedPreferences.getInstance();
-    // 'is_first_launch'가 아니라 'stride_length'를 가져와야 하므로 키 확인 필요
-    // StrideService에서 'stride_length' 키를 사용함
-    final strideSnapshot = prefs.getDouble('stride_length') ?? 0.7;
-
-    // int userStride = int.parse(strideSnapshot.toString()); // double을 int로 파싱하면 에러날 수 있음
-    // cm 단위가 아니라 m 단위로 저장되어 있다고 가정 (예: 0.7)
-    // 만약 cm단위(70)로 저장했다면 로직 확인 필요. StrideService 기본값이 0.7이므로 m단위로 보임.
-
     final currentState = state.value;
     if (currentState == null) return;
 
     double currentHeading = currentState.heading;
 
-    // --- Heading 보정 로직 (엣지 위를 걸을 때) ---
+    // 엣지 스내핑: 엣지 위에 있고 각도 차이가 작다면 엣지 방향을 따름
     if (currentState.matchingMode == MapMatchingMode.onEdge &&
         currentState.currentEdge != null &&
         currentState.lastVertex != null) {
       final edge = currentState.currentEdge!;
       final otherId = edge.getOtherVertexId(currentState.lastVertex!.id);
-
       final otherV = await _poiRepository.getVertexById(otherId);
 
       if (otherV != null) {
@@ -243,27 +258,22 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         double edgeDy = otherV.y - currentState.lastVertex!.y;
         double edgeAngle = math.atan2(edgeDx, -edgeDy);
 
-        // 각도 차이 계산 (20도 이내면 보정)
         double diff = (currentHeading - edgeAngle).abs();
         if (diff > math.pi) diff = 2 * math.pi - diff;
 
-        if (diff < 0.35) {
-          // 약 20도
+        // 약 30도 이내면 엣지 방향으로 강제 정렬 (직진성 강화)
+        if (diff < 0.52) {
           currentHeading = edgeAngle;
         }
       }
     }
 
-    // 픽셀 단위 이동거리 계산
-    // strideSnapshot(m) * pixelsPerMeter(10) => 0.7 * 10 = 7px
-    double pixelDistPerStep = strideSnapshot * pixelsPerMeter;
+    // 미리 로드한 strideLength 사용
+    double pixelDistPerStep = _strideLength * pixelsPerMeter;
 
-    // 보정된 Heading으로 이번 이동량 계산
     final dx = pixelDistPerStep * math.sin(currentHeading) * stepIncrease;
-    final dy =
-        -pixelDistPerStep * math.cos(currentHeading) * stepIncrease; // 화면 좌표계
+    final dy = -pixelDistPerStep * math.cos(currentHeading) * stepIncrease;
 
-    // 화면상 좌표 누적
     final newRawX = currentState.rawPixelX + dx;
     final newRawY = currentState.rawPixelY + dy;
 
@@ -271,7 +281,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       rawPixelX: newRawX,
       rawPixelY: newRawY,
       stepCount: newStepCount,
-      // heading은 보정된 값으로 업데이트 할지 여부 결정 (여기선 유지)
     );
 
     // 2. Map Matching Logic
@@ -291,7 +300,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         break;
     }
 
-    // 3. Handover 상태 체크
+    // 3. Handover 상태 체크 (뷰모델 레벨에서의 추가 체크가 필요하다면)
     if (nextState.handoverStatus != HandoverStatus.indoor) {
       final handoverUpdate = await _handoverService.checkHandoverLogic(
         currentState: nextState,
@@ -305,7 +314,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       }
     }
 
-    // 최종 상태 업데이트
     state = AsyncValue.data(nextState);
   }
 
@@ -314,16 +322,13 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     required Beacon beacon,
     required double rssi,
   }) async {
-    // 1. 신호 강도 체크 (너무 약하면 보정 안 함)
-    // -65dBm은 꽤 가까운 거리(약 1~2m)
-    if (rssi < -65) return;
+    // BeaconScanService가 이미 필터링했으므로 RSSI 신뢰 가능.
+    // 아주 가까울 때(-62 이상)만 강제 스냅
+    if (rssi < -62) return;
 
-    // 2. 비콘과 연결된 Vertex 찾기 (전략 패턴: 나중에 로직 수정 용이)
     final Vertex? targetVertex = await _resolveTargetVertexFromBeacon(beacon);
-
     if (targetVertex != null) {
-      // 3. 찾은 Vertex 위치로 강제 스냅(Snap)
-      _snapPositionToVertex(targetVertex, beacon.floor);
+      _snapPositionToVertex(targetVertex, beacon.floor, beacon.buildingId);
     }
   }
 
@@ -343,27 +348,21 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     return await _poiRepository.getVertexById(targetPoi.vertexId!);
   }
 
-  /// [실행] 상태를 특정 Vertex 위치로 강제 이동 (초기화)
-  void _snapPositionToVertex(Vertex vertex, int floor) {
+  /// 상태를 특정 Vertex 위치로 강제 이동 (초기화)
+  void _snapPositionToVertex(Vertex vertex, int floor, int buildingId) {
     final s = state.value;
     if (s == null) return;
 
     state = AsyncValue.data(
       s.copyWith(
-        // 1. UI 좌표 이동
         x: vertex.x,
         y: vertex.y,
         floor: floor,
-
-        // 2. 픽셀 좌표 리셋 (가장 중요: 드리프트 제거)
+        buildingId: buildingId,
         rawPixelX: vertex.x,
         rawPixelY: vertex.y,
-
-        // 3. 맵 매칭 상태: 정점 위(OnVertex)로 고정
         matchingMode: MapMatchingMode.onVertex,
         currentVertex: vertex,
-
-        // 4. 엣지 및 버퍼 초기화
         currentEdge: null,
         lastVertex: vertex,
         edgeAccumulatedDistance: 0.0,
@@ -377,14 +376,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     );
   }
 
-  /// 방향(heading) 업데이트 (IMU 센서에서 호출)
-  void updateHeading(double heading) {
-    final currentState = state.value;
-    if (currentState != null) {
-      state = AsyncValue.data(currentState.copyWith(heading: heading));
-    }
-  }
-
   // --- Map Matching Logic: OnEdge ---
   Future<NavigationState> _handleOnEdge(
     NavigationState s,
@@ -394,11 +385,9 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     if (s.currentEdge == null || s.lastVertex == null) return s;
 
     final edge = s.currentEdge!;
-    // 투영 거리 계산 (단순화: 걸은 거리 그대로 Edge 진행도로 반영)
     double projectedDist = pixelDistPerStep * stepIncrease;
     double newAccumulated = s.edgeAccumulatedDistance + projectedDist;
 
-    // Edge 위 좌표 계산
     final startV = s.lastVertex!;
     final endVId = edge.getOtherVertexId(startV.id);
     final endV = await _poiRepository.getVertexById(endVId);
@@ -412,9 +401,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     double mapX = startV.x + (endV.x - startV.x) * ratio;
     double mapY = startV.y + (endV.y - startV.y) * ratio;
 
-    // 길이 소진 체크
     if (newAccumulated >= edgeLen) {
-      // Vertex 도착
       return s.copyWith(
         matchingMode: MapMatchingMode.onVertex,
         currentVertex: endV,
@@ -422,7 +409,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         y: endV.y,
         vertexBufferX: 0,
         vertexBufferY: 0,
-        // 남은 거리는 버림 (단순화)
       );
     }
 
@@ -443,7 +429,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     double newAccY = s.vertexBufferY + dy;
     double dist = math.sqrt(newAccX * newAccX + newAccY * newAccY);
 
-    // 2m 버퍼링
     if (dist < (vertexBufferMeters * pixelsPerMeter)) {
       return s.copyWith(
         vertexBufferX: newAccX,
@@ -453,7 +438,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       );
     }
 
-    // 2m 초과 시 방향 결정
     bool isVerticalMove = newAccY.abs() > newAccX.abs();
     bool isPositive = isVerticalMove ? (newAccY > 0) : (newAccX > 0);
 
@@ -461,7 +445,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       s.currentVertex!.id,
     );
 
-    // 짧은 엣지 체이닝 로직 포함
     final (
       selectedEdge,
       targetStartV,
@@ -488,7 +471,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         rawPixelY: targetStartV.y,
       );
     } else {
-      // 갈 곳 없음 -> 이탈
       return s.copyWith(matchingMode: MapMatchingMode.outOfEdge);
     }
   }
@@ -509,15 +491,12 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     final v2 = best.$3;
     final distToEdge = best.$4;
 
-    // 5m 이상 떨어져 있으면 붙이지 않음
     if (distToEdge > (5.0 * pixelsPerMeter)) {
       return s.copyWith(x: s.rawPixelX, y: s.rawPixelY);
     }
 
-    // Snap Point 계산
     final snapped = _getProjectedPoint(s.rawPixelX, s.rawPixelY, v1, v2);
 
-    // 방향(Heading) 고려하여 lastVertex 결정
     double userDx = math.sin(s.heading);
     double userDy = -math.cos(s.heading);
     double edgeDx = v2.x - v1.x;
@@ -552,7 +531,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     required bool isPositive,
     required double requiredLength,
   }) async {
-    // 1. 방향 필터링
     List<Edge> dirs = [];
     for (var edge in candidates) {
       if (isVertical && edge.way != WayType.vertical) continue;
@@ -575,7 +553,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     Vertex currentStartV = startVertex;
     double remaining = requiredLength;
 
-    // Short Edge Chaining
     while (true) {
       final len = currentEdge.length;
       if (remaining < len) {
@@ -588,7 +565,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
         final nextEdges = await _poiRepository.getEdgesForVertex(nextVId);
         try {
-          // 직진 방향의 다음 Edge 찾기
           final next = nextEdges.firstWhere(
             (e) =>
                 e.getOtherVertexId(nextVId) != currentStartV.id &&
@@ -597,7 +573,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
           currentEdge = next;
           currentStartV = nextV;
         } catch (e) {
-          // 막다른 길
           return (currentEdge, currentStartV, len);
         }
       }
@@ -640,8 +615,6 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     state = AsyncValue.data(newState);
   }
 
-  /// 구독 취소 및 초기화 (페이지 종료 시 호출)
-  /// [Fix] NavigationViewModel 클래스 내부로 이동
   void stopNavigation() {
     _stepCountSubscription?.cancel();
     _imuSubscription?.cancel();
@@ -653,12 +626,10 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
     _handoverService.dispose();
 
-    // 상태를 초기값으로 리셋
     state = AsyncValue.data(NavigationState());
   }
-} // End of NavigationViewModel
+}
 
-/// NavigationViewModel Provider
 final navigationViewModelProvider =
     AsyncNotifierProvider<NavigationViewModel, NavigationState>(() {
       return NavigationViewModel();

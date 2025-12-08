@@ -660,12 +660,6 @@
    "way": "vertical"
  },
  {
-   "edge_id": 117,
-   "vertex1_id": 39,
-   "vertex2_id": 40,
-   "way": "vertical"
- },
- {
    "edge_id": 119,
    "vertex1_id": 41,
    "vertex2_id": 42,
@@ -766,18 +760,6 @@
    "vertex1_id": 17,
    "vertex2_id": 20,
    "way": "horizon"
- },
- {
-   "edge_id": 148,
-   "vertex1_id": 15,
-   "vertex2_id": 19,
-   "way": "vertical"
- },
- {
-   "edge_id": 149,
-   "vertex1_id": 14,
-   "vertex2_id": 18,
-   "way": "vertical"
  },
  {
    "edge_id": 150,
