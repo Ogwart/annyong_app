@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/presentation/viewmodels/navigation_view_model.dart';
 import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
+import 'package:annyong/presentation/widgets/path_page/count_steps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:annyong/domain/entity/poi.dart';
@@ -70,7 +71,12 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
 
     // 상태 리스너: 'outdoorChecking' 상태가 되면 다이얼로그 띄우기
     ref.listen(navigationViewModelProvider, (previous, next) {
-      if (next.value?.handoverStatus == HandoverStatus.outdoorChecking) {
+      final wasChecking =
+          previous?.value?.handoverStatus == HandoverStatus.outdoorChecking;
+      final isChecking =
+          next.value?.handoverStatus == HandoverStatus.outdoorChecking;
+
+      if (!wasChecking && isChecking) {
         _showIndoorConfirmationDialog(context);
       }
     });
@@ -195,15 +201,13 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
                 return const OutdoorPage();
               }
 
-              return Stack(
+              return Column(
                 children: [
-                  _buildIndoorMapView(context, state, totalCost, mapImagePath),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    right: 12,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: CountSteps(state: state),
                   ),
+                  _buildIndoorMapView(context, state, totalCost, mapImagePath),
                 ],
               );
             },
@@ -330,112 +334,101 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
-        return AlertDialog(
-          title: const Text("실내 진입 확인"),
-          content: const Text("실내로 들어오셨나요?\n지도를 실내 모드로 전환합니다."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ref
-                    .read(navigationViewModelProvider.notifier)
-                    .rejectIndoorEntry();
-              },
-              child: const Text("아니요"),
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.door_front_door_outlined,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "실내 진입 확인",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "실내로 들어오셨나요?\n지도를 실내 모드로 전환합니다.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          ref
+                              .read(navigationViewModelProvider.notifier)
+                              .rejectIndoorEntry();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          "아니요",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          ref
+                              .read(navigationViewModelProvider.notifier)
+                              .confirmIndoorEntry();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: AppColors.primary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "예",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ref
-                    .read(navigationViewModelProvider.notifier)
-                    .confirmIndoorEntry();
-              },
-              child: const Text("네, 들어왔습니다"),
-            ),
-          ],
+          ),
         );
       },
-    );
-  }
-}
-
-class CountSteps extends StatelessWidget {
-  const CountSteps({super.key, required this.state});
-
-  final NavigationState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final headingDegrees = (state.heading * 180 / math.pi) % 360;
-    String directionText;
-    if (headingDegrees >= 337.5 || headingDegrees < 22.5) {
-      directionText = '북';
-    } else if (headingDegrees >= 22.5 && headingDegrees < 67.5) {
-      directionText = '북동';
-    } else if (headingDegrees >= 67.5 && headingDegrees < 112.5) {
-      directionText = '동';
-    } else if (headingDegrees >= 112.5 && headingDegrees < 157.5) {
-      directionText = '남동';
-    } else if (headingDegrees >= 157.5 && headingDegrees < 202.5) {
-      directionText = '남';
-    } else if (headingDegrees >= 202.5 && headingDegrees < 247.5) {
-      directionText = '남서';
-    } else if (headingDegrees >= 247.5 && headingDegrees < 292.5) {
-      directionText = '서';
-    } else {
-      directionText = '북서';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.directions_walk,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${state.stepCount}걸음',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Icon(Icons.navigation, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                '$directionText (${headingDegrees.toStringAsFixed(0)}°)',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
