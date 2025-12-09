@@ -54,3 +54,34 @@ String iconPath(Poi poi) {
       return "study_room";
   }
 }
+
+String categoryIconPath(String title) {
+  switch (title) {
+    case "강의실/과사무실":
+      return "study_room";
+    case "라운지/카페":
+      return "lounge";
+    case "교수연구실":
+      return "professor_room";
+    case "엘리베이터/계단":
+      return "elevator";
+    case "화장실":
+      return "toilet";
+    case "출입문":
+      return "door";
+    case "자판기":
+      return "vending_machine";
+    case "정수기":
+      return "purifier";
+    case "ATM/제세동기":
+      return "ATM";
+    case "콘센트":
+      return "outlet";
+    case "소화기/소화전":
+      return "fire_extinguisher";
+    case "쓰레기통":
+      return "trash_can";
+    default:
+      return "study_room";
+  }
+}
