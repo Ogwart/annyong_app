@@ -428,8 +428,8 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.2,
+                                                color: Colors.black.withAlpha(
+                                                  20,
                                                 ),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 4),
@@ -493,9 +493,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.1,
-                                              ),
+                                              color: Colors.black.withAlpha(10),
                                               blurRadius: 4,
                                               offset: const Offset(0, 2),
                                             ),

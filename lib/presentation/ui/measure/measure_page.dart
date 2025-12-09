@@ -515,7 +515,7 @@ class _MeasurePageState extends State<MeasurePage> {
           final List<Offset> pathPoints = [];
           final route = _route!;
           final pathVertices = route.pathVertices;
-          
+
           if (pathVertices.isNotEmpty) {
             // 출발지점 (POI) -> 첫 번째 Vertex
             final startPx = route.startPoi.xCoord * scaleX;
@@ -524,7 +524,7 @@ class _MeasurePageState extends State<MeasurePage> {
             final firstVy = pathVertices.first.y * scaleY;
             pathPoints.add(Offset(startPx, startPy));
             pathPoints.add(Offset(firstVx, firstVy));
-            
+
             // 경유지점들 (Vertex 간 연결) - 각 선분을 [시작, 끝] 쌍으로 저장
             for (int i = 0; i < pathVertices.length - 1; i++) {
               final v1 = pathVertices[i];
@@ -536,7 +536,7 @@ class _MeasurePageState extends State<MeasurePage> {
               pathPoints.add(Offset(v1x, v1y));
               pathPoints.add(Offset(v2x, v2y));
             }
-            
+
             // 마지막 Vertex -> 도착지점
             final lastVx = pathVertices.last.x * scaleX;
             final lastVy = pathVertices.last.y * scaleY;
@@ -656,11 +656,9 @@ class _MeasurePageState extends State<MeasurePage> {
       top: transformedY - 32, // 아이콘 바닥이 좌표에 오도록 보정
       child: Container(
         padding: EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white
-        ),
-        child: Icon(icon, color: color, size: 32)),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+        child: Icon(icon, color: color, size: 32),
+      ),
     );
   }
 
@@ -812,4 +810,3 @@ class _MeasurePageState extends State<MeasurePage> {
     );
   }
 }
-

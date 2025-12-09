@@ -154,7 +154,7 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                                         .getPoisByIds(nearPoiIds);
                                   }
 
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   // 3. 페이지 이동
                                   final selectedPoi = await context.push<Poi>(
                                     "/measureSelectPoi",
@@ -174,7 +174,7 @@ class _MeasureNoticePageState extends State<MeasureNoticePage> {
                                   }
                                 } catch (e) {
                                   // 에러 발생 시 기존 방식대로 진행 (인접 POI 없음)
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     final selectedPoi = await context.push<Poi>(
                                       "/measureSelectPoi",
                                       extra: {

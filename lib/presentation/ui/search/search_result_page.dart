@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:annyong/presentation/util/search_result_page_util.dart';
 import 'package:annyong/presentation/widgets/search_page/map_marker_widget.dart';
+import 'package:vector_math/vector_math_64.dart' as math64;
 
 class SearchResultPage extends ConsumerStatefulWidget {
   final String? searchKeyword;
@@ -133,7 +134,7 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage>
 
     // 5. 이동 행렬 생성
     final targetMatrix = Matrix4.identity()
-      ..translate(targetX, targetY)
+      ..translateByVector3(math64.Vector3(targetX, targetY, 0))
       ..scale(targetZoom);
 
     // 6. 애니메이션 실행

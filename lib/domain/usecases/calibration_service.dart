@@ -182,7 +182,7 @@ class CalibrationService {
     final endVertex = await _poiRepo.getVertexById(best.vertexPath.last);
 
     // 만약 POI가 없는 곳이 당첨되었다면, 사용자에게 보여줄 힌트 텍스트 생성
-    String? hintDescription;
+    String? hintDescription = "";
     if (best.destinationPoi == null && best.isLandmark) {
       hintDescription = "길이 끝나는 곳(혹은 코너)까지 이동";
     }

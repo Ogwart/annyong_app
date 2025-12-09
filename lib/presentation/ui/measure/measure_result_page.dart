@@ -101,8 +101,8 @@ class _MeasureResultPageState extends State<MeasureResultPage> {
                 height: 100,
                 decoration: BoxDecoration(
                   color: _isValid
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withAlpha(10)
+                      : Colors.red.withAlpha(10),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

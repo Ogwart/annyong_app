@@ -45,8 +45,8 @@ class _LocationInputTileState extends State<LocationInputTile> {
           boxShadow: [
             BoxShadow(
               color: _isPressed
-                  ? AppColors.primary.withOpacity(0.25)
-                  : Colors.black.withOpacity(0.05),
+                  ? AppColors.primary.withAlpha(25)
+                  : Colors.black.withAlpha(5),
               blurRadius: 10,
               offset: const Offset(2, 4),
               spreadRadius: 0,

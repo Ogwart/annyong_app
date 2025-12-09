@@ -487,7 +487,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       ),
                                     ),
                             );
-                          }).toList(),
+                          }),
                           // 구분선
                           Container(
                             width: 2,
@@ -537,8 +537,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                           ),
                                         ),
                                 );
-                              })
-                              .toList(),
+                              }),
                         ],
                       ),
                     ),
