@@ -49,6 +49,7 @@ dependencies:
   vector_math: ^2.2.0
 
   flutter_svg: ^2.2.3
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -79,6 +80,7 @@ flutter:
     - assets/map/3_1F/
     - assets/icons/
     - assets/icons/svg/
+    - assets/image/
 
     # - assets/poi/
     - assets/poi/building.json

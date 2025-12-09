@@ -144,25 +144,38 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: Color(0xFFA2DDFF),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Text(
-              "인하대학교 실내 길찾기",
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 24,
-                color: Colors.white,
-              ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Image.asset("assets/image/mascot.png"),
             ),
-            Text(
-              "안뇽앱",
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 88,
-                color: Colors.white,
+            Positioned(
+              top: 180,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  Text(
+                    "인하대학교 실내 길찾기",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 24,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Text(
+                    "안뇽앱",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 88,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
