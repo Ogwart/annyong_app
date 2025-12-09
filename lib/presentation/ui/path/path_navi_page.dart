@@ -611,68 +611,21 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                                   imageOffsetX: imageOffsetX,
                                   imageOffsetY: imageOffsetY,
                                 ),
-                              Builder(
-                                builder: (context) {
-                                  if (state.buildingId !=
-                                          currentMapBuildingId ||
-                                      state.floor != currentMapFloorNum) {
-                                    return const SizedBox.shrink();
-                                  }
 
-                                  double currentX = state.x;
-                                  double currentY = state.y;
-
-                                  if (state.x == 0 && state.y == 0) {
-                                    currentX = widget.start.xCoord;
-                                    currentY = widget.start.yCoord;
-
-                                    if (result.path.isNotEmpty) {
-                                      final startVertex = pathFinder
-                                          .vertices[result.path.first];
-                                      if (startVertex != null) {
-                                        currentX = startVertex.x;
-                                        currentY = startVertex.y;
-                                      }
-                                    }
-                                  }
-
-                                  final localX =
-                                      currentX * scaleX + imageOffsetX;
-                                  final localY =
-                                      currentY * scaleY + imageOffsetY;
-
-                                  final currentMatrix =
-                                      _transformationController.value;
-                                  final screenX =
-                                      currentMatrix.storage[0] * localX +
-                                      currentMatrix.storage[4] * localY +
-                                      currentMatrix.storage[12];
-                                  final screenY =
-                                      currentMatrix.storage[1] * localX +
-                                      currentMatrix.storage[5] * localY +
-                                      currentMatrix.storage[13];
-
-                                  return Positioned(
-                                    left: screenX - 30,
-                                    top: screenY - 30,
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        // 배경 동심원 이펙트
-                                        const RippleMarker(),
-                                        // 회전하는 사용자 아이콘
-                                        Transform.rotate(
-                                          angle: state.heading,
-                                          child: SvgPicture.asset(
-                                            'assets/icons/user_position/user_position_normal.svg',
-                                            width: 40,
-                                            height: 40,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                              // 사용자 마커
+                              UserMarker(
+                                state: state,
+                                currentMapBuildingId: currentMapBuildingId,
+                                currentMapFloorNum: currentMapFloorNum,
+                                start: widget.start,
+                                pathFinder: pathFinder,
+                                path: result.path,
+                                scaleX: scaleX,
+                                scaleY: scaleY,
+                                imageOffsetX: imageOffsetX,
+                                imageOffsetY: imageOffsetY,
+                                transformationController:
+                                    _transformationController,
                               ),
                               CountSteps(state: state),
                               if (involvedBuildings.length > 1)
@@ -1020,5 +973,151 @@ class PathPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant PathPainter oldDelegate) {
     return oldDelegate.points != points || oldDelegate.color != color;
+  }
+}
+
+class UserMarker extends StatelessWidget {
+  final NavigationState state;
+  final int currentMapBuildingId;
+  final int currentMapFloorNum;
+  final Poi start;
+  final PathFinder pathFinder;
+  final List<int> path;
+  final double scaleX;
+  final double scaleY;
+  final double imageOffsetX;
+  final double imageOffsetY;
+  final TransformationController transformationController;
+
+  const UserMarker({
+    super.key,
+    required this.state,
+    required this.currentMapBuildingId,
+    required this.currentMapFloorNum,
+    required this.start,
+    required this.pathFinder,
+    required this.path,
+    required this.scaleX,
+    required this.scaleY,
+    required this.imageOffsetX,
+    required this.imageOffsetY,
+    required this.transformationController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 1. 현재 보고 있는 건물/층과 내 위치가 일치하는지 확인
+    if (state.buildingId != currentMapBuildingId ||
+        state.floor != currentMapFloorNum) {
+      return const SizedBox.shrink();
+    }
+
+    double currentX = state.x;
+    double currentY = state.y;
+
+    // 2. 초기 상태(0,0)일 때 출발지 좌표 사용
+    if (state.x == 0 && state.y == 0) {
+      currentX = start.xCoord;
+      currentY = start.yCoord;
+
+      if (path.isNotEmpty) {
+        final startVertex = pathFinder.vertices[path.first];
+        if (startVertex != null) {
+          currentX = startVertex.x;
+          currentY = startVertex.y;
+        }
+      }
+    }
+
+    // 3. 화면 좌표 변환
+    final localX = currentX * scaleX + imageOffsetX;
+    final localY = currentY * scaleY + imageOffsetY;
+
+    final currentMatrix = transformationController.value;
+    final screenX =
+        currentMatrix.storage[0] * localX +
+        currentMatrix.storage[4] * localY +
+        currentMatrix.storage[12];
+    final screenY =
+        currentMatrix.storage[1] * localX +
+        currentMatrix.storage[5] * localY +
+        currentMatrix.storage[13];
+
+    // 4. 마커 아이콘 결정 로직
+    // 기본값은 normal
+    String markerIcon = 'user_position_normal.svg';
+
+    if (state.matchingMode == MapMatchingMode.outOfEdge) {
+      // (1) 경로 이탈 (픽셀 기반) -> unknown
+      markerIcon = 'user_position_unknown.svg';
+    } else {
+      // (2) 방향 체크: 엣지 또는 정점 위에 있을 때
+      // '가야 할 방향' 벡터를 계산하기 위한 시작점과 끝점
+      Vertex? currentStart;
+      Vertex? currentEnd;
+
+      // Case A: 엣지 위 이동 중 (onEdge)
+      if (state.matchingMode == MapMatchingMode.onEdge &&
+          state.currentEdge != null &&
+          state.lastVertex != null) {
+        currentStart = state.lastVertex;
+        // 엣지의 반대편 정점이 가야 할 목표
+        final endVId = state.currentEdge!.getOtherVertexId(currentStart!.id);
+        currentEnd = pathFinder.vertices[endVId];
+      }
+      // Case B: 정점 위 대기/회전 중 (onVertex) - 이 부분이 누락되어 있었음
+      else if (state.matchingMode == MapMatchingMode.onVertex &&
+          state.currentVertex != null) {
+        currentStart = state.currentVertex;
+        // 전체 경로(path)에서 현재 정점의 다음 정점을 찾음
+        final currentIndex = path.indexOf(currentStart!.id);
+        if (currentIndex != -1 && currentIndex + 1 < path.length) {
+          final nextVId = path[currentIndex + 1];
+          currentEnd = pathFinder.vertices[nextVId];
+        }
+      }
+
+      // 시작점과 목표점이 모두 유효할 때만 각도 계산 수행
+      if (currentStart != null && currentEnd != null) {
+        // 벡터: Start -> End
+        final dx = currentEnd.x - currentStart.x;
+        // 화면 좌표계는 Y가 아래로 증가하므로, 수학적 각도(반시계 방향) 계산 시 -dy 사용
+        final dy = currentEnd.y - currentStart.y;
+        final targetAngle = math.atan2(dx, -dy);
+
+        // 현재 헤딩과 목표 각도의 차이 계산 (최단 거리 보정)
+        double diff = (state.heading - targetAngle).abs();
+        if (diff > math.pi) {
+          diff = 2 * math.pi - diff;
+        }
+
+        // 진행 방향과 목표 방향이 90도(PI/2) 이상 차이나면 역방향(warning)으로 간주
+        if (diff > math.pi / 2) {
+          markerIcon = 'user_position_warning.svg';
+        }
+      }
+    }
+
+    // 5. 최종 위젯 반환
+    return Positioned(
+      left: screenX - 30,
+      top: screenY - 30,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 배경 동심원 이펙트
+          const RippleMarker(),
+          // 회전하는 사용자 아이콘
+          Transform.rotate(
+            angle: state.heading,
+            child: SvgPicture.asset(
+              'assets/icons/user_position/$markerIcon',
+              width: 40,
+              height: 40,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
