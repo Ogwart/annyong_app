@@ -109,6 +109,12 @@ class CalibrationService {
           loadQueue.add(edge.toVertexId);
         }
       }
+
+      // 메인 스레드에 제어권을 돌려주어 UI 블로킹 방지
+      // 매 10번마다 yield하여 UI 반응성 유지
+      if (safetyCount % 10 == 0) {
+        await Future.microtask(() {});
+      }
     }
     // =========================================================================
 
@@ -167,9 +173,12 @@ class CalibrationService {
     );
 
     // 경로상의 모든 Vertex 객체 가져오기 (선을 꺾어서 그리기 위해 필요)
+    // 병렬 처리로 성능 개선 및 메인 스레드 블로킹 감소
     final List<Vertex> pathVertices = [];
-    for (final vId in best.vertexPath) {
-      final v = await _poiRepo.getVertexById(vId);
+    final futures = best.vertexPath.map((vId) => _poiRepo.getVertexById(vId));
+    final results = await Future.wait(futures);
+
+    for (final v in results) {
       if (v != null) pathVertices.add(v);
     }
 
@@ -180,12 +189,6 @@ class CalibrationService {
     if (pathVertices.isEmpty) return null; // 로직상 희박
 
     final endVertex = await _poiRepo.getVertexById(best.vertexPath.last);
-
-    // 만약 POI가 없는 곳이 당첨되었다면, 사용자에게 보여줄 힌트 텍스트 생성
-    String? hintDescription = "";
-    if (best.destinationPoi == null && best.isLandmark) {
-      hintDescription = "길이 끝나는 곳(혹은 코너)까지 이동";
-    }
 
     // destinationPoi가 null일 때를 대비해,
     // 화면에 보여줄 가상의 이름이 필요하다면 UI단에서 처리하거나

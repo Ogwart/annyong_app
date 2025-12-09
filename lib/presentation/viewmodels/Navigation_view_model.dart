@@ -44,7 +44,13 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   }
 
   // 네비게이션 시작
-  Future<void> startNavigation(List<Vertex> path) async {
+  // [startFloor], [startBuildingId]는 경로 출발지의 실제 층/건물 정보로,
+  // 네비게이션 시작 시 사용자의 초기 위치가 출발 정점과 일치하도록 보정하는 데 사용된다.
+  Future<void> startNavigation(
+    List<Vertex> path, {
+    required int startFloor,
+    required int startBuildingId,
+  }) async {
     if (path.isEmpty) return;
 
     // 1. 보폭 미리 로드 (매 걸음마다 로드하면 딜레이 발생하므로 여기서 한 번만)
@@ -64,12 +70,24 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     }
     _smoothedHeading = initialHeading;
 
+    // 이전 상태와 출발 정점 사이의 거리 로그 (디버깅용)
+    final prevState = state.value;
+    if (prevState != null) {
+      final dx = prevState.x - startVertex.x;
+      final dy = prevState.y - startVertex.y;
+      final dist = math.sqrt(dx * dx + dy * dy);
+      log(
+        '[Navigation] Start navigation: distance from previous position to start vertex = ${dist.toStringAsFixed(2)} px',
+      );
+    }
+
+    // 경로 안내 시작 시점에 사용자의 초기 위치를 출발 정점으로 강제 일치시킨다.
     state = AsyncValue.data(
       NavigationState(
         x: startVertex.x,
         y: startVertex.y,
-        floor: 1, // 초기값, 추후 비콘으로 보정될 수 있음
-        buildingId: 1, // 초기값, 추후 비콘으로 보정
+        floor: startFloor,
+        buildingId: startBuildingId,
         heading: initialHeading,
         rawPixelX: startVertex.x,
         rawPixelY: startVertex.y,
@@ -284,6 +302,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     );
 
     // 2. Map Matching Logic
+    final prevMode = currentState.matchingMode;
     switch (currentState.matchingMode) {
       case MapMatchingMode.onEdge:
         nextState = await _handleOnEdge(
@@ -312,6 +331,32 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
       if (handoverUpdate != null) {
         nextState = handoverUpdate;
       }
+    }
+
+    // 디버그 로그: 맵 매칭 모드 및 위치 변화 추적
+    final dxState = nextState.x - currentState.x;
+    final dyState = nextState.y - currentState.y;
+    final dxRaw = nextState.rawPixelX - currentState.rawPixelX;
+    final dyRaw = nextState.rawPixelY - currentState.rawPixelY;
+    if (prevMode != nextState.matchingMode) {
+      log(
+        '[Navigation] MapMatchingMode changed: '
+        '${prevMode.name} -> ${nextState.matchingMode.name} '
+        '| x=${nextState.x.toStringAsFixed(1)} (Δ=${dxState.toStringAsFixed(1)}), '
+        'y=${nextState.y.toStringAsFixed(1)} (Δ=${dyState.toStringAsFixed(1)}), '
+        'raw=(${nextState.rawPixelX.toStringAsFixed(1)}, '
+        '${nextState.rawPixelY.toStringAsFixed(1)}) (Δ=(${dxRaw.toStringAsFixed(1)}, ${dyRaw.toStringAsFixed(1)}))',
+      );
+    } else {
+      log(
+        '[Navigation] Step update: '
+        'mode=${nextState.matchingMode.name}, '
+        'stepIncrease=$stepIncrease, '
+        'x=${nextState.x.toStringAsFixed(1)} (Δ=${dxState.toStringAsFixed(1)}), '
+        'y=${nextState.y.toStringAsFixed(1)} (Δ=${dyState.toStringAsFixed(1)}), '
+        'raw=(${nextState.rawPixelX.toStringAsFixed(1)}, '
+        '${nextState.rawPixelY.toStringAsFixed(1)}) (Δ=(${dxRaw.toStringAsFixed(1)}, ${dyRaw.toStringAsFixed(1)}))',
+      );
     }
 
     state = AsyncValue.data(nextState);
@@ -428,6 +473,14 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     double newAccX = s.vertexBufferX + dx;
     double newAccY = s.vertexBufferY + dy;
     double dist = math.sqrt(newAccX * newAccX + newAccY * newAccY);
+
+    log(
+      '[Navigation] OnVertex buffer: '
+      'vertex=${s.currentVertex?.id}, '
+      'buffer=(${newAccX.toStringAsFixed(2)}, ${newAccY.toStringAsFixed(2)})px, '
+      'dist=${dist.toStringAsFixed(2)}px, '
+      'threshold=${(vertexBufferMeters * pixelsPerMeter).toStringAsFixed(2)}px',
+    );
 
     if (dist < (vertexBufferMeters * pixelsPerMeter)) {
       return s.copyWith(

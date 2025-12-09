@@ -163,15 +163,14 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
     );
   }
 
-  void _cycleBuildings(Set<String> involvedBuildings) {
-    if (involvedBuildings.isEmpty) return;
-
+  /// '5호관'과 '60주년기념관' 사이를 전환하는 전용 토글 버튼용 헬퍼
+  void _toggleBuilding() {
     setState(() {
-      final buildingList = involvedBuildings.toList();
-      final currentIndex = buildingList.indexOf(_currentBuilding);
-      final nextIndex = (currentIndex + 1) % buildingList.length;
-
-      _currentBuilding = buildingList[nextIndex];
+      if (_currentBuilding == '5호관') {
+        _currentBuilding = '60주년기념관';
+      } else {
+        _currentBuilding = '5호관';
+      }
       _currentFloor = '1F';
       _transformationController.value = Matrix4.identity();
     });
@@ -233,9 +232,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             final double totalCost = jsonResult['total_cost'] ?? 0.0;
 
             final allPois = [widget.start, ...widget.waypoints, widget.end];
-            final involvedBuildings = allPois
-                .map((p) => MapUtilFunctions.getBuildingName(p.buildingId))
-                .toSet();
 
             final currentBuildingId = MapUtilFunctions.getBuildingId(
               _currentBuilding,
@@ -473,54 +469,52 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                   );
                                 }),
 
-                                // 건물 전환 버튼
-                                if (involvedBuildings.length > 1)
-                                  Positioned(
-                                    bottom: 16,
-                                    left: 16,
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          _cycleBuildings(involvedBuildings),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
+                                // 건물 전환 버튼 ('5호관' <-> '60주년기념관')
+                                Positioned(
+                                  bottom: 16,
+                                  left: 16,
+                                  child: GestureDetector(
+                                    onTap: _toggleBuilding,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          12,
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withAlpha(10),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
                                           ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withAlpha(10),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _currentBuilding,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: AppColors.text,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Icon(
-                                              Icons.swap_horiz_rounded,
-                                              size: 16,
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _currentBuilding,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
                                               color: AppColors.text,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.swap_horiz_rounded,
+                                            size: 16,
+                                            color: AppColors.text,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
+                                ),
 
                                 // 층 이동 버튼
                                 Positioned(

@@ -80,6 +80,9 @@ flutter:
     - assets/map/3_1F/
     - assets/icons/
     - assets/icons/svg/
+    - assets/icons/user_position/
+    - assets/icons/guide_tile/
+    - assets/icons/search_tile/
     - assets/image/
 
     # - assets/poi/

@@ -224,7 +224,10 @@ class BeaconScanService {
     if (newState != isCurrentlyIn) {
       _beaconInRangeStatus[macAddress] = newState;
       // 상태가 변경되었으므로 전체 POI 목록 갱신 필요
-      await _updateNearbyPois();
+      // 메인 스레드를 블로킹하지 않도록 unawaited 사용
+      _updateNearbyPois().catchError((error) {
+        debugPrint('[BeaconService] Error updating nearby POIs: $error');
+      });
     }
   }
 
@@ -237,8 +240,13 @@ class BeaconScanService {
 
     if (activeMacs.isNotEmpty) {
       final Set<int> newPoiIds = {};
-      for (final mac in activeMacs) {
-        final poiIds = await _beaconRepository.getNearPoiIdsByMac(mac);
+      // 병렬 처리로 성능 개선 및 메인 스레드 블로킹 감소
+      final futures = activeMacs.map(
+        (mac) => _beaconRepository.getNearPoiIdsByMac(mac),
+      );
+      final results = await Future.wait(futures);
+
+      for (final poiIds in results) {
         newPoiIds.addAll(poiIds);
       }
 

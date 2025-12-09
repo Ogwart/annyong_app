@@ -148,15 +148,5 @@
     "y_coord": 599,
     "near_poi_ids": [242, 243, 251],
     "type": "door"
-  },
-  {
-    "beacon_id": 16,
-    "mac_id": "45c66af24272",
-    "building_id": 1,
-    "floor": 1,
-    "x_coord": 1624,
-    "y_coord": 673,
-    "near_poi_ids": [36, 53, 31],
-    "type": "door"
   }
 ]
