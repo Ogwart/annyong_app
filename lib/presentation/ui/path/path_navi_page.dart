@@ -654,30 +654,19 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
 
                                   return Positioned(
                                     left: screenX - 30,
-                                    top: screenY - 42,
+                                    top: screenY - 30,
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: [
+                                        // 배경 동심원 이펙트
                                         const RippleMarker(),
-                                        Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.3,
-                                                ),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Icon(
-                                            Icons.person,
-                                            color: AppColors.primary,
-                                            size: 24,
+                                        // 회전하는 사용자 아이콘
+                                        Transform.rotate(
+                                          angle: state.heading,
+                                          child: SvgPicture.asset(
+                                            'assets/icons/user_position/user_position_normal.svg',
+                                            width: 40,
+                                            height: 40,
                                           ),
                                         ),
                                       ],

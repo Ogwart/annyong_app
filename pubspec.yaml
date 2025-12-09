@@ -77,8 +77,6 @@ flutter:
     - assets/map/5_2F/
     - assets/map/8_1F/
     - assets/map/3_1F/
-    - assets/icons/
-    - assets/icons/svg/
 
     # - assets/poi/
     - assets/poi/building.json
@@ -89,6 +87,11 @@ flutter:
     # - assets/graph/
     - assets/graph/edge.json
     - assets/graph/vertex.json
+
+    # - assets/icons...
+    - assets/icons/
+    - assets/icons/svg/
+    - assets/icons/user_position/
 
     # - assets/icons/search_tile
     - assets/icons/search_tile/poi_1_icon.png

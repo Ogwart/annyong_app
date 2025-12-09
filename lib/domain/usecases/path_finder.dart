@@ -55,18 +55,21 @@ class PathFinder {
       final currentId = openSet.removeFirst().vertexId;
 
       if (currentId == goalId) {
-        return PathResult(
-          path: _reconstructPath(cameFrom, currentId),
-          totalCost: gCost[goalId]!,
-        );
-      }
+        final finalPath = _reconstructPath(cameFrom, currentId);
 
+        debugPrint('-------------- 경로 탐색 결과 --------------');
+        debugPrint('총 비용: ${gCost[goalId]}');
+        debugPrint('경로: $finalPath');
+        // 출력 예시: [139, 137, ..., 115, 66, ...]
+
+        return PathResult(path: finalPath, totalCost: gCost[goalId]!);
+      }
       final edges = adjacencyList[currentId];
       if (edges == null) continue;
 
       for (final edge in edges) {
         final neighborId = edge.toVertexId;
-        final tentativeGCost = gCost[currentId]! + edge.length;
+        final tentativeGCost = gCost[currentId]! + edge.meterLength;
 
         if (tentativeGCost < (gCost[neighborId] ?? double.infinity)) {
           cameFrom[neighborId] = currentId;

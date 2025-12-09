@@ -103,7 +103,30 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   void updateHeading(double newHeading) {
     final currentState = state.value;
     if (currentState != null) {
-      _smoothedHeading = _smoothedHeading * 0.7 + newHeading * 0.3;
+      // 기존코드: 단순 선형 회전
+      // _smoothedHeading = _smoothedHeading * 0.7 + newHeading * 0.3;
+
+      // 수정코드: 원형 보간 -> 현재 시점 기준으로 더 가까운 회전 각도 구하기
+      double diff = newHeading - _smoothedHeading; // 두 각도의 차
+
+      // 1. 차이가 -PI ~ +PI (-180도 ~ 180도) 범위를 벗어나면 보정
+      // 예: 차이가 350도라면, 반대쪽 -10도로 가는 것이 더 가깝다.
+      if (diff > math.pi) {
+        diff -= 2 * math.pi;
+      } else if (diff < -math.pi) {
+        diff += 2 * math.pi;
+      }
+
+      // 2. 보정된 차이(diff)에 가중치(0.3)를 적용하여 부드럽게 이동
+      _smoothedHeading += diff * 0.3;
+
+      // 3. (예외처리) 각도가 무한히 커지거나 작아지지 않도록 0 ~ 2PI 범위로 정규화
+      if (_smoothedHeading < 0) {
+        _smoothedHeading += 2 * math.pi;
+      } else if (_smoothedHeading > 2 * math.pi) {
+        _smoothedHeading -= 2 * math.pi;
+      }
+
       state = AsyncValue.data(currentState.copyWith(heading: _smoothedHeading));
     }
   }
