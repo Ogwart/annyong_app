@@ -10,7 +10,15 @@ class GpsService {
   Position? get lastPosition => _lastPosition;
 
   // GPS 정확도가 이 값(미터)보다 낮아야(좋아야) 실외로 인정
-  static const double _requiredAccuracyMeters = 50.0;
+  static const double _requiredAccuracyMeters = 7.0;
+
+  /// 위치 데이터 스트림 노출 (HandoverService에서 변화량 감지용)
+  Stream<Position> get positionStream => Geolocator.getPositionStream(
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 0, // 미세한 변화 감지를 위해 필터 제거
+    ),
+  );
 
   /// GPS 스트림 시작 (핸드오버 '준비' 단계에서 호출)
   Future<void> startLocationStream() async {
