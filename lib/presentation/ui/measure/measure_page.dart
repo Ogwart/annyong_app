@@ -245,20 +245,32 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 
   /// [도착했습니다] 버튼 클릭 시 -> 결과 페이지로 이동
-  void _onArrivedPressed() {
+  /// 결과 페이지에서 '다시 측정하기'를 눌러 돌아온 경우 보폭 측정을 처음 상태로 리셋한다.
+  Future<void> _onArrivedPressed() async {
     if (_route == null) return;
 
     // 최종 걸음수 계산 (현재값 - 시작값)
     final int walkedSteps = _currentPedometerSteps - _startSteps;
 
     // 결과 페이지로 이동 (걸음수와 총 거리 전달)
-    context.push(
+    final bool? shouldRetry = await context.push<bool>(
       "/measure/measureResult",
       extra: {
         "walkedSteps": walkedSteps, // int
         "totalDistance": _route!.totalDistance, // double
       },
     );
+
+    if (!mounted) return;
+
+    // 결과 페이지에서 '다시 측정하기'를 선택한 경우
+    if (shouldRetry == true) {
+      setState(() {
+        // 측정 단계를 처음 상태로 되돌리고, 다음 측정을 위해 시작 걸음수 기준을 현재 값으로 갱신
+        _currentStep = MeasureStep.ready;
+        _startSteps = _currentPedometerSteps;
+      });
+    }
   }
 
   String _getBuildingName(int buildingId) {
@@ -302,56 +314,58 @@ class _MeasurePageState extends State<MeasurePage> {
           // -------------------- [경로 탐색 실패 시 UI] --------------------
           ? _buildFailureView()
           // -------------------- [측정 화면 (지도 표시)] --------------------
-          : Column(
-              children: [
-                // -------------------- 상단 안내 영역 --------------------
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.grey200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          "출발: ${_route!.startPoi.name}",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.arrow_forward, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              "도착: $destinationName",
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+          : SafeArea(
+              child: Column(
+                children: [
+                  // -------------------- 상단 안내 영역 --------------------
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.grey200,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            "출발: ${_route!.startPoi.name}",
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.arrow_forward, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                "도착: $destinationName",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          guideText,
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            guideText,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                // -------------------- 지도 영역 --------------------
-                Expanded(child: _buildMapArea()),
+                  // -------------------- 지도 영역 --------------------
+                  Expanded(child: _buildMapArea()),
 
-                // -------------------- 하단 버튼 액션 영역 --------------------
-                _buildBottomActionArea(),
-              ],
+                  // -------------------- 하단 버튼 액션 영역 --------------------
+                  _buildBottomActionArea(),
+                ],
+              ),
             ),
     );
   }
