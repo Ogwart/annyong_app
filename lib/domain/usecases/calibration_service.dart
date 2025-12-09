@@ -125,7 +125,7 @@ class CalibrationService {
         startVertex: startVertex, // [New] 시작점 전달 (직진성 계산용)
         currentVertexId: edge.toVertexId,
         path: [startVertexId, edge.toVertexId],
-        currentDistance: edge.length,
+        currentDistance: edge.meterLength,
         turnCount: 0,
         currentWay: edge.way,
         candidates: candidates,
@@ -263,7 +263,7 @@ class CalibrationService {
         startVertex: startVertex,
         currentVertexId: nextEdge.toVertexId,
         path: [...path, nextEdge.toVertexId],
-        currentDistance: currentDistance + nextEdge.length,
+        currentDistance: currentDistance + nextEdge.meterLength,
         turnCount: nextTurnCount,
         currentWay: nextEdge.way,
         candidates: candidates,

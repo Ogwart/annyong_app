@@ -12,9 +12,9 @@ class PoiRepository {
   PoiRepository._();
 
   static final PoiRepository _instance = PoiRepository._();
-
   factory PoiRepository() => _instance;
-  static const double _pixelToMeterScale = 0.1; // 1px = 10cm = 0.1m 변환용 상수
+
+  static const double _pixelToMeterScale = 0.1; // 1px = 10cm 변환 상수
 
   List<PoiCategory>? _cachedCategories;
   List<Poi>? _cachedPois;
@@ -61,7 +61,7 @@ class PoiRepository {
     }
   }
 
-  /// Edge 데이터 로드 및 캐싱 (미터 단위 변환 적용)
+  /// Edge 데이터 로드 및 캐싱 (수정됨: 픽셀 거리 그대로 사용)
   Future<void> _loadEdges() async {
     if (_cachedAdjacencyList != null) return;
 
@@ -92,20 +92,22 @@ class PoiRepository {
 
       if (v1 == null || v2 == null) continue;
 
-      // 1. 픽셀 거리 계산
+      // 1. 픽셀 거리 계산 (지도상 좌표 거리)
       final double dx = v1.x - v2.x;
       final double dy = v1.y - v2.y;
       final double pixelDistance = sqrt(dx * dx + dy * dy);
 
-      // 2. 미터 단위로 변환
+      // 2. 미터 거리 계산 (실제 물리적 거리)
       final double realDistanceMeters = pixelDistance * _pixelToMeterScale;
 
+      // 3. Edge 생성 시 두 값을 모두 저장
       _cachedAdjacencyList!
           .putIfAbsent(v1Id, () => [])
           .add(
             Edge(
               toVertexId: v2Id,
-              length: realDistanceMeters,
+              pixelLength: pixelDistance,
+              meterLength: realDistanceMeters,
               way: wayType,
               isReversed: false,
             ),
@@ -116,7 +118,8 @@ class PoiRepository {
           .add(
             Edge(
               toVertexId: v1Id,
-              length: realDistanceMeters,
+              pixelLength: pixelDistance,
+              meterLength: realDistanceMeters,
               way: wayType,
               isReversed: true,
             ),
@@ -172,7 +175,7 @@ class PoiRepository {
     return _cachedAdjacencyList?[vertexId] ?? [];
   }
 
-  /// 두 점 사이의 유클리드 거리 계산
+  /// 두 점 사이의 유클리드 거리 계산 (미터 단위 반환 유지 - 필요 시 사용)
   double getStraightLineDistance(Poi poi, Vertex vertex) {
     final dx = poi.xCoord - vertex.x;
     final dy = poi.yCoord - vertex.y;
@@ -180,7 +183,7 @@ class PoiRepository {
     return pixelDistance * _pixelToMeterScale;
   }
 
-  /// 두 Vertex 사이의 유클리드 거리 계산
+  /// 두 Vertex 사이의 유클리드 거리 계산 (미터 단위 반환 유지 - 필요 시 사용)
   double getStraightLineDistanceBetweenVertices(Vertex v1, Vertex v2) {
     final dx = v1.x - v2.x;
     final dy = v1.y - v2.y;
@@ -198,14 +201,6 @@ class PoiRepository {
       return null;
     }
   }
-
-  // ===========================================================================
-  // [NEW] 맵 매칭 & 위치 보정용 헬퍼 함수들
-  // 주의: 맵 매칭은 '화면 좌표(픽셀)' 기반 계산이 필요하므로, 여기서는 픽셀 거리를 반환하거나
-  //      필요시 미터 변환을 선택적으로 수행해야 합니다.
-  //      현재 로직(NavigationViewModel)은 픽셀 기반 판정을 하므로(pixelsPerMeter 사용),
-  //      findNearestEdges는 '픽셀 거리'를 반환하는 것이 맞습니다.
-  // ===========================================================================
 
   /// 특정 좌표(x, y)에서 가장 가까운 Edge N개를 찾아서 반환
   /// 리턴값의 double distance는 '픽셀 단위' 거리입니다.

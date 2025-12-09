@@ -54,32 +54,35 @@ class Vertex {
 
 class Edge {
   final int toVertexId;
-  final double length;
+  final double pixelLength; // 픽셀 거리 (네비게이션 맵 매칭용)
+  final double meterLength; // 실제 미터 거리 (보폭 측정/안내용)
   final WayType way;
   final bool isReversed;
 
   Edge({
     required this.toVertexId,
-    required this.length,
+    required this.pixelLength,
+    required this.meterLength,
     required this.way,
     this.isReversed = false,
   });
 
   Edge copyWith({
     int? toVertexId,
-    double? length,
+    double? pixelLength,
+    double? meterLength,
     WayType? way,
     bool? isReversed,
   }) {
     return Edge(
       toVertexId: toVertexId ?? this.toVertexId,
-      length: length ?? this.length,
+      pixelLength: pixelLength ?? this.pixelLength,
+      meterLength: meterLength ?? this.meterLength,
       way: way ?? this.way,
       isReversed: isReversed ?? this.isReversed,
     );
   }
 
-  /// 현재 정점 ID를 받아서 엣지의 다른 쪽 정점 ID를 반환
   int getOtherVertexId(int currentVertexId) {
     return toVertexId;
   }

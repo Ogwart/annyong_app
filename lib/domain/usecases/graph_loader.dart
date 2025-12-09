@@ -73,7 +73,8 @@ class GraphLoader {
       // [수정됨] 두 정점 사이의 유클리드 거리 계산 (length 속성 대체)
       final double dx = v1.x - v2.x;
       final double dy = v1.y - v2.y;
-      final double length = sqrt(dx * dx + dy * dy);
+      final double pixelLength = sqrt(dx * dx + dy * dy); // 픽셀 거리
+      final double meterLength = pixelLength * 0.1; // 미터 거리
 
       // 인접 리스트에 추가 (양방향)
       adjacencyList
@@ -81,7 +82,8 @@ class GraphLoader {
           .add(
             Edge(
               toVertexId: v2Id,
-              length: length, // 계산된 거리 사용
+              pixelLength: pixelLength,
+              meterLength: meterLength,
               way: wayType,
               isReversed: false,
             ),
@@ -92,7 +94,8 @@ class GraphLoader {
           .add(
             Edge(
               toVertexId: v1Id,
-              length: length, // 계산된 거리 사용
+              pixelLength: pixelLength,
+              meterLength: meterLength,
               way: wayType,
               isReversed: true,
             ),

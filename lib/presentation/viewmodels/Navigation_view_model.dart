@@ -339,7 +339,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
 
     if (endV == null) return s;
 
-    double edgeLen = edge.length;
+    double edgeLen = edge.pixelLength;
     double ratio = newAccumulated / edgeLen;
     if (ratio > 1.0) ratio = 1.0;
 
@@ -496,7 +496,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     double remaining = requiredLength;
 
     while (true) {
-      final len = currentEdge.length;
+      final len = currentEdge.pixelLength;
       if (remaining < len) {
         return (currentEdge, currentStartV, remaining);
       } else {
