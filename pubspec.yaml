@@ -92,6 +92,7 @@ flutter:
     - assets/icons/
     - assets/icons/svg/
     - assets/icons/user_position/
+    - assets/icons/guide_tile/
 
     # - assets/icons/search_tile
     - assets/icons/search_tile/poi_1_icon.png

@@ -17,6 +17,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:vector_math/vector_math_64.dart' as math64;
 import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:annyong/presentation/util/guidance_info.dart';
+import 'package:annyong/presentation/widgets/path_page/navigation_guide_card.dart';
 
 class PathNaviPage extends ConsumerStatefulWidget {
   final Poi start;
@@ -442,7 +444,26 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
               );
 
               return Column(
+                // 상단 경로 안내 카드 ex. 직진하세요
                 children: [
+                  navigationState.when(
+                    data: (state) {
+                      if (state.handoverStatus == HandoverStatus.outdoor)
+                        return const SizedBox.shrink();
+
+                      final guidance = calculateGuidance(
+                        state,
+                        result.path,
+                        pathFinder,
+                        widget.end,
+                      );
+                      return NavigationGuideCard(info: guidance);
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+
+                  // 비용/경로 정보 카드
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: CostCard(
@@ -452,6 +473,8 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                       waypoints: widget.waypoints,
                     ),
                   ),
+
+                  // 지도 영역
                   Expanded(
                     child: SizedBox(
                       width: double.infinity,
@@ -627,7 +650,9 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                                 transformationController:
                                     _transformationController,
                               ),
-                              CountSteps(state: state),
+
+                              // 걸음수 & 방향 카드
+                              // CountSteps(state: state),
                               if (involvedBuildings.length > 1)
                                 Positioned(
                                   bottom: 16,
