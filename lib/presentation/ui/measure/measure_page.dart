@@ -3,12 +3,12 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:annyong/domain/entity/calibration_route.dart';
-import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/calibration_service.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
+import 'package:annyong/presentation/ui/path/path_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pedometer/pedometer.dart';
@@ -511,34 +511,87 @@ class _MeasurePageState extends State<MeasurePage> {
           final destY =
               _route!.destinationPoi?.yCoord ?? _route!.destinationVertex.y;
 
+          // 경로 좌표 계산 (path_navi_page.dart와 동일한 방식)
+          final List<Offset> pathPoints = [];
+          final route = _route!;
+          final pathVertices = route.pathVertices;
+          
+          if (pathVertices.isNotEmpty) {
+            // 출발지점 (POI) -> 첫 번째 Vertex
+            final startPx = route.startPoi.xCoord * scaleX;
+            final startPy = route.startPoi.yCoord * scaleY;
+            final firstVx = pathVertices.first.x * scaleX;
+            final firstVy = pathVertices.first.y * scaleY;
+            pathPoints.add(Offset(startPx, startPy));
+            pathPoints.add(Offset(firstVx, firstVy));
+            
+            // 경유지점들 (Vertex 간 연결) - 각 선분을 [시작, 끝] 쌍으로 저장
+            for (int i = 0; i < pathVertices.length - 1; i++) {
+              final v1 = pathVertices[i];
+              final v2 = pathVertices[i + 1];
+              final v1x = v1.x * scaleX;
+              final v1y = v1.y * scaleY;
+              final v2x = v2.x * scaleX;
+              final v2y = v2.y * scaleY;
+              pathPoints.add(Offset(v1x, v1y));
+              pathPoints.add(Offset(v2x, v2y));
+            }
+            
+            // 마지막 Vertex -> 도착지점
+            final lastVx = pathVertices.last.x * scaleX;
+            final lastVy = pathVertices.last.y * scaleY;
+            final endPx = destX * scaleX;
+            final endPy = destY * scaleY;
+            pathPoints.add(Offset(lastVx, lastVy));
+            pathPoints.add(Offset(endPx, endPy));
+          } else {
+            // pathVertices가 없으면 직선 경로
+            final startPx = route.startPoi.xCoord * scaleX;
+            final startPy = route.startPoi.yCoord * scaleY;
+            final endPx = destX * scaleX;
+            final endPy = destY * scaleY;
+            pathPoints.add(Offset(startPx, startPy));
+            pathPoints.add(Offset(endPx, endPy));
+          }
+
           return Stack(
             children: [
-              // 1. 지도 이미지 (줌/팬 가능)
+              // 1. 지도 이미지 및 경로 (InteractiveViewer 내부)
               Positioned.fill(
                 child: InteractiveViewer(
                   transformationController: _transformationController,
                   minScale: 1.0,
                   maxScale: 10.0,
                   boundaryMargin: const EdgeInsets.all(500),
-                  child: Image.asset(mapImagePath, fit: BoxFit.contain),
-                ),
-              ),
-
-              // 2. 파란색 경로 선 (CustomPainter)
-              // InteractiveViewer 위에 그리기 위해 Matrix 변환 적용
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _PathPainter(
-                    startX: _route!.startPoi.xCoord,
-                    startY: _route!.startPoi.yCoord,
-                    endX: destX,
-                    endY: destY,
-                    scaleX: scaleX,
-                    scaleY: scaleY,
-                    offsetX: offsetX,
-                    offsetY: offsetY,
-                    matrix: _transformationController.value,
-                    pathVertices: _route!.pathVertices,
+                  child: Center(
+                    child: SizedBox(
+                      width: displayedSize.width,
+                      height: displayedSize.height,
+                      child: Stack(
+                        children: [
+                          // 지도 이미지
+                          Image.asset(
+                            mapImagePath,
+                            fit: BoxFit.contain,
+                            width: displayedSize.width,
+                            height: displayedSize.height,
+                          ),
+                          // 경로 그리기
+                          IgnorePointer(
+                            child: CustomPaint(
+                              size: Size(
+                                displayedSize.width,
+                                displayedSize.height,
+                              ),
+                              painter: PathPainter(
+                                points: pathPoints,
+                                color: AppColors.path,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -601,7 +654,13 @@ class _MeasurePageState extends State<MeasurePage> {
     return Positioned(
       left: transformedX - 16, // 아이콘 크기/2 보정 (중앙 정렬)
       top: transformedY - 32, // 아이콘 바닥이 좌표에 오도록 보정
-      child: Icon(icon, color: color, size: 32),
+      child: Container(
+        padding: EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white
+        ),
+        child: Icon(icon, color: color, size: 32)),
     );
   }
 
@@ -754,101 +813,3 @@ class _MeasurePageState extends State<MeasurePage> {
   }
 }
 
-// -----------------------------------------------------------------------------
-// [경로 그리기용 Painter 클래스]
-// -----------------------------------------------------------------------------
-class _PathPainter extends CustomPainter {
-  final double startX;
-  final double startY;
-  final double endX;
-  final double endY;
-  final double scaleX;
-  final double scaleY;
-  final double offsetX;
-  final double offsetY;
-  final Matrix4 matrix;
-  final List<Vertex>? pathVertices;
-
-  _PathPainter({
-    required this.startX,
-    required this.startY,
-    required this.endX,
-    required this.endY,
-    required this.scaleX,
-    required this.scaleY,
-    required this.offsetX,
-    required this.offsetY,
-    required this.matrix,
-    this.pathVertices,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 파란색 선 스타일 정의
-    final paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 4.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    print("PathPainter: pathVertices count: ${pathVertices?.length}");
-
-    // 경로 데이터가 있으면 꺾인 선 그리기
-    if (pathVertices != null && pathVertices!.isNotEmpty) {
-      final path = Path();
-
-      // 1. 출발지점 (POI)
-      final sX = startX * scaleX + offsetX;
-      final sY = startY * scaleY + offsetY;
-      final pStart = _transformPoint(sX, sY);
-      path.moveTo(pStart.dx, pStart.dy);
-
-      // 2. 경유지점 (Vertices)
-      for (int i = 0; i < pathVertices!.length; i++) {
-        final v = pathVertices![i];
-        final vx = v.x * scaleX + offsetX;
-        final vy = v.y * scaleY + offsetY;
-        final p = _transformPoint(vx, vy);
-        path.lineTo(p.dx, p.dy);
-      }
-
-      // 3. 도착지점 (POI 혹은 Vertex)
-      // 도착지 좌표가 마지막 Vertex와 다를 수 있으므로 연결
-      final eX = endX * scaleX + offsetX;
-      final eY = endY * scaleY + offsetY;
-      final pEnd = _transformPoint(eX, eY);
-      path.lineTo(pEnd.dx, pEnd.dy);
-
-      canvas.drawPath(path, paint);
-    } else {
-      // 기존 로직: 출발-도착 직선 그리기
-      // 1. 이미지 기준 좌표로 변환
-      final sX = startX * scaleX + offsetX;
-      final sY = startY * scaleY + offsetY;
-      final eX = endX * scaleX + offsetX;
-      final eY = endY * scaleY + offsetY;
-
-      // 2. InteractiveViewer 매트릭스 변환 적용 (줌/팬 반영)
-      final p1 = _transformPoint(sX, sY);
-      final p2 = _transformPoint(eX, eY);
-
-      // 선 그리기
-      canvas.drawLine(p1, p2, paint);
-    }
-  }
-
-  Offset _transformPoint(double x, double y) {
-    // 행렬 연산을 통해 현재 화면상의 절대 좌표 계산
-    final tx =
-        matrix.storage[0] * x + matrix.storage[4] * y + matrix.storage[12];
-    final ty =
-        matrix.storage[1] * x + matrix.storage[5] * y + matrix.storage[13];
-    return Offset(tx, ty);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PathPainter oldDelegate) {
-    // 매트릭스가 변경되면(줌/이동 시) 다시 그려야 함
-    return oldDelegate.matrix != matrix;
-  }
-}

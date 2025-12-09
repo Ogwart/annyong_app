@@ -27,8 +27,12 @@ class CategoryButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(48),
+          border: BoxBorder.all(
+            width: 2,
+            color: isSelected ? Colors.white : AppColors.primary,
+          ),
           boxShadow: [
-            BoxShadow(color: AppColors.shadow.withAlpha(20), blurRadius: 15),
+            BoxShadow(color: AppColors.shadow.withAlpha(25), blurRadius: 15),
           ],
         ),
         child: Row(
@@ -46,7 +50,7 @@ class CategoryButton extends StatelessWidget {
                     colorFilter: isSelected
                         ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
                         : const ColorFilter.mode(
-                            AppColors.primary,
+                            AppColors.path,
                             BlendMode.srcIn,
                           ),
                   ),

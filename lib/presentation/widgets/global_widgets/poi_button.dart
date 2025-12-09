@@ -27,7 +27,7 @@ class PoiButton extends StatelessWidget {
             height: 35,
             width: 35,
             decoration: BoxDecoration(
-              color: isFavorite ? AppColors.primary : Colors.white,
+              color: isFavorite ? AppColors.point : Colors.white,
               borderRadius: BorderRadius.circular(48),
               border: Border.all(
                 color: isFavorite ? Colors.white : AppColors.primary,

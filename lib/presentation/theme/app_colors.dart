@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 
 abstract class AppColors {
-  static const primary = Color(0xFF426EFF);
-  static const secondary = Color(0xFF8AA6FF);
+  //static const primary = Color(0xFF426EFF);
+  static const primary = Color(0xFF194D7D);
+  static const secondary = Color(0xFFFF8C00);
+  static const path = Color(0xFF426EFF);
+  static const pathArrow = Color(0xFF8AA6FF);
   static const warning = Color(0xFFE64747);
   static const point = Color(0xFFFFD650);
   static const text = Color(0xFF314158);

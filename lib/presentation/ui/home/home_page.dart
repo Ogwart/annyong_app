@@ -203,7 +203,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 // 마커 빌더 (선택된 카테고리 또는 즐겨찾기)
                 ...MapUtilFunctions.getFilteredFavoritePois(
                   (categoryState.selectedCategoryId == -2 &&
-                          _currentScale < 1.5)
+                          _currentScale < 3.0)
                       ? categoryState.favoritePois
                       : categoryState.displayedPois,
                   mapProvider.selectedBuilding,
@@ -242,7 +242,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       // zoom level 3부터 글씨 표시
                       child: PoiButton(
                         poi: poi,
-                        showTitle: _currentScale >= 3,
+                        showTitle: _currentScale >= 4,
                         isFavorite: categoryState.favoritePois.any(
                           (p) => p.id == poi.id,
                         ),
@@ -269,6 +269,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
+                                  border: BoxBorder.all(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.shadow.withValues(
@@ -301,6 +305,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
+                                  border: BoxBorder.all(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.shadow.withValues(
@@ -372,8 +380,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 // -----------------------카테고리-------------------------
                 Positioned(
                   top: 104,
-                  left: 24,
-                  right: 24,
+                  left: 16,
+                  right: 16,
                   height: 50,
                   child: SizedBox(
                     child: ListView.builder(
@@ -422,6 +430,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
+                        border: BoxBorder.all(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
                         borderRadius: BorderRadius.circular(35),
                         boxShadow: [
                           BoxShadow(
