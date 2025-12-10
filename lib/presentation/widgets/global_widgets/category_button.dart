@@ -40,7 +40,7 @@ class CategoryButton extends StatelessWidget {
             bookmarkTitle == "즐겨찾기"
                 ? Icon(
                     Icons.star_rounded,
-                    color: isSelected ? Colors.white : AppColors.point,
+                    color: isSelected ? Colors.yellow : AppColors.point,
                     size: 20,
                   )
                 : SvgPicture.asset(

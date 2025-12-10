@@ -7,7 +7,7 @@ abstract class AppColors {
   static const path = Color(0xFF426EFF);
   static const pathArrow = Color(0xFF8AA6FF);
   static const warning = Color(0xFFE64747);
-  static const point = Color(0xFFFFD650);
+  static const point = Color.fromARGB(255, 50, 53, 241);
   static const text = Color(0xFF314158);
   static const shadow = Color(0xFF051682);
 
