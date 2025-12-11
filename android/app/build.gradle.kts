@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.annyong"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion  sohee 앱 테스트용 
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

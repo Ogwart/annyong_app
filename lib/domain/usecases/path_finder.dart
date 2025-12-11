@@ -99,7 +99,6 @@ class PathFinder {
 
       // 경로가 하나라도 끊기면 전체 실패 처리
       if (result == null) {
-        debugPrint('구간 $i 실패: 경로가 끊긴 곳이 존재함');
         return null;
       }
 

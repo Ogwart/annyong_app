@@ -1,50 +1,50 @@
 [
- {
-   "poi_category_id": 1,
-   "poi_category_name": "강의실"
- },
- {
-   "poi_category_id": 2,
-   "poi_category_name": "라운지\n카페"
- },
- {
-   "poi_category_id": 3,
-   "poi_category_name": "과사무실\n학생회실"
- },
- {
-   "poi_category_id": 4,
-   "poi_category_name": "엘리베이터\n계단"
- },
- {
-   "poi_category_id": 5,
-   "poi_category_name": "화장실"
- },
- {
-   "poi_category_id": 6,
-   "poi_category_name": "출입문"
- },
- {
-   "poi_category_id": 7,
-   "poi_category_name": "자판기"
- },
- {
-   "poi_category_id": 8,
-   "poi_category_name": "정수기"
- },
- {
-   "poi_category_id": 9,
-   "poi_category_name": "ATM\n제세동기"
- },
- {
-   "poi_category_id": 10,
-   "poi_category_name": "콘센트"
- },
- {
-   "poi_category_id": 11,
-   "poi_category_name": "소화기\n소화전"
- },
- {
-   "poi_category_id": 12,
-   "poi_category_name": "쓰레기통"
- }
+  {
+    "poi_category_id": 1,
+    "poi_category_name": "강의실\n과사무실"
+  },
+  {
+    "poi_category_id": 2,
+    "poi_category_name": "라운지\n카페"
+  },
+  {
+    "poi_category_id": 3,
+    "poi_category_name": "교수연구실"
+  },
+  {
+    "poi_category_id": 4,
+    "poi_category_name": "엘리베이터\n계단"
+  },
+  {
+    "poi_category_id": 5,
+    "poi_category_name": "화장실"
+  },
+  {
+    "poi_category_id": 6,
+    "poi_category_name": "출입문"
+  },
+  {
+    "poi_category_id": 7,
+    "poi_category_name": "자판기"
+  },
+  {
+    "poi_category_id": 8,
+    "poi_category_name": "정수기"
+  },
+  {
+    "poi_category_id": 9,
+    "poi_category_name": "ATM\n제세동기"
+  },
+  {
+    "poi_category_id": 10,
+    "poi_category_name": "콘센트"
+  },
+  {
+    "poi_category_id": 11,
+    "poi_category_name": "소화기\n소화전"
+  },
+  {
+    "poi_category_id": 12,
+    "poi_category_name": "쓰레기통"
+  }
 ]

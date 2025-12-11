@@ -1,12 +1,12 @@
-import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
-import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:annyong/domain/entity/poi.dart';
 import 'package:annyong/presentation/providers/path_finder_provider.dart';
 import 'package:annyong/domain/usecases/path_description_builder.dart';
 import 'package:annyong/presentation/util/map_util_funtions.dart';
 import 'package:annyong/presentation/theme/app_colors.dart';
+import 'package:annyong/presentation/widgets/path_page/cost_card.dart';
+import 'package:annyong/presentation/widgets/home_page/floor_button.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,19 +21,85 @@ class PathPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
+    // 1. 경로 생성 (하나의 Path로 연결)
+    final path = Path();
+    if (points.isNotEmpty) {
+      path.moveTo(points[0].dx, points[0].dy);
+      for (int i = 1; i < points.length; i++) {
+        // 불연속적인 점(선분의 시작점이 이전 선분의 끝점과 다를 경우) 처리
+        // points 구조: [p1, p2, p3, p4, ...] (이미 연결된 순서로 온다고 가정해야 함)
+        // 하지만 호출부 로직을 보면 [시작1, 끝1, 시작2, 끝2] 형태로 들어옴
+        // 따라서 i가 홀수일 때(끝점)는 lineTo, 짝수일 때(시작점)는 체크 필요
+        // 호출부 로직: pathPoints.add(Offset(p1x, p1y)); pathPoints.add(Offset(p2x, p2y));
+        // 즉, i=0(시작), i=1(끝), i=2(시작), i=3(끝) ...
+        if (i % 2 == 0) {
+          // 새로운 선분의 시작점
+          // 이전 선분의 끝점(points[i-1])과 현재 시작점(points[i])이 같으면 이어그리기(아무것도 안 함, 다음 루프에서 lineTo로 이어짐)
+          // 다르면 끊어서 이동
+          if (points[i] != points[i - 1]) {
+            path.moveTo(points[i].dx, points[i].dy);
+          }
+        } else {
+          // 선분의 끝점
+          path.lineTo(points[i].dx, points[i].dy);
+        }
+      }
+    }
+
+    // 2. 테두리 그리기 (흰색, 더 두껍게)
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path();
-    // 선이 끊기지 않고 이어지도록 하기 위해 path.lineTo 사용
-    // points 구조: [시작점1, 끝점1, 시작점2, 끝점2, ...]
-    // TODO: 층이 바뀌는 등 불연속적인 구간은 points 리스트 구성 시 처리 필요
-    for (int i = 0; i < points.length - 1; i += 2) {
-      canvas.drawLine(points[i], points[i + 1], paint);
+    canvas.drawPath(path, borderPaint);
+
+    // 3. 경로 그리기 (기존 색상, 기존 두께)
+    final pathPaint = Paint()
+      ..color = color
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(path, pathPaint);
+
+    // 화살표
+    final arrowPaint = Paint()
+      ..color = AppColors.pathArrow
+      ..style = PaintingStyle.fill;
+
+    // 경로를 따라가며 일정 간격마다 화살표 배치
+    for (final metric in path.computeMetrics()) {
+      const double dashWidth = 20.0; // 화살표 간격
+      const double arrowSize = 1.5; // 화살표 크기
+      double distance = dashWidth;
+
+      while (distance < metric.length) {
+        final tangent = metric.getTangentForOffset(distance);
+        if (tangent != null) {
+          final position = tangent.position;
+          final angle = -tangent.angle; // Canvas 좌표계와 atan2 방향 고려
+
+          canvas.save();
+          canvas.translate(position.dx, position.dy);
+          canvas.rotate(angle); // 진행 방향으로 회전
+
+          // 화살표 모양 그리기 (삼각형)
+          final arrowPath = Path()
+            ..moveTo(-arrowSize, -arrowSize) // 왼쪽 위
+            ..lineTo(arrowSize, 0) // 오른쪽 중앙 (화살표 끝)
+            ..lineTo(-arrowSize, arrowSize) // 왼쪽 아래
+            ..close();
+
+          canvas.drawPath(arrowPath, arrowPaint);
+          canvas.restore();
+        }
+
+        distance += 40.0; // 다음 화살표까지 거리
+      }
     }
   }
 
@@ -86,6 +152,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
   }
 
   void _onStartNavigation() {
+    // 실제 네비게이션 화면(PathNaviPage)으로 이동
     context.push(
       '/home/pathSelection/pathNavi',
       extra: {
@@ -96,15 +163,14 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
     );
   }
 
-  void _cycleBuildings(Set<String> involvedBuildings) {
-    if (involvedBuildings.isEmpty) return;
-
+  /// '5호관'과 '60주년기념관' 사이를 전환하는 전용 토글 버튼용 헬퍼
+  void _toggleBuilding() {
     setState(() {
-      final buildingList = involvedBuildings.toList();
-      final currentIndex = buildingList.indexOf(_currentBuilding);
-      final nextIndex = (currentIndex + 1) % buildingList.length;
-
-      _currentBuilding = buildingList[nextIndex];
+      if (_currentBuilding == '5호관') {
+        _currentBuilding = '60주년기념관';
+      } else {
+        _currentBuilding = '5호관';
+      }
       _currentFloor = '1F';
       _transformationController.value = Matrix4.identity();
     });
@@ -118,16 +184,14 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
 
   // 정점 ID가 현재 맵(건물/층)에 포함되는지 확인하는 헬퍼 함수
   bool _isVertexOnCurrentMap(int vertexId) {
-    // vertex.json 및 poi.json 분석 결과에 따른 ID 대역 하드코딩
-    // 5호관 1층은 0~499, 2층은 500~999, 60주년 1층은 1000~1499로 할당해두었음
     if (_currentBuilding == '5호관') {
       if (_currentFloor == '1F') {
-        return vertexId < 500; // 1층 대역
+        return vertexId < 500;
       } else if (_currentFloor == '2F') {
-        return vertexId >= 500 && vertexId < 1000; // 2층 대역
+        return vertexId >= 500 && vertexId < 1000;
       }
     } else if (_currentBuilding == '60주년' || _currentBuilding == '60주년기념관') {
-      return vertexId >= 1000; // 60주년 대역
+      return vertexId >= 1000;
     }
     return false;
   }
@@ -168,9 +232,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             final double totalCost = jsonResult['total_cost'] ?? 0.0;
 
             final allPois = [widget.start, ...widget.waypoints, widget.end];
-            final involvedBuildings = allPois
-                .map((p) => MapUtilFunctions.getBuildingName(p.buildingId))
-                .toSet();
 
             final currentBuildingId = MapUtilFunctions.getBuildingId(
               _currentBuilding,
@@ -202,7 +263,6 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             return Column(
               children: [
                 // 1. Stack 영역: 지도 + (오버레이된) CostCard
-                // 화면의 나머지 공간(버튼 제외)을 차지하며, CostCard가 지도 위에 뜸
                 Expanded(
                   child: Stack(
                     children: [
@@ -300,7 +360,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                                 ),
                                                 painter: PathPainter(
                                                   points: pathPoints,
-                                                  color: AppColors.primary,
+                                                  color: AppColors.path,
                                                 ),
                                               ),
                                             ),
@@ -364,8 +424,8 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.2,
+                                                color: Colors.black.withAlpha(
+                                                  20,
                                                 ),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 4),
@@ -409,56 +469,52 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                   );
                                 }),
 
-                                // 건물 전환 버튼 (기존 코드 유지)
-                                if (involvedBuildings.length > 1)
-                                  Positioned(
-                                    bottom: 16,
-                                    left: 16,
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          _cycleBuildings(involvedBuildings),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
+                                // 건물 전환 버튼 ('5호관' <-> '60주년기념관')
+                                Positioned(
+                                  bottom: 16,
+                                  left: 16,
+                                  child: GestureDetector(
+                                    onTap: _toggleBuilding,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(
+                                          12,
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withAlpha(10),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
                                           ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.1,
-                                              ),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _currentBuilding,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: AppColors.text,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            const Icon(
-                                              Icons.swap_horiz_rounded,
-                                              size: 16,
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _currentBuilding,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
                                               color: AppColors.text,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.swap_horiz_rounded,
+                                            size: 16,
+                                            color: AppColors.text,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
+                                ),
 
                                 // 층 이동 버튼
                                 Positioned(
@@ -542,7 +598,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withAlpha(5),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       ),
