@@ -289,7 +289,6 @@ class BeaconScanService {
   }
 
   /// (구) 메서드 호환성 유지
-  // TODO: 추후 이 기법의 안정성이 확보되면 주석처리 or 삭제할 예정
   Future<List<int>> scanNearbyBeaconsAndGetPoiIds() async {
     if (_isScanning) {
       return _currentNearbyPoiIds;

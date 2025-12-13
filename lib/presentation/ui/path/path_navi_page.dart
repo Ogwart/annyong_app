@@ -1051,7 +1051,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                               },
                             );
 
-                            if (shouldExit == true) {
+                            if (shouldExit == true && context.mounted) {
                               // 네비게이션 상태 정리 후 홈으로 이동
                               ref
                                   .read(navigationViewModelProvider.notifier)

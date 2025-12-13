@@ -18,8 +18,17 @@ class HandoverService {
   double? _currentGpsAccuracy;
   StreamSubscription<dynamic>? _gpsSubscription;
 
-  // 뷰모델의 임계값 상수 사용 (또는 직접 정의)
-  static const int rssiThresholdReady = -75;
+  // RSSI 임계값 상수 정의 (일관성 확보)
+  static const int rssiThresholdStrong =
+      -70; // 강한 신호 (HandoverReady -> Transitioning)
+  static const int rssiThresholdWeak = -85; // 약한 신호 (Transitioning -> Outdoor)
+  static const int rssiThresholdEntry = -70; // 실내 진입 감지 (Outdoor -> Checking)
+
+  // GPS 정확도 임계값
+  static const double gpsBaselineMin = 5.0; // 최소 baseline (m)
+  static const double gpsBaselineMax = 100.0; // 최대 baseline (m)
+  static const double gpsImprovementAbsolute = 3.0; // 절대값 개선 기준 (m)
+  static const double gpsImprovementRatio = 0.40; // 비율 개선 기준 (40%)
 
   Future<NavigationState?> checkHandoverLogic({
     required NavigationState currentState,
@@ -58,8 +67,9 @@ class HandoverService {
         bool isGpsImproved = false;
         if (_baselineGpsAccuracy != null && _currentGpsAccuracy != null) {
           // 정확도 수치가 작아질수록 좋은 것 (예: 11.0 -> 6.0 = 5.0 개선)
-          // 3.0m 이상 개선되면 실외 징후로 판단
-          if ((_baselineGpsAccuracy! - _currentGpsAccuracy!) >= 3.0) {
+          // 절대값 기준으로 개선 확인
+          if ((_baselineGpsAccuracy! - _currentGpsAccuracy!) >=
+              gpsImprovementAbsolute) {
             isGpsImproved = true;
             log(
               "[Handover] GPS Improved: $_baselineGpsAccuracy -> $_currentGpsAccuracy",
@@ -68,9 +78,10 @@ class HandoverService {
         }
 
         // [조건 완화] 맵 매칭(Connect Edge)에 의존하지 않고,
-        // Door 비콘 신호가 충분히 강하거나(-70 이상), GPS 신호가 잡히기 시작하면 전환 시작
+        // Door 비콘 신호가 충분히 강하거나, GPS 신호가 잡히기 시작하면 전환 시작
         // [수정] RSSI 강도 또는 GPS 정확도 개선 시 전환
-        bool isStrongSignal = (currentRssi != null && currentRssi > -70);
+        bool isStrongSignal =
+            (currentRssi != null && currentRssi > rssiThresholdStrong);
 
         if (isStrongSignal || isGpsImproved) {
           log("[Handover] Transitioning: Strong Signal or GPS Improved.");
@@ -87,7 +98,7 @@ class HandoverService {
         bool beaconLost = (nearestBeaconMac != _targetDoorBeaconMac);
         // bool gpsReady = _locationService.isGpsSignalGood(); // [삭제] 절대값 기준 대신 변화율 사용
 
-        // [수정] GPS 변화율 계산 (baseline 대비 40% 이상 개선)
+        // [수정] GPS 변화율 계산 (baseline 대비 비율 기준으로 개선 확인)
         bool isSignificantImprovement = false;
         if (_baselineGpsAccuracy != null &&
             _currentGpsAccuracy != null &&
@@ -95,16 +106,15 @@ class HandoverService {
           double improvementRatio =
               (_baselineGpsAccuracy! - _currentGpsAccuracy!) /
               _baselineGpsAccuracy!;
-          if (improvementRatio >= 0.40) {
+          if (improvementRatio >= gpsImprovementRatio) {
             isSignificantImprovement = true;
           }
         }
 
         // [수정] GPS 신호가 좋아도, 비콘이 여전히 강력하게 잡히고 있다면 아직 실내(문 근처)일 수 있음.
         // 따라서 "비콘 신호가 끊김(beaconLost)" 또는 "GPS가 좋으면서 비콘 신호가 약해짐" 조건으로 강화
-        // [수정] 비콘 신호 임계값 -85dBm 미만으로 강화
         bool weakBeacon =
-            (currentRssi != null && currentRssi < -85); // 예: -85dBm 미만이면 약함
+            (currentRssi != null && currentRssi < rssiThresholdWeak);
 
         // Case 1: 비콘이 끊긴 경우
         if (beaconLost) {
@@ -139,16 +149,38 @@ class HandoverService {
       // 4. Outdoor -> Checking (실내 진입 감지)
       case HandoverStatus.outdoor:
         if (nearestBeaconType == 'door') {
-          // 진입하려는 비콘 정보 저장 (나중에 건물/층 정보 사용)
-          if (nearestBeaconMac != null) {
+          // [개선] 실내 진입 감지 조건 강화
+          // 1. Door 비콘 타입 확인
+          // 2. RSSI 신호 강도 확인 (임계값 이상)
+          // 3. 비콘 MAC 주소 유효성 확인
+          bool isValidSignal =
+              (currentRssi != null && currentRssi > rssiThresholdEntry);
+          bool isValidBeacon = (nearestBeaconMac != null);
+
+          if (isValidSignal && isValidBeacon) {
+            // 진입하려는 비콘 정보 저장 (나중에 건물/층 정보 사용)
             _pendingEntryBeacon = await _poiRepository.findBeaconByMac(
               nearestBeaconMac,
             );
+
+            // 비콘 정보가 정상적으로 조회되었는지 확인
+            if (_pendingEntryBeacon != null) {
+              log(
+                "[Handover] Detect Entry: Door beacon detected (RSSI: $currentRssi, MAC: $nearestBeaconMac)",
+              );
+              return currentState.copyWith(
+                handoverStatus: HandoverStatus.outdoorChecking,
+              );
+            } else {
+              log(
+                "[Handover] Entry Detection Failed: Beacon not found in repository (MAC: $nearestBeaconMac)",
+              );
+            }
+          } else {
+            log(
+              "[Handover] Entry Detection Skipped: Weak signal (RSSI: $currentRssi) or invalid beacon",
+            );
           }
-          log("[Handover] Detect Entry: Asking user...");
-          return currentState.copyWith(
-            handoverStatus: HandoverStatus.outdoorChecking,
-          );
         }
         break;
 
@@ -230,11 +262,18 @@ class HandoverService {
       final acc = position.accuracy;
       _currentGpsAccuracy = acc;
 
-      // 첫 데이터(또는 초기 데이터)를 기준값으로 설정
-      // 단, 너무 터무니없는 값(100m 이상)은 제외하고, 실내 수준(10~30m)일 때 잡는 것이 좋음
+      // [개선] GPS baseline 필터링 추가
+      // 첫 데이터를 기준값으로 설정하되, 비정상적인 값은 제외
+      // 실내 수준(5~100m)의 합리적인 값만 baseline으로 설정
       if (_baselineGpsAccuracy == null) {
-        _baselineGpsAccuracy = acc;
-        log("[Handover] GPS Baseline set: $acc");
+        if (acc >= gpsBaselineMin && acc <= gpsBaselineMax) {
+          _baselineGpsAccuracy = acc;
+          log("[Handover] GPS Baseline set: $acc (filtered)");
+        } else {
+          log(
+            "[Handover] GPS Baseline skipped: $acc (out of range: $gpsBaselineMin~${gpsBaselineMax}m)",
+          );
+        }
       }
     });
   }
