@@ -502,14 +502,52 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
     final navigationState = ref.watch(navigationViewModelProvider);
 
     // 상태 리스너: 'outdoorChecking' 상태가 되면 다이얼로그 띄우기
+    // 그리고 사용자의 층/건물 변경 시 지도 이미지 자동 업데이트
     ref.listen(navigationViewModelProvider, (previous, next) {
+      final prevState = previous?.value;
+      final nextState = next.value;
+
+      // outdoorChecking 상태 변경 감지 - 자동으로 실내 진입 확인
       final wasChecking =
-          previous?.value?.handoverStatus == HandoverStatus.outdoorChecking;
+          prevState?.handoverStatus == HandoverStatus.outdoorChecking;
       final isChecking =
-          next.value?.handoverStatus == HandoverStatus.outdoorChecking;
+          nextState?.handoverStatus == HandoverStatus.outdoorChecking;
 
       if (!wasChecking && isChecking) {
-        _showIndoorConfirmationDialog(context);
+        // 다이얼로그 없이 자동으로 실내 진입 확인
+        ref.read(navigationViewModelProvider.notifier).confirmIndoorEntry();
+      }
+
+      // 층/건물 변경 감지 및 자동 업데이트
+      if (prevState != null && nextState != null) {
+        final prevFloor = prevState.floor;
+        final nextFloor = nextState.floor;
+        final prevBuildingId = prevState.buildingId;
+        final nextBuildingId = nextState.buildingId;
+
+        final floorChanged = prevFloor != nextFloor;
+        final buildingChanged = prevBuildingId != nextBuildingId;
+
+        if (floorChanged || buildingChanged) {
+          final newBuildingName = MapUtilFunctions.getBuildingName(
+            nextBuildingId,
+          );
+          final newFloor = '${nextFloor}F';
+
+          // 현재 표시 중인 건물/층과 다를 때만 업데이트
+          if (_currentBuilding != newBuildingName ||
+              _currentFloor != newFloor) {
+            setState(() {
+              _currentBuilding = newBuildingName;
+              _currentFloor = newFloor;
+              // 건물이 변경되면 지도 초기화
+              if (buildingChanged) {
+                _transformationController.value = Matrix4.identity();
+                _isMapInitialized = false;
+              }
+            });
+          }
+        }
       }
     });
 
@@ -1049,109 +1087,6 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
           },
         ),
       ),
-    );
-  }
-
-  void _showIndoorConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.door_front_door_outlined,
-                  size: 48,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "실내 진입 확인",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  "실내로 들어오셨나요?\n지도를 실내 모드로 전환합니다.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          ref
-                              .read(navigationViewModelProvider.notifier)
-                              .rejectIndoorEntry();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.grey[300]!),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          "아니요",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          ref
-                              .read(navigationViewModelProvider.notifier)
-                              .confirmIndoorEntry();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.primary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          "예",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
