@@ -4,11 +4,13 @@ import 'package:annyong/domain/entity/beacon.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/repository/poi_repository.dart';
 import 'package:annyong/domain/usecases/gps_service.dart';
+import 'package:annyong/domain/usecases/beacon_scan_service.dart';
 import 'package:annyong/presentation/viewmodels/navigation_state.dart';
 
 class HandoverService {
   final GpsService _locationService = GpsService();
   final PoiRepository _poiRepository = PoiRepository();
+  final BeaconScanService _beaconScanService = BeaconScanService();
 
   String? _targetDoorBeaconMac;
   Beacon? _pendingEntryBeacon;
@@ -21,8 +23,8 @@ class HandoverService {
   // RSSI 임계값 상수 정의 (일관성 확보)
   static const int rssiThresholdStrong =
       -70; // 강한 신호 (HandoverReady -> Transitioning)
-  static const int rssiThresholdWeak = -85; // 약한 신호 (Transitioning -> Outdoor)
-  static const int rssiThresholdEntry = -80; // 실내 진입 감지 (Outdoor -> Checking)
+  static const int rssiThresholdWeak = -73; // 약한 신호 (Transitioning -> Outdoor)
+  static const int rssiThresholdEntry = -68; // 실내 진입 감지 (Outdoor -> Checking)
 
   // GPS 정확도 임계값
   static const double gpsBaselineMin = 5.0; // 최소 baseline (m)
@@ -43,7 +45,7 @@ class HandoverService {
         if (nearestBeaconType == 'door') {
           _targetDoorBeaconMac = nearestBeaconMac;
           await _locationService.startLocationStream(); // GPS ON
-          _startMonitoringGpsAccuracy(); // [New] 변화량 감지 시작
+          await _startMonitoringGpsAccuracy(); // [New] 변화량 감지 시작 (async)
 
           log("[Handover] {indoor}: Door beacon ($nearestBeaconMac) detected.");
           return currentState.copyWith(
@@ -54,70 +56,111 @@ class HandoverService {
 
       // 2. HandoverReady -> Transitioning OR Cancel OR Outdoor
       case HandoverStatus.handoverReady:
-        // [수정] HandoverReady에서는 GPS 검사 없이 데이터 수집만 수행
-        // 비콘이 Lost되거나 Weak해지면 Transitioning으로 전환하여 GPS 검사 시작
+        if (_targetDoorBeaconMac == null) {
+          // 타겟 door 비콘이 없으면 Indoor로 복귀
+          log("[Handover] {ready}: Target door beacon MAC is null -> Indoor");
+          return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
+        }
 
-        // 1. 비콘 Lost 또는 Weak 확인
-        bool beaconLost = (nearestBeaconMac != _targetDoorBeaconMac);
-        bool beaconWeak =
-            (currentRssi != null && currentRssi < rssiThresholdWeak);
+        // [추가] 다른 door 비콘이 감지되면 타겟 변경
+        if (nearestBeaconType == 'door' &&
+            nearestBeaconMac != null &&
+            nearestBeaconMac != _targetDoorBeaconMac) {
+          // 새로운 door 비콘의 신호 확인
+          final newDoorBeacon = await _beaconScanService.getBeaconByMac(
+            nearestBeaconMac,
+          );
 
-        if (beaconLost || beaconWeak) {
-          log("[Handover] {ready}: Beacon Lost or Weak (RSSI: $currentRssi)");
-          // Transitioning으로 넘어가서 즉시 검사 수행
+          if (newDoorBeacon != null) {
+            // 현재 타겟 비콘의 신호 확인
+            final currentTargetBeacon = await _beaconScanService.getBeaconByMac(
+              _targetDoorBeaconMac!,
+            );
+
+            // 새로운 door 비콘이 더 강한 신호를 가지고 있으면 타겟 변경
+            bool shouldSwitch = false;
+            if (currentTargetBeacon == null) {
+              // 현재 타겟이 끊겼으면 무조건 변경
+              shouldSwitch = true;
+            } else if (newDoorBeacon.rssi > currentTargetBeacon.rssi) {
+              // 새로운 비콘이 더 강한 신호를 가지고 있으면 변경
+              shouldSwitch = true;
+            }
+
+            if (shouldSwitch) {
+              _targetDoorBeaconMac = nearestBeaconMac;
+              // GPS baseline 리셋 (새로운 door 비콘 기준으로 다시 측정)
+              _stopMonitoringGpsAccuracy();
+              await _startMonitoringGpsAccuracy();
+              log(
+                "[Handover] {ready}: Target door beacon changed to $nearestBeaconMac (RSSI: ${newDoorBeacon.rssi.toStringAsFixed(1)})",
+              );
+            }
+          }
+        }
+
+        // door 비콘의 신호를 직접 확인
+        final doorBeacon = await _beaconScanService.getBeaconByMac(
+          _targetDoorBeaconMac!,
+        );
+
+        if (doorBeacon == null) {
+          // door 비콘이 스캔되지 않음 (완전히 끊김)
+          log(
+            "[Handover] {ready}: Door beacon lost (MAC: $_targetDoorBeaconMac) -> Transitioning",
+          );
           return currentState.copyWith(
             handoverStatus: HandoverStatus.transitioning,
           );
         }
 
-        // 2. 비콘이 여전히 강하면 대기 (GPS 데이터 계속 누적됨)
+        // door 비콘의 RSSI 확인
+        final doorRssi = doorBeacon.rssi;
+        bool beaconWeak = doorRssi < rssiThresholdWeak;
+
+        if (beaconWeak) {
+          log(
+            "[Handover] {ready}: Door beacon weak (RSSI: ${doorRssi.toStringAsFixed(1)}, MAC: $_targetDoorBeaconMac) -> Transitioning",
+          );
+          return currentState.copyWith(
+            handoverStatus: HandoverStatus.transitioning,
+          );
+        }
+
+        // door 비콘이 여전히 강하면 대기 (GPS 데이터 계속 누적됨)
         break;
 
       // 3. Transitioning -> Outdoor
       case HandoverStatus.transitioning:
-        // [수정] 진입 즉시 GPS 검사 수행
-        // GPS 변화량 검사 + 절댓값 검사
+        // [간소화] GPS 절대값만 확인 (8m 미만이면 실외)
+        // _currentGpsAccuracy가 null이면 lastPosition에서 가져오기
+        double? currentAccuracy = _currentGpsAccuracy;
 
-        bool isGpsImproved = false;
-        double? referenceAccuracy = _baselineGpsAccuracy;
-
-        if (referenceAccuracy != null &&
-            _currentGpsAccuracy != null &&
-            referenceAccuracy > 0) {
-          // 1. 비율 개선 검사
-          double improvementRatio =
-              (referenceAccuracy - _currentGpsAccuracy!) / referenceAccuracy;
-          if (improvementRatio >= gpsImprovementRatio) {
-            isGpsImproved = true;
-            log(
-              "[Handover] GPS Improved: $referenceAccuracy -> $_currentGpsAccuracy (${(improvementRatio * 100).toStringAsFixed(1)}%)",
-            );
+        if (currentAccuracy == null) {
+          final lastPos = _locationService.lastPosition;
+          if (lastPos != null) {
+            currentAccuracy = lastPos.accuracy;
+            _currentGpsAccuracy = currentAccuracy;
           }
-          // 2. 절대값 개선 검사 (추가 안전장치)
-          double absoluteImprovement = referenceAccuracy - _currentGpsAccuracy!;
-          if (absoluteImprovement >= gpsImprovementAbsolute) {
-            isGpsImproved = true;
-            log(
-              "[Handover] GPS Absolute Improved: $referenceAccuracy -> $_currentGpsAccuracy (${absoluteImprovement.toStringAsFixed(1)}m)",
-            );
-          }
-        } else {
-          log("[Handover] GPS Data Insufficient");
         }
 
-        if (isGpsImproved) {
-          // GPS 개선 확인 -> Outdoor 전환
+        // GPS 정확도가 8m 미만이면 실외로 판단
+        if (currentAccuracy != null && currentAccuracy < 8.0) {
           _stopMonitoringGpsAccuracy();
           _locationService.stopLocationStream();
           _targetDoorBeaconMac = null;
-          log("[Handover] COMPLETE: Switched to Outdoor (GPS Improved)");
+          log(
+            "[Handover] COMPLETE: Switched to Outdoor (GPS Accuracy: ${currentAccuracy.toStringAsFixed(1)}m < 8.0m)",
+          );
           return currentState.copyWith(handoverStatus: HandoverStatus.outdoor);
         } else {
-          // GPS 개선 안됨 -> 단순 음영 구역이거나 아직 실내 -> Indoor 복귀
+          // GPS 정확도가 8m 이상이면 실내로 복귀
           _stopMonitoringGpsAccuracy();
           _locationService.stopLocationStream();
           _targetDoorBeaconMac = null;
-          log("[Handover] Reset to Indoor: GPS not improved (Shadow Area?)");
+          log(
+            "[Handover] Reset to Indoor: GPS accuracy too high (${currentAccuracy?.toStringAsFixed(1) ?? 'N/A'}m >= 8.0m)",
+          );
           return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
         }
 
@@ -228,11 +271,37 @@ class HandoverService {
   }
 
   // --- GPS 정확도 모니터링 헬퍼 ---
-  void _startMonitoringGpsAccuracy() {
+  Future<void> _startMonitoringGpsAccuracy() async {
     _baselineGpsAccuracy = null;
     _currentGpsAccuracy = null;
     _gpsSubscription?.cancel();
 
+    // [방법 1] getCurrentPosition() 즉시 호출하여 baseline 빠르게 설정
+    final currentPos = await _locationService.getCurrentPosition();
+    if (currentPos != null) {
+      final acc = currentPos.accuracy;
+      _currentGpsAccuracy = acc;
+
+      // baseline 설정 (범위 필터링 적용)
+      if (acc >= gpsBaselineMin && acc <= gpsBaselineMax) {
+        _baselineGpsAccuracy = acc;
+        log(
+          "[Handover] GPS Baseline set immediately: $acc (from getCurrentPosition)",
+        );
+      } else if (acc > 0 && acc < gpsBaselineMin) {
+        // 실외에서 정확도가 좋은 경우 (5m 미만)도 baseline으로 설정
+        _baselineGpsAccuracy = acc;
+        log(
+          "[Handover] GPS Baseline set immediately: $acc (outdoor, good signal)",
+        );
+      } else {
+        log(
+          "[Handover] GPS Baseline skipped (immediate): $acc (out of range: $gpsBaselineMin~${gpsBaselineMax}m)",
+        );
+      }
+    }
+
+    // 스트림 구독 시작 (baseline 업데이트용)
     _gpsSubscription = _locationService.positionStream.listen((position) {
       final acc = position.accuracy;
       _currentGpsAccuracy = acc;
@@ -240,10 +309,16 @@ class HandoverService {
       // [개선] GPS baseline 필터링 추가
       // 첫 데이터를 기준값으로 설정하되, 비정상적인 값은 제외
       // 실내 수준(5~100m)의 합리적인 값만 baseline으로 설정
+      // [수정] 범위 밖 값도 baseline으로 설정 (실외에서도 작동하도록)
+      // [수정] 이미 baseline이 설정되었으면 업데이트하지 않음 (getCurrentPosition으로 먼저 설정됨)
       if (_baselineGpsAccuracy == null) {
         if (acc >= gpsBaselineMin && acc <= gpsBaselineMax) {
           _baselineGpsAccuracy = acc;
-          log("[Handover] GPS Baseline set: $acc (filtered)");
+          log("[Handover] GPS Baseline set: $acc (from stream)");
+        } else if (acc > 0 && acc < gpsBaselineMin) {
+          // 실외에서 정확도가 좋은 경우 (5m 미만)도 baseline으로 설정
+          _baselineGpsAccuracy = acc;
+          log("[Handover] GPS Baseline set: $acc (outdoor, good signal)");
         } else {
           log(
             "[Handover] GPS Baseline skipped: $acc (out of range: $gpsBaselineMin~${gpsBaselineMax}m)",

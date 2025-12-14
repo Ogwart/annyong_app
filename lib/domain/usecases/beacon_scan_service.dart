@@ -80,17 +80,56 @@ class BeaconScanService {
 
   bool _isScanning = false;
 
+  // 특정 MAC 주소의 비콘 정보 반환 (HandoverReady 상태에서 door 비콘 확인용)
+  Future<({Beacon beacon, double rssi})?> getBeaconByMac(
+    String macAddress,
+  ) async {
+    final mac = macAddress.toLowerCase();
+
+    // _lastSeenTime에 없으면 스캔된 적이 없는 비콘
+    if (!_lastSeenTime.containsKey(mac)) {
+      return null;
+    }
+
+    final beacon = await _poiRepository.findBeaconByMac(mac);
+    if (beacon == null) {
+      return null;
+    }
+
+    final rssi = _kalmanFilters[mac]?.currentEstimate ?? -100.0;
+    return (beacon: beacon, rssi: rssi);
+  }
+
   // 현재 추적 중인 비콘 중 가장 가까운 비콘 정보 반환
+  // [수정] Door 타입 비콘의 경우 "In Range" 상태가 아니어도 반환 (handover 감지용)
   Future<({Beacon beacon, double rssi})?> getNearestTrackedBeacon() async {
     String? bestMac;
     double bestRssi = -999.0;
 
+    // 1. "In Range" 상태인 비콘들 중에서 찾기
     for (var entry in _beaconInRangeStatus.entries) {
       if (entry.value == true) {
         final mac = entry.key;
         final rssi = _kalmanFilters[mac]?.currentEstimate ?? -100.0;
 
         if (rssi > bestRssi) {
+          bestRssi = rssi;
+          bestMac = mac;
+        }
+      }
+    }
+
+    // 2. "In Range" 상태가 아니어도 door 타입 비콘은 반환 (handover 감지용)
+    // _lastSeenTime에 있는 비콘은 한 번이라도 스캔된 비콘
+    for (var mac in _lastSeenTime.keys) {
+      // 이미 "In Range" 상태인 비콘은 제외
+      if (_beaconInRangeStatus[mac] == true) continue;
+
+      final beacon = await _poiRepository.findBeaconByMac(mac);
+      if (beacon != null && beacon.type == 'door') {
+        final rssi = _kalmanFilters[mac]?.currentEstimate ?? -100.0;
+        // door 비콘의 경우 RSSI가 -90 이상이면 반환 (너무 약한 신호는 제외)
+        if (rssi > -90 && rssi > bestRssi) {
           bestRssi = rssi;
           bestMac = mac;
         }
@@ -209,15 +248,15 @@ class BeaconScanService {
     if (!isCurrentlyIn && filteredRssi >= _incomingCriterion) {
       // 진입 조건 충족
       newState = true;
-      debugPrint(
-        '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      );
+      // debugPrint(
+      //   '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      // );
     } else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
       // 이탈 조건 충족
       newState = false;
-      debugPrint(
-        '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      );
+      // debugPrint(
+      //   '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      // );
     }
 
     // 상태 변경 여부 확인
@@ -254,9 +293,9 @@ class BeaconScanService {
       if (!_listEquals(_currentNearbyPoiIds, newList)) {
         _currentNearbyPoiIds = newList;
         _poiStreamController.add(_currentNearbyPoiIds);
-        debugPrint(
-          '[BeaconService] Detected POIs Updated: $_currentNearbyPoiIds',
-        );
+        // debugPrint(
+        //   '[BeaconService] Detected POIs Updated: $_currentNearbyPoiIds',
+        // );
       }
     } else {
       // 활성화된 비콘이 하나도 없음

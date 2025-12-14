@@ -348,15 +348,15 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
         '${nextState.rawPixelY.toStringAsFixed(1)}) (Δ=(${dxRaw.toStringAsFixed(1)}, ${dyRaw.toStringAsFixed(1)}))',
       );
     } else {
-      log(
-        '[Navigation] Step update: '
-        'mode=${nextState.matchingMode.name}, '
-        'stepIncrease=$stepIncrease, '
-        'x=${nextState.x.toStringAsFixed(1)} (Δ=${dxState.toStringAsFixed(1)}), '
-        'y=${nextState.y.toStringAsFixed(1)} (Δ=${dyState.toStringAsFixed(1)}), '
-        'raw=(${nextState.rawPixelX.toStringAsFixed(1)}, '
-        '${nextState.rawPixelY.toStringAsFixed(1)}) (Δ=(${dxRaw.toStringAsFixed(1)}, ${dyRaw.toStringAsFixed(1)}))',
-      );
+      // log(
+      //   '[Navigation] Step update: '
+      //   'mode=${nextState.matchingMode.name}, '
+      //   'stepIncrease=$stepIncrease, '
+      //   'x=${nextState.x.toStringAsFixed(1)} (Δ=${dxState.toStringAsFixed(1)}), '
+      //   'y=${nextState.y.toStringAsFixed(1)} (Δ=${dyState.toStringAsFixed(1)}), '
+      //   'raw=(${nextState.rawPixelX.toStringAsFixed(1)}, '
+      //   '${nextState.rawPixelY.toStringAsFixed(1)}) (Δ=(${dxRaw.toStringAsFixed(1)}, ${dyRaw.toStringAsFixed(1)}))',
+      // );
     }
 
     state = AsyncValue.data(nextState);
@@ -474,13 +474,13 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     double newAccY = s.vertexBufferY + dy;
     double dist = math.sqrt(newAccX * newAccX + newAccY * newAccY);
 
-    log(
-      '[Navigation] OnVertex buffer: '
-      'vertex=${s.currentVertex?.id}, '
-      'buffer=(${newAccX.toStringAsFixed(2)}, ${newAccY.toStringAsFixed(2)})px, '
-      'dist=${dist.toStringAsFixed(2)}px, '
-      'threshold=${(vertexBufferMeters * pixelsPerMeter).toStringAsFixed(2)}px',
-    );
+    // log(
+    //   '[Navigation] OnVertex buffer: '
+    //   'vertex=${s.currentVertex?.id}, '
+    //   'buffer=(${newAccX.toStringAsFixed(2)}, ${newAccY.toStringAsFixed(2)})px, '
+    //   'dist=${dist.toStringAsFixed(2)}px, '
+    //   'threshold=${(vertexBufferMeters * pixelsPerMeter).toStringAsFixed(2)}px',
+    // );
 
     if (dist < (vertexBufferMeters * pixelsPerMeter)) {
       return s.copyWith(
