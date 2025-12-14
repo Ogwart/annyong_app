@@ -262,17 +262,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           // 1. 메뉴 버튼
-                          Expanded(
-                            flex: 1,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: GestureDetector(
                               onTap: () => context.go('/home/menu'),
                               child: Container(
+                                height: 50,
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   border: BoxBorder.all(
                                     color: AppColors.primary,
-                                    width: 2,
+                                    width: 1,
                                   ),
+                                  borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.shadow.withValues(
@@ -282,7 +284,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     ),
                                   ],
                                   color: Colors.white,
-                                  shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.menu,
@@ -298,7 +299,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             child: GestureDetector(
                               onTap: () => context.go('/home/search'),
                               child: Container(
-                                height: 52,
+                                height: 50,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                 ),
@@ -307,7 +308,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   borderRadius: BorderRadius.circular(12),
                                   border: BoxBorder.all(
                                     color: AppColors.primary,
-                                    width: 2,
+                                    width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
@@ -432,7 +433,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         color: Colors.white,
                         border: BoxBorder.all(
                           color: AppColors.primary,
-                          width: 2,
+                          width: 1,
                         ),
                         borderRadius: BorderRadius.circular(35),
                         boxShadow: [
@@ -473,10 +474,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         ),
                                       ),
                                     )
-                                  : Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
+                                  : Container(
+                                      height: 36,
+                                      margin: EdgeInsets.symmetric(
+                                        horizontal: 8,
                                       ),
+                                      color: Colors.transparent,
+                                      alignment: Alignment.center,
                                       child: Text(
                                         building,
                                         style: TextStyle(
@@ -507,8 +511,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       mapProvider.setSelectedFloor(floor),
                                   child: isSelected
                                       ? Container(
-                                          width: 32,
-                                          height: 32,
+                                          width: 36,
+                                          height: 36,
                                           alignment: Alignment.center,
                                           decoration: BoxDecoration(
                                             color: AppColors.primary,
@@ -523,10 +527,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                                             ),
                                           ),
                                         )
-                                      : Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                          ),
+                                      : Container(
+                                          width: 36,
+                                          height: 36,
+                                          color: Colors.transparent,
+                                          alignment: Alignment.center,
                                           child: Text(
                                             floor.replaceAll('F', ''),
                                             style: TextStyle(

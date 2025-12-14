@@ -27,12 +27,8 @@ class CategoryButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(48),
-          border: BoxBorder.all(
-            width: 2,
-            color: isSelected ? Colors.white : AppColors.primary,
-          ),
           boxShadow: [
-            BoxShadow(color: AppColors.shadow.withAlpha(25), blurRadius: 15),
+            BoxShadow(color: AppColors.shadow.withAlpha(25), blurRadius: 8),
           ],
         ),
         child: Row(
@@ -40,7 +36,7 @@ class CategoryButton extends StatelessWidget {
             bookmarkTitle == "즐겨찾기"
                 ? Icon(
                     Icons.star_rounded,
-                    color: isSelected ? Colors.yellow : AppColors.point,
+                    color: isSelected ? Colors.white : Colors.amberAccent,
                     size: 20,
                   )
                 : SvgPicture.asset(

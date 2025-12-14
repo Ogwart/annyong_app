@@ -17,6 +17,10 @@ class HomePageMapProvider extends ChangeNotifier {
   void setSelectedBuilding(String building) {
     if (_selectedBuilding != building) {
       _selectedBuilding = building;
+      // 60주년기념관 선택 시 층을 자동으로 1F로 설정
+      if (building == '60주년기념관') {
+        _selectedFloor = '1F';
+      }
       notifyListeners();
     }
   }

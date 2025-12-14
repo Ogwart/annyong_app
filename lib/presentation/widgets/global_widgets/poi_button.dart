@@ -86,8 +86,8 @@ class PoiButton extends StatelessWidget {
           ),
           child: SvgPicture.asset(
             "assets/icons/svg/${iconPath(poi)}.svg",
-            width: 35,
-            height: 35,
+            width: 30,
+            height: 30,
           ),
         ),
         const SizedBox(width: 4),
