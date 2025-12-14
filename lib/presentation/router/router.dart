@@ -10,6 +10,7 @@ import 'package:annyong/presentation/ui/path/path_navi_page.dart';
 import 'package:annyong/presentation/ui/search/search_page.dart';
 import 'package:annyong/presentation/ui/search/search_result_page.dart';
 import 'package:annyong/presentation/ui/search/search_rooms_page.dart';
+import 'package:annyong/presentation/ui/search/map_search_page.dart';
 import 'package:annyong/presentation/ui/menu/settings_page.dart';
 import 'package:annyong/presentation/ui/splash/splash_page.dart';
 import 'package:flutter/material.dart';
@@ -174,6 +175,31 @@ class AppRouter {
                     builder: (context, state) => SettingsPage(),
                   ),
                 ],
+              ),
+              // 지도 검색 페이지 (출발지 선택용)
+              GoRoute(
+                path: "mapSearch",
+                builder: (context, state) {
+                  SearchMode? searchMode;
+                  bool returnResult = false;
+                  final extra = state.extra;
+                  if (extra is SearchMode) {
+                    searchMode = extra;
+                  } else if (extra is Map) {
+                    final searchModeValue = extra['searchMode'];
+                    if (searchModeValue is SearchMode) {
+                      searchMode = searchModeValue;
+                    }
+                    final returnResultValue = extra['returnResult'];
+                    if (returnResultValue is bool) {
+                      returnResult = returnResultValue;
+                    }
+                  }
+                  return MapSearchPage(
+                    searchMode: searchMode,
+                    returnResult: returnResult,
+                  );
+                },
               ),
               // 검색 관련 페이지
               GoRoute(

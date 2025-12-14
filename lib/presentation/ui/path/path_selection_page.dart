@@ -89,8 +89,13 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     SearchMode searchMode, {
     int? waypointIndex,
   }) async {
+    // 출발지 선택 시에는 지도 검색 페이지로 이동
+    final String route = searchMode == SearchMode.departure
+        ? '/home/mapSearch'
+        : '/home/search';
+    
     final result = await context.push<Poi>(
-      '/home/search',
+      route,
       extra: {'searchMode': searchMode, 'returnResult': true},
     );
     if (result == null) return;
