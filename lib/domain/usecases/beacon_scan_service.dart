@@ -48,12 +48,12 @@ class BeaconScanService {
   final PoiRepository _poiRepository = PoiRepository(); // [Fix] 필드 추가
 
   static const double _kalmanR = 40.0;
-  static const double _kalmanQ = 0.5;
+  static const double _kalmanQ = 0.2;
 
   // 실험적 1m 기준 RSSI (TxPower): -56;
   // 히스테리시스 경계 (진입/이탈)
-  static const double _incomingCriterion = -68.5;
-  static const double _outgoingCriterion = -73.5;
+  static const double _incomingCriterion = -76.0;
+  static const double _outgoingCriterion = -83.0;
 
   static const String _beaconName = 'Holy-IOT';
 
@@ -231,8 +231,10 @@ class BeaconScanService {
     );
   }
 
-  /// 비콘 신호 처리 통합 로직 (실제 신호 + 가상 신호 공용)
-  /// [rssi] : 실제 측정값 또는 Ghost Packet(-99.0)
+  // 비콘별 이탈 대기 타이머를 관리할 맵
+  final Map<String, Timer> _exitDebounceTimers = {};
+
+  /// 비콘 신호 처리 통합 로직 (Debounce 적용)
   void _processBeaconSignal(String macAddress, double rssi) async {
     // 1. 칼만 필터 적용
     _kalmanFilters.putIfAbsent(
@@ -241,29 +243,73 @@ class BeaconScanService {
     );
     final filteredRssi = _kalmanFilters[macAddress]!.filter(rssi);
 
-    // 2. 히스테리시스 로직 적용
     bool isCurrentlyIn = _beaconInRangeStatus[macAddress] ?? false;
-    bool newState = isCurrentlyIn;
 
+    // ------------------------------------------------------------------
+    // Case 1: 진입 로직 (즉시 진입)
+    // ------------------------------------------------------------------
     if (!isCurrentlyIn && filteredRssi >= _incomingCriterion) {
-      // 진입 조건 충족
-      newState = true;
-      debugPrint(
-        '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      );
-    } else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
-      // 이탈 조건 충족
-      newState = false;
-      debugPrint(
-        '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      );
-    }
+      // 혹시 이탈 대기 중이었다면(Timer가 돌고 있었다면) 취소!
+      // "어? 나가는 줄 알았는데 다시 신호가 좋아졌네? 그럼 계속 In 상태야."
+      if (_exitDebounceTimers.containsKey(macAddress)) {
+        _exitDebounceTimers[macAddress]?.cancel();
+        _exitDebounceTimers.remove(macAddress);
+        debugPrint('[Beacon] $macAddress 진입 신호 감지 -> 이탈 대기 취소');
+      }
 
-    // 상태 변경 여부 확인
+      // 상태 업데이트 (In)
+      _updateStatus(macAddress, true, rssi, filteredRssi);
+    }
+    // ------------------------------------------------------------------
+    // Case 2: 이탈 로직 (지연 이탈 - Debounce)
+    // ------------------------------------------------------------------
+    else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
+      // 이미 이탈 타이머가 돌고 있다면? -> 건드리지 말고 냅둔다. (기다리는 중)
+      if (_exitDebounceTimers.containsKey(macAddress)) return;
+
+      // 타이머가 없다면? -> "어? 신호 약한데? 진짜 나간 건지 2초만 지켜보자" (타이머 시작)
+      _exitDebounceTimers[macAddress] = Timer(const Duration(seconds: 2), () {
+        // 2초 뒤에도 이 타이머가 취소되지 않고 살아있다면 -> 진짜 이탈 확정!
+        _updateStatus(macAddress, false, rssi, filteredRssi);
+        _exitDebounceTimers.remove(macAddress);
+      });
+    }
+    // ------------------------------------------------------------------
+    // Case 3: 신호 회복 (이탈 대기 중이었는데 다시 좋아짐)
+    // ------------------------------------------------------------------
+    else if (isCurrentlyIn && filteredRssi >= _outgoingCriterion) {
+      // 이탈 기준(-83)보다는 크고, 진입 기준(-76)보다는 작은 "애매한 구간"이거나
+      // 혹은 아주 좋아진 경우 모두 포함.
+
+      // 2초 안에 다시 신호가 이탈 기준 이상으로 올라오면 이탈 취소! (핑퐁 방지 핵심)
+      if (_exitDebounceTimers.containsKey(macAddress)) {
+        _exitDebounceTimers[macAddress]?.cancel();
+        _exitDebounceTimers.remove(macAddress);
+        debugPrint('[Beacon] $macAddress 신호 회복(-83 이상) -> 이탈 대기 취소.');
+      }
+    }
+  }
+
+  /// 상태 변경을 실제로 수행하고 로그를 찍는 헬퍼 함수
+  void _updateStatus(
+    String macAddress,
+    bool newState,
+    double rawRssi,
+    double filteredRssi,
+  ) {
+    bool isCurrentlyIn = _beaconInRangeStatus[macAddress] ?? false;
+
+    // 상태가 변했을 때만 실행
     if (newState != isCurrentlyIn) {
       _beaconInRangeStatus[macAddress] = newState;
+
+      // 로그 출력
+      String tag = newState ? '[Beacon Enter]' : '[Beacon Exit]';
+      debugPrint(
+        '$tag MAC: $macAddress | Input: $rawRssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      );
+
       // 상태가 변경되었으므로 전체 POI 목록 갱신 필요
-      // 메인 스레드를 블로킹하지 않도록 unawaited 사용
       _updateNearbyPois().catchError((error) {
         debugPrint('[BeaconService] Error updating nearby POIs: $error');
       });
