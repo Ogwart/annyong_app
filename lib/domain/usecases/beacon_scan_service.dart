@@ -248,15 +248,15 @@ class BeaconScanService {
     if (!isCurrentlyIn && filteredRssi >= _incomingCriterion) {
       // 진입 조건 충족
       newState = true;
-      // debugPrint(
-      //   '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      // );
+      debugPrint(
+        '[Beacon Enter] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      );
     } else if (isCurrentlyIn && filteredRssi < _outgoingCriterion) {
       // 이탈 조건 충족
       newState = false;
-      // debugPrint(
-      //   '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
-      // );
+      debugPrint(
+        '[Beacon Exit] MAC: $macAddress | Input: $rssi | Filtered: ${filteredRssi.toStringAsFixed(2)}',
+      );
     }
 
     // 상태 변경 여부 확인

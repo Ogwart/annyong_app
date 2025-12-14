@@ -24,6 +24,7 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
   StreamSubscription<StepCount>? _stepCountSubscription;
   StreamSubscription<dynamic>? _imuSubscription;
   Timer? _beaconMonitorTimer;
+  bool _isProcessingBeacon = false; // [최적화] 비콘 처리 중복 방지 플래그
 
   int _lastStepCount = 0;
 
@@ -199,59 +200,72 @@ class NavigationViewModel extends AsyncNotifier<NavigationState> {
     _beaconMonitorTimer = Timer.periodic(const Duration(milliseconds: 1000), (
       timer,
     ) async {
-      final currentState = state.value;
-      if (currentState == null) return;
+      // [최적화] 이전 작업이 아직 진행 중이면 이번 틱은 건너뜀 (메인 스레드 부하 방지)
+      if (_isProcessingBeacon) return;
+      _isProcessingBeacon = true;
 
-      // BeaconScanService가 필터링해준 '가장 신뢰할 수 있는' 비콘 가져오기
-      final nearest = await _beaconScanService.getNearestTrackedBeacon();
+      try {
+        final currentState = state.value;
+        if (currentState == null) return;
 
-      // 1. 층/건물 변경 감지 (가장 우선)
-      // 비콘 서비스가 리턴했다는 것은 이미 진입 조건(RSSI > -68.5)을 만족했다는 의미
-      if (nearest != null) {
-        bool isFloorChanged = currentState.floor != nearest.beacon.floor;
-        bool isBuildingChanged =
-            currentState.buildingId != nearest.beacon.buildingId;
+        // BeaconScanService가 필터링해준 '가장 신뢰할 수 있는' 비콘 가져오기
+        final nearest = await _beaconScanService.getNearestTrackedBeacon();
 
-        if (isFloorChanged || isBuildingChanged) {
-          debugPrint(
-            "[Change Detected] Floor: ${currentState.floor}->${nearest.beacon.floor}, Building: ${currentState.buildingId}->${nearest.beacon.buildingId}",
-          );
+        // 1. 층/건물 변경 감지 (가장 우선)
+        // 비콘 서비스가 리턴했다는 것은 이미 진입 조건(RSSI > -68.5)을 만족했다는 의미
+        if (nearest != null) {
+          bool isFloorChanged = currentState.floor != nearest.beacon.floor;
+          bool isBuildingChanged =
+              currentState.buildingId != nearest.beacon.buildingId;
 
-          // 해당 층/건물의 좌표계로 강제 이동 및 맵 매칭 초기화
-          state = AsyncValue.data(
-            currentState.copyWith(
-              floor: nearest.beacon.floor,
-              buildingId: nearest.beacon.buildingId,
-              x: nearest.beacon.xCoord.toDouble(),
-              y: nearest.beacon.yCoord.toDouble(),
-              rawPixelX: nearest.beacon.xCoord.toDouble(),
-              rawPixelY: nearest.beacon.yCoord.toDouble(),
-              matchingMode: MapMatchingMode.outOfEdge, // 새로운 층이므로 매칭 해제
-              currentEdge: null,
-              currentVertex: null,
-              handoverStatus: HandoverStatus.indoor, // 실내 상태로 확정
-            ),
-          );
-          return; // 층이 바뀌었으면 아래 로직 생략
+          if (isFloorChanged || isBuildingChanged) {
+            debugPrint(
+              "[Change Detected] Floor: ${currentState.floor}->${nearest.beacon.floor}, Building: ${currentState.buildingId}->${nearest.beacon.buildingId}",
+            );
+
+            // 해당 층/건물의 좌표계로 강제 이동 및 맵 매칭 초기화
+            state = AsyncValue.data(
+              currentState.copyWith(
+                floor: nearest.beacon.floor,
+                buildingId: nearest.beacon.buildingId,
+                x: nearest.beacon.xCoord.toDouble(),
+                y: nearest.beacon.yCoord.toDouble(),
+                rawPixelX: nearest.beacon.xCoord.toDouble(),
+                rawPixelY: nearest.beacon.yCoord.toDouble(),
+                matchingMode: MapMatchingMode.outOfEdge, // 새로운 층이므로 매칭 해제
+                currentEdge: null,
+                currentVertex: null,
+                handoverStatus: HandoverStatus.indoor, // 실내 상태로 확정
+              ),
+            );
+            return; // 층이 바뀌었으면 아래 로직 생략
+          }
         }
-      }
 
-      // 2. 핸드오버 로직 위임
-      final newState = await _handoverService.checkHandoverLogic(
-        currentState: currentState,
-        nearestBeaconType: nearest?.beacon.type,
-        nearestBeaconMac: nearest?.beacon.macId,
-        currentRssi: nearest?.rssi.toInt(),
-      );
+        // 2. 핸드오버 로직 위임
+        final newState = await _handoverService.checkHandoverLogic(
+          currentState: currentState,
+          nearestBeaconType: nearest?.beacon.type,
+          nearestBeaconMac: nearest?.beacon.macId,
+          currentRssi: nearest?.rssi.toInt(),
+        );
 
-      if (newState != null) {
-        state = AsyncValue.data(newState);
-      }
+        if (newState != null) {
+          state = AsyncValue.data(newState);
+        }
 
-      // 3. 같은 층 내 위치 보정 (실내 주행 중일 때)
-      if (currentState.handoverStatus == HandoverStatus.indoor &&
-          nearest != null) {
-        correctPositionWithBeacon(beacon: nearest.beacon, rssi: nearest.rssi);
+        // 3. 같은 층 내 위치 보정 (실내 주행 중일 때)
+        if (currentState.handoverStatus == HandoverStatus.indoor &&
+            nearest != null) {
+          await correctPositionWithBeacon(
+            beacon: nearest.beacon,
+            rssi: nearest.rssi,
+          );
+        }
+      } catch (e) {
+        log("[Beacon Monitoring Error] $e");
+      } finally {
+        _isProcessingBeacon = false;
       }
     });
   }

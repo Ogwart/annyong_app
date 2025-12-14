@@ -145,7 +145,7 @@ class HandoverService {
         }
 
         // GPS 정확도가 8m 미만이면 실외로 판단
-        if (currentAccuracy != null && currentAccuracy < 8.0) {
+        if (currentAccuracy != null && currentAccuracy <= 8.0) {
           _stopMonitoringGpsAccuracy();
           _locationService.stopLocationStream();
           _targetDoorBeaconMac = null;
@@ -159,7 +159,7 @@ class HandoverService {
           _locationService.stopLocationStream();
           _targetDoorBeaconMac = null;
           log(
-            "[Handover] Reset to Indoor: GPS accuracy too high (${currentAccuracy?.toStringAsFixed(1) ?? 'N/A'}m >= 8.0m)",
+            "[Handover] Reset to Indoor: GPS accuracy too high (${currentAccuracy?.toStringAsFixed(1) ?? 'N/A'}m > 8.0m)",
           );
           return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
         }
