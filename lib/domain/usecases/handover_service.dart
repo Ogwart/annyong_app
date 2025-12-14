@@ -14,7 +14,7 @@ class HandoverService {
   Beacon? _pendingEntryBeacon;
 
   // GPS 변화량 감지용
-  double? _baselineGpsAccuracy;
+  double? _baselineGpsAccuracy; // HandoverReady 시작 시점의 baseline
   double? _currentGpsAccuracy;
   StreamSubscription<dynamic>? _gpsSubscription;
 
@@ -22,13 +22,13 @@ class HandoverService {
   static const int rssiThresholdStrong =
       -70; // 강한 신호 (HandoverReady -> Transitioning)
   static const int rssiThresholdWeak = -85; // 약한 신호 (Transitioning -> Outdoor)
-  static const int rssiThresholdEntry = -70; // 실내 진입 감지 (Outdoor -> Checking)
+  static const int rssiThresholdEntry = -80; // 실내 진입 감지 (Outdoor -> Checking)
 
   // GPS 정확도 임계값
   static const double gpsBaselineMin = 5.0; // 최소 baseline (m)
   static const double gpsBaselineMax = 100.0; // 최대 baseline (m)
   static const double gpsImprovementAbsolute = 3.0; // 절대값 개선 기준 (m)
-  static const double gpsImprovementRatio = 0.40; // 비율 개선 기준 (40%)
+  static const double gpsImprovementRatio = 0.35; // 비율 개선 기준 (40%)
 
   Future<NavigationState?> checkHandoverLogic({
     required NavigationState currentState,
@@ -45,106 +45,81 @@ class HandoverService {
           await _locationService.startLocationStream(); // GPS ON
           _startMonitoringGpsAccuracy(); // [New] 변화량 감지 시작
 
-          log("[Handover] Ready: Door beacon ($nearestBeaconMac) detected.");
+          log("[Handover] {indoor}: Door beacon ($nearestBeaconMac) detected.");
           return currentState.copyWith(
             handoverStatus: HandoverStatus.handoverReady,
           );
         }
         break;
 
-      // 2. HandoverReady -> Transitioning OR Cancel
+      // 2. HandoverReady -> Transitioning OR Cancel OR Outdoor
       case HandoverStatus.handoverReady:
-        // 타겟 문 비콘이 사라지거나 바뀌면 취소
-        if (nearestBeaconMac != _targetDoorBeaconMac) {
-          _stopMonitoringGpsAccuracy(); // [New] 모니터링 종료
-          _locationService.stopLocationStream();
-          _targetDoorBeaconMac = null;
-          log("[Handover] Cancelled: Lost door beacon.");
-          return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
-        }
+        // [수정] HandoverReady에서는 GPS 검사 없이 데이터 수집만 수행
+        // 비콘이 Lost되거나 Weak해지면 Transitioning으로 전환하여 GPS 검사 시작
 
-        // [조건 강화] GPS 정확도 변화량 체크
-        bool isGpsImproved = false;
-        if (_baselineGpsAccuracy != null && _currentGpsAccuracy != null) {
-          // 정확도 수치가 작아질수록 좋은 것 (예: 11.0 -> 6.0 = 5.0 개선)
-          // 절대값 기준으로 개선 확인
-          if ((_baselineGpsAccuracy! - _currentGpsAccuracy!) >=
-              gpsImprovementAbsolute) {
-            isGpsImproved = true;
-            log(
-              "[Handover] GPS Improved: $_baselineGpsAccuracy -> $_currentGpsAccuracy",
-            );
-          }
-        }
+        // 1. 비콘 Lost 또는 Weak 확인
+        bool beaconLost = (nearestBeaconMac != _targetDoorBeaconMac);
+        bool beaconWeak =
+            (currentRssi != null && currentRssi < rssiThresholdWeak);
 
-        // [조건 완화] 맵 매칭(Connect Edge)에 의존하지 않고,
-        // Door 비콘 신호가 충분히 강하거나, GPS 신호가 잡히기 시작하면 전환 시작
-        // [수정] RSSI 강도 또는 GPS 정확도 개선 시 전환
-        bool isStrongSignal =
-            (currentRssi != null && currentRssi > rssiThresholdStrong);
-
-        if (isStrongSignal || isGpsImproved) {
-          log("[Handover] Transitioning: Strong Signal or GPS Improved.");
+        if (beaconLost || beaconWeak) {
+          log("[Handover] {ready}: Beacon Lost or Weak (RSSI: $currentRssi)");
+          // Transitioning으로 넘어가서 즉시 검사 수행
           return currentState.copyWith(
             handoverStatus: HandoverStatus.transitioning,
           );
         }
+
+        // 2. 비콘이 여전히 강하면 대기 (GPS 데이터 계속 누적됨)
         break;
 
       // 3. Transitioning -> Outdoor
       case HandoverStatus.transitioning:
-        // 문 비콘 신호가 완전히 끊기거나(null), 다른 비콘으로 바뀌면 실외로 간주
-        // (BeaconScanService의 Ghost Packet 로직에 의해 서서히 끊김)
-        bool beaconLost = (nearestBeaconMac != _targetDoorBeaconMac);
-        // bool gpsReady = _locationService.isGpsSignalGood(); // [삭제] 절대값 기준 대신 변화율 사용
+        // [수정] 진입 즉시 GPS 검사 수행
+        // GPS 변화량 검사 + 절댓값 검사
 
-        // [수정] GPS 변화율 계산 (baseline 대비 비율 기준으로 개선 확인)
-        bool isSignificantImprovement = false;
-        if (_baselineGpsAccuracy != null &&
+        bool isGpsImproved = false;
+        double? referenceAccuracy = _baselineGpsAccuracy;
+
+        if (referenceAccuracy != null &&
             _currentGpsAccuracy != null &&
-            _baselineGpsAccuracy! > 0) {
+            referenceAccuracy > 0) {
+          // 1. 비율 개선 검사
           double improvementRatio =
-              (_baselineGpsAccuracy! - _currentGpsAccuracy!) /
-              _baselineGpsAccuracy!;
+              (referenceAccuracy - _currentGpsAccuracy!) / referenceAccuracy;
           if (improvementRatio >= gpsImprovementRatio) {
-            isSignificantImprovement = true;
+            isGpsImproved = true;
+            log(
+              "[Handover] GPS Improved: $referenceAccuracy -> $_currentGpsAccuracy (${(improvementRatio * 100).toStringAsFixed(1)}%)",
+            );
           }
+          // 2. 절대값 개선 검사 (추가 안전장치)
+          double absoluteImprovement = referenceAccuracy - _currentGpsAccuracy!;
+          if (absoluteImprovement >= gpsImprovementAbsolute) {
+            isGpsImproved = true;
+            log(
+              "[Handover] GPS Absolute Improved: $referenceAccuracy -> $_currentGpsAccuracy (${absoluteImprovement.toStringAsFixed(1)}m)",
+            );
+          }
+        } else {
+          log("[Handover] GPS Data Insufficient");
         }
 
-        // [수정] GPS 신호가 좋아도, 비콘이 여전히 강력하게 잡히고 있다면 아직 실내(문 근처)일 수 있음.
-        // 따라서 "비콘 신호가 끊김(beaconLost)" 또는 "GPS가 좋으면서 비콘 신호가 약해짐" 조건으로 강화
-        bool weakBeacon =
-            (currentRssi != null && currentRssi < rssiThresholdWeak);
-
-        // Case 1: 비콘이 끊긴 경우
-        if (beaconLost) {
-          if (isSignificantImprovement) {
-            // 비콘 끊김 + GPS 개선됨 -> 확실한 실외
-            log(
-              "[Handover] COMPLETE: Switched to Outdoor (BeaconLost + GPS Improved)",
-            );
-            return currentState.copyWith(
-              handoverStatus: HandoverStatus.outdoor,
-            );
-          } else {
-            // 비콘 끊김 + GPS 개선 안됨 -> 실내 음영 구역일 가능성 -> Indoor 복귀
-            _stopMonitoringGpsAccuracy();
-            _locationService.stopLocationStream();
-            _targetDoorBeaconMac = null;
-            log(
-              "[Handover] Reset to Indoor: Beacon lost but GPS bad (Shadow Area?)",
-            );
-            return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
-          }
-        }
-        // Case 2: 비콘은 잡히지만 신호가 약하고 GPS가 크게 개선된 경우
-        else if (isSignificantImprovement && weakBeacon) {
-          log(
-            "[Handover] COMPLETE: Switched to Outdoor (Weak Beacon + GPS Improved)",
-          );
+        if (isGpsImproved) {
+          // GPS 개선 확인 -> Outdoor 전환
+          _stopMonitoringGpsAccuracy();
+          _locationService.stopLocationStream();
+          _targetDoorBeaconMac = null;
+          log("[Handover] COMPLETE: Switched to Outdoor (GPS Improved)");
           return currentState.copyWith(handoverStatus: HandoverStatus.outdoor);
+        } else {
+          // GPS 개선 안됨 -> 단순 음영 구역이거나 아직 실내 -> Indoor 복귀
+          _stopMonitoringGpsAccuracy();
+          _locationService.stopLocationStream();
+          _targetDoorBeaconMac = null;
+          log("[Handover] Reset to Indoor: GPS not improved (Shadow Area?)");
+          return currentState.copyWith(handoverStatus: HandoverStatus.indoor);
         }
-        break;
 
       // 4. Outdoor -> Checking (실내 진입 감지)
       case HandoverStatus.outdoor:
