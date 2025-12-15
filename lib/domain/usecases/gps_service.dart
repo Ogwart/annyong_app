@@ -46,9 +46,6 @@ class GpsService {
     }
 
     if (_positionStreamSubscription != null) return;
-
-    debugPrint('[GPS] Warm-up Started (Handover Detected)');
-
     // [수정] StreamController를 사용하여 스트림 공유
     _positionStreamController = StreamController<Position>.broadcast();
 
@@ -59,16 +56,13 @@ class GpsService {
     );
 
     _positionStreamSubscription =
-        Geolocator.getPositionStream(
-          locationSettings: locationSettings,
-        ).listen((Position position) {
-          _lastPosition = position;
-          // StreamController를 통해 모든 구독자에게 전달
-          _positionStreamController?.add(position);
-          debugPrint(
-            '[GPS] Updated: ${position.latitude}, ${position.longitude} (Acc: ${position.accuracy})',
-          );
-        });
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+          (Position position) {
+            _lastPosition = position;
+            // StreamController를 통해 모든 구독자에게 전달
+            _positionStreamController?.add(position);
+          },
+        );
   }
 
   /// GPS 스트림 종료
@@ -78,7 +72,6 @@ class GpsService {
     _positionStreamController?.close();
     _positionStreamController = null;
     _lastPosition = null;
-    debugPrint('[GPS] Stream Stopped');
   }
 
   /// 현재 GPS 신호가 실외 판정을 내리기에 충분한 품질인지 확인

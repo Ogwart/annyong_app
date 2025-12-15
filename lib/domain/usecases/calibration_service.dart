@@ -1,5 +1,6 @@
 // lib/domain/usecases/calibration_service.dart
 import 'dart:collection';
+import 'package:flutter/foundation.dart';
 import 'package:annyong/domain/entity/calibration_route.dart';
 import 'package:annyong/domain/entity/graph_models.dart';
 import 'package:annyong/domain/entity/poi.dart';
@@ -74,11 +75,21 @@ class CalibrationService {
   // ===========================================================================
 
   Future<CalibrationRoute?> findTargetRoute(Poi startPoi) async {
-    if (startPoi.vertexId == null) return null;
+    debugPrint("[CalibrationService] Finding route for POI: ${startPoi.name} (Vertex: ${startPoi.vertexId})");
+
+    if (startPoi.vertexId == null) {
+      debugPrint("[CalibrationService] Failed: POI has no vertex ID.");
+      return null;
+    }
 
     final startVertexId = startPoi.vertexId!;
     final startVertex = await _poiRepo.getVertexById(startVertexId);
-    if (startVertex == null) return null;
+    if (startVertex == null) {
+      debugPrint("[CalibrationService] Failed: Start vertex not found (ID: $startVertexId).");
+      return null;
+    }
+    
+    debugPrint("[CalibrationService] Start vertex found at (${startVertex.x}, ${startVertex.y})");
 
     // =========================================================================
     // [성능 최적화] 데이터 미리 가져오기 (Pre-fetching)
@@ -116,10 +127,13 @@ class CalibrationService {
         await Future.microtask(() {});
       }
     }
+    debugPrint("[CalibrationService] Pre-fetching complete. Loaded ${loadedVertices.length} vertices.");
     // =========================================================================
 
     final List<_CalibrationCandidate> candidates = [];
     final initialEdges = localEdgesMap[startVertexId] ?? [];
+
+    debugPrint("[CalibrationService] Initial edges count: ${initialEdges.length}");
 
     // [수정] 출발 POI와 시작 정점 사이의 거리 계산 (픽셀 -> 미터 변환)
     final startOffsetMeters = pointsToMeters(
@@ -129,9 +143,14 @@ class CalibrationService {
       startVertex.y,
     );
 
+    debugPrint("[CalibrationService] Start offset distance: $startOffsetMeters meters");
+
     // DFS 탐색 시작
     for (final edge in initialEdges) {
-      if (!_isWalkable(edge.way)) continue;
+      if (!_isWalkable(edge.way)) {
+        debugPrint("[CalibrationService] Skipping initial edge (non-walkable way: ${edge.way})");
+        continue;
+      }
 
       // [수정] 엣지 길이도 미터로 변환
       final edgeLengthMeters = pixelsToMeters(edge.length);
@@ -150,30 +169,26 @@ class CalibrationService {
       );
     }
 
-    if (candidates.isEmpty) return null;
+    if (candidates.isEmpty) {
+      debugPrint("[CalibrationService] No candidates found.");
+      return null;
+    }
+
+    debugPrint("[CalibrationService] Found ${candidates.length} candidates.");
 
     // 점수순 정렬 (POI 있음 > 랜드마크임 > 거리 적절함 순서)
-    // [DEBUG] 정렬 전 모든 후보 출력
-    print("--- Calibration Candidates (Total: ${candidates.length}) ---");
-    for (int i = 0; i < candidates.length; i++) {
-      final c = candidates[i];
-      print(
-        "[$i] Path: ${c.vertexPath}, Dist: ${c.distance.toStringAsFixed(2)}m, "
-        "Turn: ${c.turnCount}, POI: ${c.destinationPoi?.name}, "
-        "Landmark: ${c.isLandmark}, Score: ${c.score.toStringAsFixed(1)}",
-      );
-    }
-    print("---------------------------------------------------------");
-
     candidates.sort((a, b) => b.score.compareTo(a.score));
 
     final best = candidates.first;
-    print(
-      "BEST >> Path: ${best.vertexPath}, Dist: ${best.distance.toStringAsFixed(2)}m, Score: ${best.score}",
-    );
+    debugPrint("[CalibrationService] Best candidate selected:");
+    debugPrint(" - Score: ${best.score}");
+    debugPrint(" - Distance: ${best.distance}");
+    debugPrint(" - Destination POI: ${best.destinationPoi?.name}");
+    debugPrint(" - Is Landmark: ${best.isLandmark}");
+    debugPrint(" - Path Length: ${best.vertexPath.length}");
+
 
     // 경로상의 모든 Vertex 객체 가져오기 (선을 꺾어서 그리기 위해 필요)
-    // 병렬 처리로 성능 개선 및 메인 스레드 블로킹 감소
     final List<Vertex> pathVertices = [];
     final futures = best.vertexPath.map((vId) => _poiRepo.getVertexById(vId));
     final results = await Future.wait(futures);
@@ -181,10 +196,6 @@ class CalibrationService {
     for (final v in results) {
       if (v != null) pathVertices.add(v);
     }
-
-    print(
-      "CalibrationService: pathVertices count: ${pathVertices.length}, IDs: ${best.vertexPath}",
-    );
 
     if (pathVertices.isEmpty) return null; // 로직상 희박
 
@@ -219,9 +230,6 @@ class CalibrationService {
     required Map<int, List<Edge>> edgesMap, // 데이터 소스
     required Map<int, List<Poi>> poisMap, // 데이터 소스
   }) {
-    // _recursiveSearchSync 함수 초입에 로그 추가
-    print("Node $currentVertexId, Dist: $currentDistance");
-
     // 1. 탐색 거리 한계 (13m 넘으면 무조건 중단)
     if (currentDistance > _extendedMax) return;
 
@@ -263,6 +271,7 @@ class CalibrationService {
 
     // A. 최적 거리 (6.3 ~ 8.7m) 구간
     if (currentDistance >= _optimalMin && currentDistance <= _optimalMax) {
+      debugPrint("[CalibrationService] Candidate added (Optimal): Dist=${currentDistance.toStringAsFixed(2)}m, POI=${pois.isNotEmpty ? pois.first.name : 'None'}, Landmark=$isLandmark");
       candidates.add(
         _CalibrationCandidate(
           vertexPath: List.from(path),
@@ -278,6 +287,7 @@ class CalibrationService {
     // (허공에 12m 걷게 하는 것은 방지)
     else if (currentDistance > _optimalMax && currentDistance <= _extendedMax) {
       if (pois.isNotEmpty || isLandmark) {
+        debugPrint("[CalibrationService] Candidate added (Extended): Dist=${currentDistance.toStringAsFixed(2)}m, POI=${pois.isNotEmpty ? pois.first.name : 'None'}, Landmark=$isLandmark");
         candidates.add(
           _CalibrationCandidate(
             vertexPath: List.from(path),

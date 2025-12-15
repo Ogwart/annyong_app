@@ -56,9 +56,6 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
     try {
       final buildings = await _buildingRepository.fetchBuildings();
       final pois = await _poiRepository.fetchPois();
-
-      // 선택된 카테고리에 맞는 POI만 필터링
-      debugPrint('선택된 카테고리 ID: ${widget.categoryId}');
       final filteredPois = pois
           .where((poi) => poi.categoryId == widget.categoryId)
           .toList();
@@ -77,7 +74,6 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
         }
       });
     } catch (e) {
-      print('Error loading data: $e');
       setState(() {
         _isLoading = false;
       });
@@ -107,7 +103,6 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
   void _onBuildingSelected(Building building) {
     setState(() {
-      debugPrint('선택된 건물: ${building.name}');
       selectedBuilding = building.name;
       selectedBuildingId = building.id;
       selectedFloor = null;
@@ -121,7 +116,6 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
 
   void _onFloorSelected(int floor) {
     setState(() {
-      debugPrint('선택된 층: $floor');
       selectedFloor = '${floor}F';
       selectedClassroom = null;
 
@@ -135,7 +129,6 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
   }
 
   Future<void> _onClassroomSelected(Poi classroom) async {
-    debugPrint('선택된 강의실: ${classroom.name}');
     setState(() {
       selectedClassroom = classroom.name;
     });
@@ -262,8 +255,7 @@ class _SearchRoomsPageState extends ConsumerState<SearchRoomsPage> {
                   child: Stack(
                     children: [
                       CategoryBox(
-                        categoryName:
-                            widget.searchType.replaceAll('\n', '/'),
+                        categoryName: widget.searchType.replaceAll('\n', '/'),
                       ),
                       if (selectedClassroom != null) SelectedCategoryFlag(),
                     ],

@@ -1119,7 +1119,7 @@
     "floor": 2,
     "x_coord": 137,
     "y_coord": 850,
-    "vertex_id": 119
+    "vertex_id": 525
   },
   {
     "poi_id": 145,
@@ -1152,7 +1152,7 @@
     "floor": 2,
     "x_coord": 441,
     "y_coord": 820,
-    "vertex_id": 124
+    "vertex_id": 530
   },
   {
     "poi_id": 149,
@@ -1185,7 +1185,7 @@
     "floor": 2,
     "x_coord": 784,
     "y_coord": 827,
-    "vertex_id": 133
+    "vertex_id": 539
   },
   {
     "poi_id": 152,
@@ -1196,7 +1196,7 @@
     "floor": 2,
     "x_coord": 819,
     "y_coord": 827,
-    "vertex_id": 134
+    "vertex_id": 540
   },
   {
     "poi_id": 153,
@@ -1207,7 +1207,7 @@
     "floor": 2,
     "x_coord": 856,
     "y_coord": 827,
-    "vertex_id": 134
+    "vertex_id": 540
   },
   {
     "poi_id": 154,
@@ -1218,7 +1218,7 @@
     "floor": 2,
     "x_coord": 893,
     "y_coord": 827,
-    "vertex_id": 136
+    "vertex_id": 541
   },
   {
     "poi_id": 156,
@@ -1229,7 +1229,7 @@
     "floor": 2,
     "x_coord": 964,
     "y_coord": 827,
-    "vertex_id": 138
+    "vertex_id": 543
   },
   {
     "poi_id": 160,
@@ -1251,7 +1251,7 @@
     "floor": 2,
     "x_coord": 1323,
     "y_coord": 820,
-    "vertex_id": 168
+    "vertex_id": 574
   },
   {
     "poi_id": 163,
@@ -1262,7 +1262,7 @@
     "floor": 2,
     "x_coord": 1359,
     "y_coord": 820,
-    "vertex_id": 169
+    "vertex_id": 575
   },
   {
     "poi_id": 164,
@@ -1273,7 +1273,7 @@
     "floor": 2,
     "x_coord": 1395,
     "y_coord": 820,
-    "vertex_id": 170
+    "vertex_id": 576
   },
   {
     "poi_id": 165,
@@ -1284,7 +1284,7 @@
     "floor": 2,
     "x_coord": 1431,
     "y_coord": 820,
-    "vertex_id": 170
+    "vertex_id": 577
   },
   {
     "poi_id": 166,
@@ -1295,7 +1295,7 @@
     "floor": 2,
     "x_coord": 1467,
     "y_coord": 820,
-    "vertex_id": 172
+    "vertex_id": 578
   },
   {
     "poi_id": 167,
@@ -1306,7 +1306,7 @@
     "floor": 2,
     "x_coord": 1503,
     "y_coord": 820,
-    "vertex_id": 172
+    "vertex_id": 578
   },
   {
     "poi_id": 168,
@@ -1317,7 +1317,7 @@
     "floor": 2,
     "x_coord": 1539,
     "y_coord": 820,
-    "vertex_id": 174
+    "vertex_id": 579
   },
   {
     "poi_id": 169,
@@ -1328,7 +1328,7 @@
     "floor": 2,
     "x_coord": 1575,
     "y_coord": 820,
-    "vertex_id": 174
+    "vertex_id": 580
   },
   {
     "poi_id": 170,
@@ -1339,7 +1339,7 @@
     "floor": 2,
     "x_coord": 1611,
     "y_coord": 820,
-    "vertex_id": 175
+    "vertex_id": 581
   },
   {
     "poi_id": 171,
@@ -1383,7 +1383,7 @@
     "floor": 2,
     "x_coord": 786,
     "y_coord": 677,
-    "vertex_id": 141
+    "vertex_id": 596
   },
   {
     "poi_id": 186,

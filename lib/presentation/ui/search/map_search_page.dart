@@ -41,6 +41,12 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage>
   @override
   void initState() {
     super.initState();
+    // [Fix] 빌드 중 상태 변경 방지를 위해 addPostFrameCallback 사용
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(categoryProvider.notifier).setDefaultCategory();
+      ref.read(searchResultProvider.notifier).reset();
+    });
+
     _transformationController.value = Matrix4.identity();
     _transformationController.addListener(() {
       setState(() {});
@@ -57,10 +63,6 @@ class _MapSearchPageState extends ConsumerState<MapSearchPage>
     });
 
     _poiFuture = _repository.fetchPois();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchResultProvider.notifier).reset();
-    });
   }
 
   @override

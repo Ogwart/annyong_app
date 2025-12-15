@@ -227,7 +227,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
             final jsonResult = PathDescriptionBuilder().build(
               pathFinder,
               result.path,
-              result.totalCost,
+              result.totalCost / 10,
             );
             final double totalCost = jsonResult['total_cost'] ?? 0.0;
 
@@ -482,9 +482,7 @@ class _PathResultPageState extends ConsumerState<PathResultPage> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        borderRadius: BorderRadius.circular(
-                                          12,
-                                        ),
+                                        borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
                                             color: Colors.black.withAlpha(10),

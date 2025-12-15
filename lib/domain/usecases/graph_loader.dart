@@ -27,7 +27,6 @@ class GraphLoader {
         final vertex = Vertex.fromJson(rawVertex);
         vertices[vertex.id] = vertex;
       } catch (error, stackTrace) {
-        debugPrint('잘못된 정점 데이터가 무시되었습니다: $error');
         debugPrint('$stackTrace');
       }
     }
@@ -49,15 +48,12 @@ class GraphLoader {
 
       // 정점 ID 유효성 검사
       if (v1Id == null || v2Id == null) {
-        debugPrint('정점 ID가 없어 엣지를 무시했습니다: $rawEdge');
         continue;
       }
       if (v1Id < 0 || v2Id < 0) {
-        debugPrint('미지원 정점 ID여서 엣지를 무시했습니다: $rawEdge');
         continue;
       }
       if (v1Id == v2Id) {
-        debugPrint('동일한 정점 간 엣지여서 무시했습니다: $rawEdge');
         continue;
       }
 
@@ -66,7 +62,6 @@ class GraphLoader {
       final v2 = vertices[v2Id];
 
       if (v1 == null || v2 == null) {
-        debugPrint('존재하지 않는 정점을 연결하는 엣지여서 무시했습니다: $v1Id <-> $v2Id');
         continue;
       }
 

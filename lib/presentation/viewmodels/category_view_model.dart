@@ -69,10 +69,6 @@ class CategoryViewModel extends StateNotifier<CategoryState> {
       final allPois = await PoiRepository().fetchPois();
       final categories = await PoiRepository().fetchCategories();
 
-      debugPrint(
-        '데이터 로드 완료: 카테고리 ${categories.length}개, 전체 POI ${allPois.length}개, 즐겨찾기 ${favoritePois.length}개',
-      );
-
       // 초기 상태: 아무것도 선택하지 않음 (-2)
       // displayedPois는 전체 POI (allPois)로 설정
       state = state.copyWith(
@@ -85,6 +81,10 @@ class CategoryViewModel extends StateNotifier<CategoryState> {
     } catch (e) {
       debugPrint('데이터 로드 중 오류 발생: $e');
     }
+  }
+
+  void setDefaultCategory() {
+    state = state.copyWith(selectedCategoryId: 0, displayedPois: state.allPois);
   }
 
   void onCategorySelected(int categoryId) {

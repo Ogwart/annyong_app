@@ -76,12 +76,10 @@ class _SearchResultPageState extends ConsumerState<SearchResultPage>
     });
 
     _displayKeyword = widget.searchKeyword ?? '';
-    debugPrint('선택된 키워드: $_displayKeyword');
     _poiFuture = SearchResultPageUtil.loadPois(
       _repository,
       categoryId: widget.categoryId,
     );
-    debugPrint('카테고리 ID: ${widget.categoryId}');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(searchResultProvider.notifier).setSearchKeyword(_displayKeyword);

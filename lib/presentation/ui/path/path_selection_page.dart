@@ -93,7 +93,7 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     final String route = searchMode == SearchMode.departure
         ? '/home/mapSearch'
         : '/home/search';
-    
+
     final result = await context.push<Poi>(
       route,
       extra: {'searchMode': searchMode, 'returnResult': true},
@@ -244,7 +244,6 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
   }
 
   void _handleFindPath() {
-    debugPrint('----------- [_handleFindPath Start] -----------');
     final pathState = ref.read(pathSelectionProvider);
     final Poi? startPoi = pathState.departure;
     final Poi? endPoi = pathState.destination;
@@ -256,11 +255,6 @@ class _PathSelectionPageState extends ConsumerState<PathSelectionPage>
     if (pathState.waypoint2 != null) {
       activeWaypoints.add(pathState.waypoint2!);
     }
-
-    debugPrint('출발지 POI: ${startPoi!.vertexId}');
-    debugPrint('경유지 POI: ${activeWaypoints.map((e) => e.vertexId).toList()}');
-    debugPrint('목적지 POI: ${endPoi!.vertexId}');
-    debugPrint('----------- [_handleFindPath End] -----------');
 
     context.go(
       '/home/pathSelection/pathResult',

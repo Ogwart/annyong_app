@@ -24,10 +24,10 @@ class HandoverService {
   static const int rssiThresholdStrong =
       -70; // 강한 신호 (HandoverReady -> Transitioning)
   static const int rssiThresholdWeak = -73; // 약한 신호 (Transitioning -> Outdoor)
-  static const int rssiThresholdEntry = -68; // 실내 진입 감지 (Outdoor -> Checking)
+  static const int rssiThresholdEntry = -76; // 실내 진입 감지 (Outdoor -> Checking)
 
   // GPS 정확도 임계값
-  static const double gpsBaselineMin = 5.0; // 최소 baseline (m)
+  static const double gpsBaselineMin = 5.0; // 최소 baseline  (m)
   static const double gpsBaselineMax = 100.0; // 최대 baseline (m)
   static const double gpsImprovementAbsolute = 3.0; // 절대값 개선 기준 (m)
   static const double gpsImprovementRatio = 0.35; // 비율 개선 기준 (40%)

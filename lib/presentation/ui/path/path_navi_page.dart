@@ -705,7 +705,7 @@ class _PathNaviPageState extends ConsumerState<PathNaviPage>
                       child: CostCard(
                         departure: widget.start.name,
                         destination: widget.end.name,
-                        totalCost: totalCost,
+                        totalCost: totalCost / 10,
                         waypoints: widget.waypoints,
                       ),
                     ),

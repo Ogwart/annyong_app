@@ -124,8 +124,6 @@ class _MenuPageState extends State<MenuPage> {
               ),
               // 설정 메뉴
               MenuListButton(title: '즐겨찾기', routePath: '/home/menu/bookmark'),
-              MenuListButton(title: '설정', routePath: '/home/menu/settings'),
-              //MenuListButton(title: '설정', route: "menu/settings"),
             ],
           ),
         );

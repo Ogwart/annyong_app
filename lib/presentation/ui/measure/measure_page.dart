@@ -104,7 +104,9 @@ class _MeasurePageState extends State<MeasurePage> {
     }
 
     // 건물 이름 및 층 정보 가져오기
-    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final buildingName = MapUtilFunctions.getBuildingName(
+      _route!.startPoi.buildingId,
+    );
     final floorString = '${_route!.startPoi.floor}F';
 
     // 지도 원본 이미지 사이즈 가져오기
@@ -201,7 +203,14 @@ class _MeasurePageState extends State<MeasurePage> {
 
   /// 보폭 측정 경로 탐색 (Hybrid Logic 적용)
   Future<void> _findRoute() async {
-    if (_targetPoi == null) return;
+    if (_targetPoi == null) {
+      debugPrint("[MeasurePage] _findRoute skipped: _targetPoi is null");
+      return;
+    }
+
+    debugPrint(
+      "[MeasurePage] _findRoute started for POI: ${_targetPoi!.name} (ID: ${_targetPoi!.id})",
+    );
 
     try {
       // CalibrationService를 통해 최적의 경로(POI 우선, 없으면 랜드마크) 탐색
@@ -213,10 +222,21 @@ class _MeasurePageState extends State<MeasurePage> {
 
         // 탐색 실패 시 null 반환됨 -> _errorMessage를 null로 유지하여 실패 UI(_buildFailureView) 표시
         if (route == null) {
+          debugPrint(
+            "[MeasurePage] _findRoute failed: No suitable route found.",
+          );
           _errorMessage = null;
+        } else {
+          debugPrint("[MeasurePage] _findRoute success: Route found.");
+          debugPrint(" - Total Distance: ${route.totalDistance}");
+          debugPrint(
+            " - Destination: ${route.destinationPoi?.name ?? 'Vertex(${route.destinationVertex.id})'}",
+          );
+          debugPrint(" - Path Vertices Count: ${route.pathVertices.length}");
         }
       });
     } catch (e) {
+      debugPrint("[MeasurePage] _findRoute error: $e");
       setState(() {
         _isLoading = false;
         _errorMessage = "경로 탐색 중 오류가 발생했습니다: $e";
@@ -270,18 +290,6 @@ class _MeasurePageState extends State<MeasurePage> {
         _currentStep = MeasureStep.ready;
         _startSteps = _currentPedometerSteps;
       });
-    }
-  }
-
-  String _getBuildingName(int buildingId) {
-    switch (buildingId) {
-      case 1:
-      case 2:
-        return '5호관';
-      case 3:
-        return '하이테크관';
-      default:
-        return '5호관';
     }
   }
 
@@ -481,7 +489,9 @@ class _MeasurePageState extends State<MeasurePage> {
 
   /// 지도 및 경로 오버레이 빌더
   Widget _buildMapArea() {
-    final buildingName = _getBuildingName(_route!.startPoi.buildingId);
+    final buildingName = MapUtilFunctions.getBuildingName(
+      _route!.startPoi.buildingId,
+    );
     final floorString = '${_route!.startPoi.floor}F';
     final mapImagePath = MapUtilFunctions.getImagePath(
       buildingName,
